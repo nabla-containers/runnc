@@ -1,5 +1,13 @@
+0. Get started with the go repo!
+
+a. Ensure that your `GOPATH` is set. (https://github.com/golang/go/wiki/SettingGOPATH)
+b. Go get the repo (`go get github.ibm.com/nabla-containers/runnc`).
+
 1. Make binaries and copy to bin dir
 ```
+# Go to the repo
+cd $GOPATH/src/github.ibm.com/nabla-containers/runnc
+
 # Get the neceesary binaries for the runtime
 make build
 
