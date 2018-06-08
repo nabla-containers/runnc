@@ -26,7 +26,7 @@ sudo hack/copy_bins.sh
                 "--network=sandbox"
             ]
        },
-        "runn": {
+        "runnc": {
                 "path": "/usr/local/bin/runnc",
                 "runtimeArgs": [
                 ]
