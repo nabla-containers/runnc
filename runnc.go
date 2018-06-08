@@ -91,7 +91,7 @@ func writeSpec(bundlePath string, s *spec.Spec) error {
 	if err != nil {
 		return err
 	}
-	log.Printf("Write Spect bytes\n\n%v", string(specBytes))
+	log.Printf("Write Spec bytes\n\n%v", string(specBytes))
 
 	if err = ioutil.WriteFile(specFile, specBytes, 0644); err != nil {
 		return err
@@ -183,12 +183,11 @@ func addNablaBinaries(bundlePath string, s *spec.Spec) error {
 
 	binSrcPath := "/usr/local/bin"
 	ukvmBinSrcPath := filepath.Join(binSrcPath, "ukvm-bin")
-	nablaRunSrcPath := filepath.Join(binSrcPath, "nabla_run")
+	nablaRunSrcPath := filepath.Join(binSrcPath, "runnc-cont")
 
 	// TODO: Add checks for file exists?
-
 	ukvmBinDstPath := filepath.Join(rootfsPath, "ukvm-bin")
-	nablaRunDstPath := filepath.Join(rootfsPath, "nabla_run")
+	nablaRunDstPath := filepath.Join(rootfsPath, "runnc-cont")
 
 	if err := copyFile(ukvmBinDstPath, ukvmBinSrcPath); err != nil {
 		return err
@@ -244,7 +243,7 @@ func modEntrypoint(s *spec.Spec) error {
 	}
 	s.Process.Cwd = "/"
 
-	args := append([]string{"/nabla_run", "-docker",
+	args := append([]string{"/runnc-cont", "-docker",
 		"-volume", "/rootfs.iso:/",
 		"-unikernel", s.Process.Args[0], "--"},
 		s.Process.Args[1:]...)

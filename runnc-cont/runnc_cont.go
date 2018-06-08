@@ -25,8 +25,8 @@ import (
 	"os/exec"
 	"strings"
 	"syscall"
-	"github.ibm.com/nabla-containers/nabla-build/nabla-run/cli/nabla_run/network"
-	"github.ibm.com/nabla-containers/nabla-build/nabla-run/cli/nabla_run/storage"
+	"github.ibm.com/nabla-containers/nabla-lib/network"
+	"github.ibm.com/nabla-containers/nabla-lib/storage"
 )
 
 type arrayEnvVars []string
@@ -59,7 +59,7 @@ func setupDisk(path string) (string, error) {
         return "", fmt.Errorf(
 			"Input storage %s is not an ISO", path)
 	}
-	
+
 	// "path" is a file, so we treat it like a disk
 	return path, nil
 }

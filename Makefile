@@ -1,9 +1,16 @@
 default: build
 
-build: runnc
+build: godep bin/runnc bin/runnc-cont
 
-runnc: runnc.go
+.PHONY: godep
+godep: 
+	dep ensure
+
+bin/runnc: runnc.go
 	GOOS=linux GOARCH=amd64 go build -o $@ .
 
+bin/runnc-cont: runnc-cont/
+	GOOS=linux GOARCH=amd64 go build -ldflags "-linkmode external -extldflags -static" -o $@ ./runnc-cont
+
 clean:
-	rm -f runnc
+	rm -rf bin/
