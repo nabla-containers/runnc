@@ -1,8 +1,10 @@
 1. Make binaries and copy to bin dir
 ```
+# Get the neceesary binaries for the runtime
 make build
-cp runnc /usr/local/bin/runnc
-# In addition, copy nabla_run and ukvm_bin to /usr/local/bin and chmod +x them
+
+# Copy the binaries to /usr/local/bin
+sudo hack/copy_bins.sh
 ```
 
 2. Modify to add runtime to `/etc/docker/daemon.json`, for example:
