@@ -1,7 +1,10 @@
-0. Get started with the go repo!
-
+## Get started with the go repo!
+```
 a. Ensure that your `GOPATH` is set. (https://github.com/golang/go/wiki/SettingGOPATH)
 b. Go get the repo (`go get github.ibm.com/nabla-containers/runnc`).
+```
+
+## Install Runnc
 
 1. Make binaries and copy to bin dir
 ```
@@ -41,4 +44,4 @@ sudo hack/copy_bins.sh
 
 4. Run with runtime:
 
-```docker run --rm --runtime=runnc lumjjb/node-nable:latest```
+```sudo docker run --rm --runtime=runnc lumjjb/user-node:v0```
