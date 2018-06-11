@@ -185,11 +185,11 @@ func addNetAdmin(s *spec.Spec) error {
 		return fmt.Errorf("Spec process capabilities is nil")
 	}
 
-	s.Process.Capabilities.Bounding = addAbsentSlice(s.Process.Capabilities.Bounding, CAP_NET_ADMIN)
-	s.Process.Capabilities.Effective = addAbsentSlice(s.Process.Capabilities.Effective, CAP_NET_ADMIN)
-	s.Process.Capabilities.Inheritable = addAbsentSlice(s.Process.Capabilities.Inheritable, CAP_NET_ADMIN)
-	s.Process.Capabilities.Permitted = addAbsentSlice(s.Process.Capabilities.Permitted, CAP_NET_ADMIN)
-	s.Process.Capabilities.Ambient = addAbsentSlice(s.Process.Capabilities.Ambient, CAP_NET_ADMIN)
+	s.Process.Capabilities.Bounding = addAbsentSlice(s.Process.Capabilities.Bounding, linuxPermCapNetAdmin)
+	s.Process.Capabilities.Effective = addAbsentSlice(s.Process.Capabilities.Effective, linuxPermCapNetAdmin)
+	s.Process.Capabilities.Inheritable = addAbsentSlice(s.Process.Capabilities.Inheritable, linuxPermCapNetAdmin)
+	s.Process.Capabilities.Permitted = addAbsentSlice(s.Process.Capabilities.Permitted, linuxPermCapNetAdmin)
+	s.Process.Capabilities.Ambient = addAbsentSlice(s.Process.Capabilities.Ambient, linuxPermCapNetAdmin)
 
 	return nil
 }
