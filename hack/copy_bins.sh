@@ -1,4 +1,9 @@
 #!/bin/bash
-cp bin/runnc /usr/local/bin/
-cp bin/runnc-cont /usr/local/bin/
-cp bin/ukvm-bin /usr/local/bin/
+
+BIN_PATH=/usr/local/bin/
+COPY_BINS=("bin/runnc" "bin/runnc-cont" "bin/ukvm-bin")
+
+for i in ${COPY_BINS[@]}; do
+    echo $i
+    cp $i ${BIN_PATH}/
+done
