@@ -1,5 +1,5 @@
 // Copyright (c) 2018, IBM
-// Author(s): Brandon Lum, Ricardo Koller
+// Author(s): Brandon Lum, Ricardo Koller, Dan Williams
 //
 // Permission to use, copy, modify, and/or distribute this software for
 // any purpose with or without fee is hereby granted, provided that the
