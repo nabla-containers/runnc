@@ -14,11 +14,11 @@ cd $GOPATH/src/github.ibm.com/nabla-containers/runnc
 # Get the neceesary binaries for the runtime
 make build
 
-# Copy the binaries to /usr/local/bin
-sudo hack/copy_bins.sh
-
 # Install genisoimage on host
 sudo apt install genisoimage
+
+# Install the appropriate binaries/libraries
+sudo make preinstall
 ```
 
 2. Modify to add runtime to `/etc/docker/daemon.json`, for example:

@@ -148,12 +148,14 @@ func addNablaBinaries(bundlePath string, s *spec.Spec) error {
 	}
 
 	binSrcPath := "/usr/local/bin"
-	ukvmBinSrcPath := filepath.Join(binSrcPath, "ukvm-bin")
+	libSrcPath := "/opt/runnc/lib"
+
+	ukvmBinSrcPath := filepath.Join(binSrcPath, "nabla-run")
 	nablaRunSrcPath := filepath.Join(binSrcPath, "runnc-cont")
 
-	// TODO: Add checks for file exists?
-	ukvmBinDstPath := filepath.Join(rootfsPath, "ukvm-bin")
+	ukvmBinDstPath := filepath.Join(rootfsPath, "nabla-run")
 	nablaRunDstPath := filepath.Join(rootfsPath, "runnc-cont")
+    libDstPath := filepath.Join(rootfsPath, "/lib64")
 
 	if err := utils.Copy(ukvmBinDstPath, ukvmBinSrcPath); err != nil {
 		return err
@@ -163,17 +165,11 @@ func addNablaBinaries(bundlePath string, s *spec.Spec) error {
 		return err
 	}
 
-	return nil
-}
-
-func addAbsentSlice(slice []string, add string) []string {
-	for _, v := range slice {
-		if add == v {
-			return slice
-		}
+    if err := utils.Copy(libDstPath, libSrcPath) ; err != nil {
+		return err
 	}
 
-	return append(slice, add)
+	return nil
 }
 
 func addNetAdmin(s *spec.Spec) error {
@@ -185,11 +181,11 @@ func addNetAdmin(s *spec.Spec) error {
 		return fmt.Errorf("Spec process capabilities is nil")
 	}
 
-	s.Process.Capabilities.Bounding = addAbsentSlice(s.Process.Capabilities.Bounding, linuxPermCapNetAdmin)
-	s.Process.Capabilities.Effective = addAbsentSlice(s.Process.Capabilities.Effective, linuxPermCapNetAdmin)
-	s.Process.Capabilities.Inheritable = addAbsentSlice(s.Process.Capabilities.Inheritable, linuxPermCapNetAdmin)
-	s.Process.Capabilities.Permitted = addAbsentSlice(s.Process.Capabilities.Permitted, linuxPermCapNetAdmin)
-	s.Process.Capabilities.Ambient = addAbsentSlice(s.Process.Capabilities.Ambient, linuxPermCapNetAdmin)
+	s.Process.Capabilities.Bounding = utils.AddAbsentSlice(s.Process.Capabilities.Bounding, linuxPermCapNetAdmin)
+	s.Process.Capabilities.Effective = utils.AddAbsentSlice(s.Process.Capabilities.Effective, linuxPermCapNetAdmin)
+	s.Process.Capabilities.Inheritable = utils.AddAbsentSlice(s.Process.Capabilities.Inheritable, linuxPermCapNetAdmin)
+	s.Process.Capabilities.Permitted = utils.AddAbsentSlice(s.Process.Capabilities.Permitted, linuxPermCapNetAdmin)
+	s.Process.Capabilities.Ambient = utils.AddAbsentSlice(s.Process.Capabilities.Ambient, linuxPermCapNetAdmin)
 
 	return nil
 }
@@ -284,6 +280,7 @@ func main() {
 				bundlePath := args[i+1]
 				log.Printf("Bundle: %v\n\n", bundlePath)
 				if err := bundleMod(bundlePath); err != nil {
+                    log.Printf("ERROR: %v", err)
 					panic(err)
 				}
 				break

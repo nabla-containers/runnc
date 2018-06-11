@@ -18,11 +18,11 @@
 # PERFORMANCE OF THIS SOFTWARE.
 
 LIBRARY_PATH=/opt/runnc/lib/
-TARGET_BIN=bin/nabla_run
+TARGET_BIN=bin/nabla-run
 
 mkdir -p ${LIBRARY_PATH}
 
-for i in $(ldd $(which whoami)); do 
+for i in $(ldd ${TARGET_BIN}); do 
 	if [[ ${i} == /* ]]; then 
 		echo Copying $i to ${LIBRARY_PATH}
         cp $i ${LIBRARY_PATH}/

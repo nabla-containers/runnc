@@ -18,7 +18,7 @@
 # PERFORMANCE OF THIS SOFTWARE.
 
 BIN_PATH=/usr/local/bin/
-COPY_BINS=("bin/runnc" "bin/runnc-cont" "bin/ukvm-bin")
+COPY_BINS=("bin/runnc" "bin/runnc-cont" "bin/nabla-run")
 
 for i in ${COPY_BINS[@]}; do
     echo $i

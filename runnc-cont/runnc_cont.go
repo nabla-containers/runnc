@@ -69,8 +69,8 @@ func main() {
 		flag.PrintDefaults()
 	}
 
-	ukvm := flag.String("ukvm", "./ukvm-bin",
-		"Path to desired ukvm-bin to use.")
+	nablarun := flag.String("nabla-run", "./nabla-run",
+		"Path to desired nabla-run to use.")
 	unikernel := flag.String("unikernel", "./node.nablet",
 		"Unikernel executable file. It will be looked for in $PATH.")
 	tap := flag.String("tap", "tap100",
@@ -105,11 +105,11 @@ func main() {
 
 	cmdargs := strings.Join(flag.Args(), " ")
 
-	os.Exit(run(*ukvm, *unikernel, *tap, ip, ipNet.Mask, gw,
+	os.Exit(run(*nablarun, *unikernel, *tap, ip, ipNet.Mask, gw,
 		*inDocker, vol, cmdargs, envVars))
 }
 
-func run(ukvm string, unikernel string, tapName string,
+func run(nablarun string, unikernel string, tapName string,
 	ip net.IP, mask net.IPMask, gw net.IP,
 	inDocker bool, volume []string,
 	cmdargs string, envVars []string) int {
@@ -154,16 +154,30 @@ func run(ukvm string, unikernel string, tapName string,
 		return 1
 	}
 
-	args := []string{ukvm,
+	args := []string{nablarun,
 		"--net=" + tapName,
 		"--disk=" + disk,
 		unikernel,
 		unikernelArgs}
 
 	fmt.Printf("%s\n", args)
-	err = syscall.Exec(ukvm, args, os.Environ())
+
+    // Set LD_LIBRARY_PATH to our dynamic libraries
+	env := os.Environ()
+
+    newenv := make([]string, 0, len(env))
+    for _, v := range env {
+        if strings.HasPrefix(v, "LD_LIBRARY_PATH=") {
+            continue
+        } else {
+            newenv = append(newenv, v)
+        }
+    }
+    newenv =  append(newenv, "LD_LIBRARY_PATH=/lib64")
+
+    err = syscall.Exec(nablarun, args, newenv)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Err: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Err from execve: %v\n", err)
 		return 1
 	}
 
