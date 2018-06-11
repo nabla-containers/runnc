@@ -18,7 +18,7 @@ make build
 sudo apt install genisoimage
 
 # Install the appropriate binaries/libraries
-sudo make preinstall
+make preinstall
 ```
 
 2. Modify to add runtime to `/etc/docker/daemon.json`, for example:
