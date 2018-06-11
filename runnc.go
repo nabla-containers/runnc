@@ -42,10 +42,14 @@ type config struct {
 }
 
 var (
-	LogFile               *os.File = nil
-	LogFilePath           string   = "/tmp/runnc.log"
-	Config                         = config{}
-	DefaultRuncBinaryPath          = "/usr/bin/docker-runc"
+	// LogFile handlier to use for logging
+	LogFile *os.File
+	// LogFilePath to log to
+	LogFilePath = "/tmp/runnc.log"
+	// Config is the config for the runc command invoked
+	Config = config{}
+	// DefaultRuncBinaryPath is the default path to the docker-runc binary
+	DefaultRuncBinaryPath = "/usr/bin/docker-runc"
 )
 
 func runRunc(args, env []string) {
@@ -66,7 +70,8 @@ func runRunc(args, env []string) {
 	}
 }
 
-var CAP_NET_ADMIN = "CAP_NET_ADMIN"
+// linuxPermCapNetAdmin is the string to signify the CAP_NET_ADMIN linux capability
+var linuxPermCapNetAdmin = "CAP_NET_ADMIN"
 
 // readSpec reads the runtime spec (config.json) from the bundle
 func readSpec(bundlePath string) (*spec.Spec, error) {

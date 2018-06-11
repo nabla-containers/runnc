@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 )
 
+// Copy simulates the command `cp -r <dst> <src>`
 // copyPath adapted from
 // https://gist.github.com/elazarl/5507969 and
 // https://github.com/otiai10/copy/blob/master/copy.go
@@ -24,9 +25,8 @@ func Copy(dst, src string) error {
 func pcopy(dst, src string, srcInfo os.FileInfo) error {
 	if srcInfo.IsDir() {
 		return dcopy(dst, src, srcInfo)
-	} else {
-		return fcopy(dst, src, srcInfo)
 	}
+	return fcopy(dst, src, srcInfo)
 }
 
 func fcopy(dst, src string, srcInfo os.FileInfo) error {
