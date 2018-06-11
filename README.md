@@ -24,18 +24,9 @@ sudo apt install genisoimage
 2. Modify to add runtime to `/etc/docker/daemon.json`, for example:
 ```
 {
-    "default-runtime": "runc",
     "runtimes": {
-        "runsc": {
-            "path": "/usr/local/bin/runsc",
-            "runtimeArgs": [
-                "--network=sandbox"
-            ]
-       },
         "runnc": {
-                "path": "/usr/local/bin/runnc",
-                "runtimeArgs": [
-                ]
+                "path": "/usr/local/bin/runnc"
         }
     }
 }
