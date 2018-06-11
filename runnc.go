@@ -21,7 +21,7 @@ import (
 	"encoding/json"
 	"fmt"
 	spec "github.com/opencontainers/runtime-spec/specs-go"
-	"github.ibm.com/nabla-containers/nabla-lib/storageiso"
+	"github.ibm.com/nabla-containers/nabla-lib/storage"
 	"io"
 	"io/ioutil"
 	"log"
@@ -151,7 +151,7 @@ func addRootfsISO(bundlePath string, s *spec.Spec) error {
 	}
 
 	log.Printf("ISO: Rootfs path determined as %v", rootfsPath)
-	isoPath, err := storageiso.CreateIso(rootfsPath)
+	isoPath, err := storage.CreateIso(rootfsPath)
 	if err != nil {
 		log.Printf("ISO: Failed to create ISO")
 		return err

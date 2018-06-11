@@ -27,20 +27,19 @@
   name = "github.ibm.com/nabla-containers/nabla-lib"
   packages = [
     "network",
-    "storage",
-    "storageiso"
+    "storage"
   ]
-  revision = "bd306fffafac98a73a4e3317aab778553e004ae4"
+  revision = "ad53f175ac9b797a29d64070f13b98062b946376"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix"]
-  revision = "9527bec2660bd847c050fda93a0f0c6dee0800bb"
+  revision = "bff228c7b664c5fce602223a05fb708fd8654986"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "142f46924d34bade207d7dcd0235dce2db176b91c60a15f6a52122f9404ad210"
+  inputs-digest = "14897dace3cbebb14c742545bf7f0691e7bcc48dc52fb4858d683bba1f22f4f7"
   solver-name = "gps-cdcl"
   solver-version = 1

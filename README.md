@@ -16,6 +16,9 @@ make build
 
 # Copy the binaries to /usr/local/bin
 sudo hack/copy_bins.sh
+
+# Install genisoimage on host
+sudo apt install genisoimage
 ```
 
 2. Modify to add runtime to `/etc/docker/daemon.json`, for example:
