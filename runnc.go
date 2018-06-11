@@ -22,8 +22,8 @@ import (
 	"fmt"
 	spec "github.com/opencontainers/runtime-spec/specs-go"
 	"github.ibm.com/nabla-containers/nabla-lib/storage"
-	"io"
 	"io/ioutil"
+    "io"
 	"log"
 	"os"
 	"path/filepath"
@@ -100,9 +100,30 @@ func writeSpec(bundlePath string, s *spec.Spec) error {
 	return nil
 }
 
-// copyFile adapted from https://gist.github.com/elazarl/5507969
-// Added code to copy attributes
-func copyFile(dst, src string) error {
+// copyPath adapted from 
+// https://gist.github.com/elazarl/5507969 and 
+// https://github.com/otiai10/copy/blob/master/copy.go
+// Changed to have different semantics and behaviors for file perms, overwrites
+// and copy attributes
+func copyPath (dst, src string) error {
+    srcInfo, err := os.Stat(src)
+	if err != nil {
+		return err
+	}
+
+    return pcopy(dst, src, srcInfo)
+}
+
+
+func pcopy (dst, src string, srcInfo os.FileInfo) error {
+	if srcInfo.IsDir() {
+		return dcopy (dst, src, srcInfo)
+	} else {
+		return fcopy (dst, src, srcInfo)
+	}
+}
+
+func fcopy (dst, src string, srcInfo os.FileInfo) error {
 	s, err := os.Open(src)
 	if err != nil {
 		return err
@@ -127,17 +148,37 @@ func copyFile(dst, src string) error {
 		return err
 	}
 
-	si, err := os.Stat(src)
-	if err != nil {
-		return err
-	}
-	err = os.Chmod(dst, si.Mode())
+	err = os.Chmod(dst, srcInfo.Mode())
 	if err != nil {
 		return err
 	}
 
 	return d.Close()
 }
+
+func dcopy (dst, src string, srcInfo os.FileInfo) error {
+		if err := os.MkdirAll(dst, srcInfo.Mode()); err != nil {
+			return err
+		}
+
+		infos, err := ioutil.ReadDir(src)
+		if err != nil {
+			return err
+		}
+
+		for _, info := range infos {
+			if err := pcopy(
+				filepath.Join(dst, info.Name()),
+				filepath.Join(src, info.Name()),
+                info,
+			); err != nil {
+				return err
+			}
+		}
+		return nil
+
+}
+
 
 // addRootfsISO creates an ISO from the rootfs of the target spec and adds it
 // to the root of the rootfs.
@@ -161,7 +202,7 @@ func addRootfsISO(bundlePath string, s *spec.Spec) error {
 
 	log.Printf("ISO: Created ISO %v", isoPath)
 	log.Printf("ISO: Target ISO %v", targetISOPath)
-	if err = copyFile(targetISOPath, isoPath); err != nil {
+	if err = copyPath(targetISOPath, isoPath); err != nil {
 		return err
 	}
 
@@ -189,11 +230,11 @@ func addNablaBinaries(bundlePath string, s *spec.Spec) error {
 	ukvmBinDstPath := filepath.Join(rootfsPath, "ukvm-bin")
 	nablaRunDstPath := filepath.Join(rootfsPath, "runnc-cont")
 
-	if err := copyFile(ukvmBinDstPath, ukvmBinSrcPath); err != nil {
+	if err := copyPath(ukvmBinDstPath, ukvmBinSrcPath); err != nil {
 		return err
 	}
 
-	if err := copyFile(nablaRunDstPath, nablaRunSrcPath); err != nil {
+	if err := copyPath(nablaRunDstPath, nablaRunSrcPath); err != nil {
 		return err
 	}
 
