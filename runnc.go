@@ -22,8 +22,8 @@ import (
 	"fmt"
 	spec "github.com/opencontainers/runtime-spec/specs-go"
 	"github.ibm.com/nabla-containers/nabla-lib/storage"
+	"io"
 	"io/ioutil"
-    "io"
 	"log"
 	"os"
 	"path/filepath"
@@ -100,30 +100,29 @@ func writeSpec(bundlePath string, s *spec.Spec) error {
 	return nil
 }
 
-// copyPath adapted from 
-// https://gist.github.com/elazarl/5507969 and 
+// copyPath adapted from
+// https://gist.github.com/elazarl/5507969 and
 // https://github.com/otiai10/copy/blob/master/copy.go
 // Changed to have different semantics and behaviors for file perms, overwrites
 // and copy attributes
-func copyPath (dst, src string) error {
-    srcInfo, err := os.Stat(src)
+func copyPath(dst, src string) error {
+	srcInfo, err := os.Stat(src)
 	if err != nil {
 		return err
 	}
 
-    return pcopy(dst, src, srcInfo)
+	return pcopy(dst, src, srcInfo)
 }
 
-
-func pcopy (dst, src string, srcInfo os.FileInfo) error {
+func pcopy(dst, src string, srcInfo os.FileInfo) error {
 	if srcInfo.IsDir() {
-		return dcopy (dst, src, srcInfo)
+		return dcopy(dst, src, srcInfo)
 	} else {
-		return fcopy (dst, src, srcInfo)
+		return fcopy(dst, src, srcInfo)
 	}
 }
 
-func fcopy (dst, src string, srcInfo os.FileInfo) error {
+func fcopy(dst, src string, srcInfo os.FileInfo) error {
 	s, err := os.Open(src)
 	if err != nil {
 		return err
@@ -156,29 +155,28 @@ func fcopy (dst, src string, srcInfo os.FileInfo) error {
 	return d.Close()
 }
 
-func dcopy (dst, src string, srcInfo os.FileInfo) error {
-		if err := os.MkdirAll(dst, srcInfo.Mode()); err != nil {
+func dcopy(dst, src string, srcInfo os.FileInfo) error {
+	if err := os.MkdirAll(dst, srcInfo.Mode()); err != nil {
+		return err
+	}
+
+	infos, err := ioutil.ReadDir(src)
+	if err != nil {
+		return err
+	}
+
+	for _, info := range infos {
+		if err := pcopy(
+			filepath.Join(dst, info.Name()),
+			filepath.Join(src, info.Name()),
+			info,
+		); err != nil {
 			return err
 		}
-
-		infos, err := ioutil.ReadDir(src)
-		if err != nil {
-			return err
-		}
-
-		for _, info := range infos {
-			if err := pcopy(
-				filepath.Join(dst, info.Name()),
-				filepath.Join(src, info.Name()),
-                info,
-			); err != nil {
-				return err
-			}
-		}
-		return nil
+	}
+	return nil
 
 }
-
 
 // addRootfsISO creates an ISO from the rootfs of the target spec and adds it
 // to the root of the rootfs.

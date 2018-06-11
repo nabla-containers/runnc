@@ -22,11 +22,11 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"github.ibm.com/nabla-containers/nabla-lib/network"
 	"net"
+	"os"
 	"strconv"
 	"strings"
-	"os"
-	"github.ibm.com/nabla-containers/nabla-lib/network"
 )
 
 type rumpArgsNetwork struct {

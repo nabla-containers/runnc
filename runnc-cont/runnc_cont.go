@@ -20,13 +20,13 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.ibm.com/nabla-containers/nabla-lib/network"
+	"github.ibm.com/nabla-containers/nabla-lib/storage"
 	"net"
 	"os"
 	"os/exec"
 	"strings"
 	"syscall"
-	"github.ibm.com/nabla-containers/nabla-lib/network"
-	"github.ibm.com/nabla-containers/nabla-lib/storage"
 )
 
 type arrayEnvVars []string
@@ -56,7 +56,7 @@ func setupDisk(path string) (string, error) {
 
 	if pathInfo.Mode()&os.ModeDir != 0 {
 		// path is a dir, so we flat it to an iso disk
-        return "", fmt.Errorf(
+		return "", fmt.Errorf(
 			"Input storage %s is not an ISO", path)
 	}
 
@@ -85,8 +85,8 @@ func main() {
 		"Is this running in a Docker container")
 	volume := flag.String("volume", ":",
 		"'--volume <SRC>:<DST>'. "+
-		"<SRC> is the directory or device to mount, and <DST> "+
-		"is the path where it's going to be mounted in the unikernel.")
+			"<SRC> is the directory or device to mount, and <DST> "+
+			"is the path where it's going to be mounted in the unikernel.")
 	flag.Var(&envVars, "env",
 		"Environment variable; add as many '-env A -env B' as needed")
 	flag.Parse()
@@ -106,7 +106,7 @@ func main() {
 	cmdargs := strings.Join(flag.Args(), " ")
 
 	os.Exit(run(*ukvm, *unikernel, *tap, ip, ipNet.Mask, gw,
-			*inDocker, vol, cmdargs, envVars))
+		*inDocker, vol, cmdargs, envVars))
 }
 
 func run(ukvm string, unikernel string, tapName string,
@@ -147,7 +147,7 @@ func run(ukvm string, unikernel string, tapName string,
 	}
 
 	unikernelArgs, err := CreateRumprunArgs(ip, mask, gw, volume[1],
-						envVars, unikernel, cmdargs)
+		envVars, unikernel, cmdargs)
 	if err != nil {
 		fmt.Fprintf(os.Stderr,
 			"Could not create the unikernel cmdline: %v\n", err)
