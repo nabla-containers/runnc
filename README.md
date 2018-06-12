@@ -38,4 +38,4 @@ make preinstall
 
 4. Run with runtime:
 
-```sudo docker run --rm --runtime=runnc lumjjb/user-node:v0```
+```sudo docker run --rm --runtime=runnc nablact/nabla-node-base```
