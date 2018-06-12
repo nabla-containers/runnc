@@ -42,5 +42,9 @@ preinstall: build
 	sudo hack/copy_binaries.sh
 	sudo hack/copy_libraries.sh
 
+integration:
+	make -C tests/integration
+	sudo tests/bats-core/bats -p tests/integration
+
 clean:
 	rm -rf bin/
