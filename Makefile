@@ -23,28 +23,43 @@ RELEASE_SERVER=9.12.247.246
 # Synced relelase version to downlaod from
 RELEASE_VER=NONE
 
-build: godep bin/runnc bin/runnc-cont bin/nabla-run
+build: godep build/runnc build/runnc-cont build/nabla-run
 
 .PHONY: godep
 godep: 
 	dep ensure
 
-bin/runnc: runnc.go
+build/runnc: runnc.go
 	GOOS=linux GOARCH=amd64 go build -o $@ .
 
-bin/runnc-cont: runnc-cont/*
+build/runnc-cont: runnc-cont/*
 	GOOS=linux GOARCH=amd64 go build -ldflags "-linkmode external -extldflags -static" -o $@ ./runnc-cont
 
-bin/nabla-run: 
+build/nabla-run: 
 	wget -nc http://${RELEASE_SERVER}/nabla-build/nabla-run -O $@ && chmod +x $@
 
 preinstall: build
 	sudo hack/copy_binaries.sh
 	sudo hack/copy_libraries.sh
 
-integration:
+.PHONY: test,container-integration-test,local-integration-test,integration
+test: integration
+
+integration: local-integration-test container-integration-test
+
+test/integration/node_tests.iso:
 	make -C tests/integration
+
+local-integration-test: test/integration/node_tests.iso
 	sudo tests/bats-core/bats -p tests/integration
 
+container-integration-test:
+	sudo docker run -it --rm \
+		-v $(CURDIR)/build:/build \
+		-v $(CURDIR)/tests:/tests \
+		--cap-add=NET_ADMIN \
+		-e INCONTAINER=1 \
+		ubuntu:16.04 /tests/bats-core/bats -p /tests/integration
+
 clean:
-	rm -rf bin/
+	rm -rf build/

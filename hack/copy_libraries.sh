@@ -18,7 +18,7 @@
 # PERFORMANCE OF THIS SOFTWARE.
 
 LIBRARY_PATH=/opt/runnc/lib/
-TARGET_BIN=bin/nabla-run
+TARGET_BIN=build/nabla-run
 
 mkdir -p ${LIBRARY_PATH}
 
