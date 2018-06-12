@@ -69,7 +69,7 @@ func main() {
 		flag.PrintDefaults()
 	}
 
-	nablarun := flag.String("nabla-run", "./nabla-run",
+	nablarun := flag.String("nabla-run", "/nabla-run",
 		"Path to desired nabla-run to use.")
 	unikernel := flag.String("unikernel", "./node.nablet",
 		"Unikernel executable file. It will be looked for in $PATH.")
@@ -87,6 +87,8 @@ func main() {
 		"'--volume <SRC>:<DST>'. "+
 			"<SRC> is the directory or device to mount, and <DST> "+
 			"is the path where it's going to be mounted in the unikernel.")
+	cwd := flag.String("cwd", "/",
+		"Current working directory. Defaults to /.")
 	flag.Var(&envVars, "env",
 		"Environment variable; add as many '-env A -env B' as needed")
 	flag.Parse()
@@ -106,13 +108,13 @@ func main() {
 	cmdargs := strings.Join(flag.Args(), " ")
 
 	os.Exit(run(*nablarun, *unikernel, *tap, ip, ipNet.Mask, gw,
-		*inDocker, vol, cmdargs, envVars))
+		*inDocker, vol, cmdargs, envVars, *cwd))
 }
 
 func run(nablarun string, unikernel string, tapName string,
 	ip net.IP, mask net.IPMask, gw net.IP,
 	inDocker bool, volume []string,
-	cmdargs string, envVars []string) int {
+	cmdargs string, envVars []string, cwd string) int {
 
 	disk, err := setupDisk(volume[0])
 	if err != nil {
@@ -147,7 +149,7 @@ func run(nablarun string, unikernel string, tapName string,
 	}
 
 	unikernelArgs, err := CreateRumprunArgs(ip, mask, gw, volume[1],
-		envVars, unikernel, cmdargs)
+		envVars, cwd, unikernel, cmdargs)
 	if err != nil {
 		fmt.Fprintf(os.Stderr,
 			"Could not create the unikernel cmdline: %v\n", err)
@@ -162,20 +164,20 @@ func run(nablarun string, unikernel string, tapName string,
 
 	fmt.Printf("%s\n", args)
 
-    // Set LD_LIBRARY_PATH to our dynamic libraries
+	// Set LD_LIBRARY_PATH to our dynamic libraries
 	env := os.Environ()
 
-    newenv := make([]string, 0, len(env))
-    for _, v := range env {
-        if strings.HasPrefix(v, "LD_LIBRARY_PATH=") {
-            continue
-        } else {
-            newenv = append(newenv, v)
-        }
-    }
-    newenv =  append(newenv, "LD_LIBRARY_PATH=/lib64")
+	newenv := make([]string, 0, len(env))
+	for _, v := range env {
+		if strings.HasPrefix(v, "LD_LIBRARY_PATH=") {
+			continue
+		} else {
+			newenv = append(newenv, v)
+		}
+	}
+	newenv =  append(newenv, "LD_LIBRARY_PATH=/lib64")
 
-    err = syscall.Exec(nablarun, args, newenv)
+	err = syscall.Exec(nablarun, args, newenv)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Err from execve: %v\n", err)
 		return 1

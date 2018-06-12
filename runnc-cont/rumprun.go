@@ -48,7 +48,7 @@ type rumpArgsBlock struct {
 
 // CreateRumprunArgs returns the cmdline string for rumprun (a json)
 func CreateRumprunArgs(ip net.IP, mask net.IPMask, gw net.IP,
-	mountPoint string, envVars []string,
+	mountPoint string, envVars []string, cwd string,
 	unikernel string, cmdargs string) (string, error) {
 
 	net := rumpArgsNetwork{
@@ -63,6 +63,7 @@ func CreateRumprunArgs(ip net.IP, mask net.IPMask, gw net.IP,
 
 	ra := make(map[string]interface{})
 	cmdline := []string{unikernel, cmdargs}
+	ra["cwd"] = cwd
 	ra["cmdline"] = strings.Join(cmdline, " ")
 	ra["net"] = net
 	if mountPoint != "" {
@@ -84,7 +85,7 @@ func CreateRumprunArgs(ip net.IP, mask net.IPMask, gw net.IP,
 
 	if len(envVars) > 1 {
 		fmt.Fprintf(os.Stderr,
-			"All -env values after the first will be ignored.")
+			"All -env values after the first will be ignored.\n")
 	}
 
 	b, err := json.Marshal(ra)

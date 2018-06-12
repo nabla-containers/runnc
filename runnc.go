@@ -200,6 +200,7 @@ func modEntrypoint(s *spec.Spec) error {
 	}
 
 	args := []string{"/runnc-cont", "-docker",
+		"-cwd", s.Process.Cwd,
 		"-volume", "/rootfs.iso:/",
 		"-unikernel", s.Process.Args[0]}
 
