@@ -165,7 +165,7 @@ func addNablaBinaries(bundlePath string, s *spec.Spec) error {
 		return err
 	}
 
-	if err := utils.Copy(libDstPath, libSrcPath) ; err != nil {
+	if err := utils.Copy(libDstPath, libSrcPath); err != nil {
 		return err
 	}
 

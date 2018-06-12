@@ -175,7 +175,7 @@ func run(nablarun string, unikernel string, tapName string,
 			newenv = append(newenv, v)
 		}
 	}
-	newenv =  append(newenv, "LD_LIBRARY_PATH=/lib64")
+	newenv = append(newenv, "LD_LIBRARY_PATH=/lib64")
 
 	err = syscall.Exec(nablarun, args, newenv)
 	if err != nil {
