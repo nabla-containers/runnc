@@ -117,7 +117,7 @@ func CreateRumprunArgs(ip net.IP, mask net.IPMask, gw net.IP,
 
 	cmdline := []string{unikernel, cmdargs}
 	ra := &rumpArgs{
-		//Cwd: cwd,
+		Cwd: cwd,
 		Cmdline: strings.Join(cmdline, " "),
 		Net:     net,
 	}
