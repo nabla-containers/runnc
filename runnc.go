@@ -155,7 +155,7 @@ func addNablaBinaries(bundlePath string, s *spec.Spec) error {
 
 	ukvmBinDstPath := filepath.Join(rootfsPath, "nabla-run")
 	nablaRunDstPath := filepath.Join(rootfsPath, "runnc-cont")
-    libDstPath := filepath.Join(rootfsPath, "/lib64")
+	libDstPath := filepath.Join(rootfsPath, "/lib64")
 
 	if err := utils.Copy(ukvmBinDstPath, ukvmBinSrcPath); err != nil {
 		return err
@@ -165,7 +165,7 @@ func addNablaBinaries(bundlePath string, s *spec.Spec) error {
 		return err
 	}
 
-    if err := utils.Copy(libDstPath, libSrcPath) ; err != nil {
+	if err := utils.Copy(libDstPath, libSrcPath) ; err != nil {
 		return err
 	}
 
@@ -199,16 +199,16 @@ func modEntrypoint(s *spec.Spec) error {
 		return fmt.Errorf("OCI process args are empty")
 	}
 
-	// Set cwd to root
-	if s.Process.Cwd != "/" {
-		log.Printf("Currently, CWD is not supported, ignoring and setting to /")
-	}
-	s.Process.Cwd = "/"
-
-	args := append([]string{"/runnc-cont", "-docker",
+	args := []string{"/runnc-cont", "-docker",
 		"-volume", "/rootfs.iso:/",
-		"-unikernel", s.Process.Args[0], "--"},
-		s.Process.Args[1:]...)
+		"-unikernel", s.Process.Args[0]}
+
+	for _, e := range s.Process.Env {
+		args = append(args, "-env", e)
+	}
+
+	args = append(args, "--")
+	args = append(args, s.Process.Args[1:]...)
 
 	s.Process.Args = args
 
@@ -280,7 +280,7 @@ func main() {
 				bundlePath := args[i+1]
 				log.Printf("Bundle: %v\n\n", bundlePath)
 				if err := bundleMod(bundlePath); err != nil {
-                    log.Printf("ERROR: %v", err)
+					log.Printf("ERROR: %v", err)
 					panic(err)
 				}
 				break
