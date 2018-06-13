@@ -39,13 +39,13 @@ build/nabla-run:
 	wget -nc http://${RELEASE_SERVER}/nabla-build/nabla-run -O $@ && chmod +x $@
 
 tests/integration/node.nabla: 
-	wget -nc http://${RELEASE_SERVER}/nabla-build/nabla-run -O $@ && chmod +x $@
+	wget -nc http://${RELEASE_SERVER}/nabla-build/node.nabla -O $@ && chmod +x $@
 
 tests/integration/test_hello.nabla: 
-	wget -nc http://${RELEASE_SERVER}/nabla-build/nabla-run -O $@ && chmod +x $@
+	wget -nc http://${RELEASE_SERVER}/nabla-build/test_hello.nabla -O $@ && chmod +x $@
 
 tests/integration/test_curl.nabla: 
-	wget -nc http://${RELEASE_SERVER}/nabla-build/nabla-run -O $@ && chmod +x $@
+	wget -nc http://${RELEASE_SERVER}/nabla-build/test_curl.nabla -O $@ && chmod +x $@
 
 preinstall: build
 	sudo hack/copy_binaries.sh
