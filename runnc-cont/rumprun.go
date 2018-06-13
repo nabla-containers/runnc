@@ -46,11 +46,11 @@ type rumpArgsBlock struct {
 }
 
 type rumpArgs struct {
-	Cwd     string          `json:"cwd,omitempty"`
 	Cmdline string          `json:"cmdline"`
 	Net     rumpArgsNetwork `json:"net"`
-	Blk     rumpArgsBlock   `json:"blk,omitempty"`
+	Blk     *rumpArgsBlock  `json:"blk,omitempty"`
 	Env     []string        `json:"env,omitempty"`
+	Cwd     string          `json:"cwd,omitempty"`
 }
 
 // Overwrite the rumprum args marshalling since rump expects multiple env
@@ -128,12 +128,9 @@ func CreateRumprunArgs(ip net.IP, mask net.IPMask, gw net.IP,
 			Fstype: "blk",
 			Mount:  mountPoint,
 		}
-		ra.Blk = block
+		ra.Blk = &block
 	}
 
-	// XXX: Unfortunately the rumprun JSON takes multiple "env" keys which
-	// is not valid JSON (at least here in golang). So for now, just take
-	// the first one (if any).
 	if len(envVars) > 0 {
 		ra.Env = envVars
 	}
