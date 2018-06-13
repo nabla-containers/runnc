@@ -51,7 +51,7 @@ function docker_node_nabla_run() {
 	[ "$status" -eq 0 ]
 }
 
-@test "test node-hello docker" {
+@test "test node-hello runnc" {
 	local-test
 
 	run sudo docker run --rm --runtime=runnc nablact/nabla-node:test /hello/app.js
@@ -60,7 +60,7 @@ function docker_node_nabla_run() {
 }
 
 @test "test node-env" {
-	nabla_run -unikernel node.nabla -env NABLA_ENV_TEST=blableblibloblu -volume node_tests.iso:/hello -- /hello/env.js
+	nabla_run -unikernel node.nabla -env BLA=bla -env NABLA_ENV_TEST=blableblibloblu -env BLE=ble -volume node_tests.iso:/hello -- /hello/env.js
 	echo "$output"
 	[[ "$output" == *"env=blableblibloblu"* ]]
 	[ "$status" -eq 0 ]
@@ -94,7 +94,7 @@ function docker_node_nabla_run() {
 	[ "$status" -eq 0 ]
 }
 
-@test "test hello docker" {
+@test "test hello runnc" {
 	local-test
 
 	run sudo docker run --rm --runtime=runnc nablact/nabla-hello:test /test_hello.nabla 
@@ -102,7 +102,7 @@ function docker_node_nabla_run() {
 	[ "$status" -eq 0 ]
 }
 
-@test "test hello docker with arg" {
+@test "test hello runnc with arg" {
 	local-test
 
 	run sudo docker run --rm --runtime=runnc nablact/nabla-hello:test /test_hello.nabla hola
@@ -111,7 +111,7 @@ function docker_node_nabla_run() {
 	[ "$status" -eq 0 ]
 }
 
-@test "test hello docker with json arg" {
+@test "test hello runnc with json arg" {
 	local-test
 
 	run sudo docker run --rm --runtime=runnc nablact/nabla-hello:test /test_hello.nabla {\"bla\":\"ble\"}
@@ -120,7 +120,7 @@ function docker_node_nabla_run() {
 	[ "$status" -eq 0 ]
 }
 
-@test "test node-env docker" {
+@test "test node-env runnc" {
 	local-test
 
 	# env.js just prints the NABLA_ENV_TEST environment variable
@@ -153,7 +153,7 @@ function docker_node_nabla_run() {
 	[ "$status" -eq 0 ]
 }
 
-@test "test curl docker" {
+@test "test curl runnc" {
 	local-test
 
 	(
