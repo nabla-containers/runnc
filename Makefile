@@ -38,6 +38,15 @@ build/runnc-cont: runnc-cont/*
 build/nabla-run: 
 	wget -nc http://${RELEASE_SERVER}/nabla-build/nabla-run -O $@ && chmod +x $@
 
+tests/integration/node.nabla: 
+	wget -nc http://${RELEASE_SERVER}/nabla-build/nabla-run -O $@ && chmod +x $@
+
+tests/integration/test_hello.nabla: 
+	wget -nc http://${RELEASE_SERVER}/nabla-build/nabla-run -O $@ && chmod +x $@
+
+tests/integration/test_curl.nabla: 
+	wget -nc http://${RELEASE_SERVER}/nabla-build/nabla-run -O $@ && chmod +x $@
+
 preinstall: build
 	sudo hack/copy_binaries.sh
 	sudo hack/copy_libraries.sh
@@ -45,15 +54,20 @@ preinstall: build
 .PHONY: test,container-integration-test,local-integration-test,integration
 test: integration
 
+test_images: \
+tests/integration/node.nabla \
+tests/integration/test_hello.nabla \
+tests/integration/test_curl.nabla
+
 integration: local-integration-test container-integration-test
 
 test/integration/node_tests.iso:
 	make -C tests/integration
 
-local-integration-test: test/integration/node_tests.iso
+local-integration-test: test_images test/integration/node_tests.iso
 	sudo tests/bats-core/bats -p tests/integration
 
-container-integration-test:
+container-integration-test: test_images test/integration/node_tests.iso
 	sudo docker run -it --rm \
 		-v $(CURDIR)/build:/build \
 		-v $(CURDIR)/tests:/tests \
