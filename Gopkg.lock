@@ -2,6 +2,15 @@
 
 
 [[projects]]
+  branch = "master"
+  name = "github.com/nabla-containers/nabla-lib"
+  packages = [
+    "network",
+    "storage"
+  ]
+  revision = "c66c7ee0f3eb791ef731e10948324356875b1bce"
+
+[[projects]]
   name = "github.com/opencontainers/runtime-spec"
   packages = ["specs-go"]
   revision = "4e3b9264a330d094b0386c3703c5f379119711e8"
@@ -24,22 +33,13 @@
 
 [[projects]]
   branch = "master"
-  name = "github.ibm.com/nabla-containers/nabla-lib"
-  packages = [
-    "network",
-    "storage"
-  ]
-  revision = "ad53f175ac9b797a29d64070f13b98062b946376"
-
-[[projects]]
-  branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix"]
-  revision = "bff228c7b664c5fce602223a05fb708fd8654986"
+  revision = "8ee9f3e146b708d082f4bab861e5759d1edf8c00"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "14897dace3cbebb14c742545bf7f0691e7bcc48dc52fb4858d683bba1f22f4f7"
+  inputs-digest = "7362e148699e0e541478a2c76e2945ae9dab3c06b04f35b33692b5a02e6c245e"
   solver-name = "gps-cdcl"
   solver-version = 1

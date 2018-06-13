@@ -31,7 +31,7 @@
 
 [[constraint]]
   branch = "master"
-  name = "github.ibm.com/nabla-containers/nabla-lib"
+  name = "github.com/nabla-containers/nabla-lib"
 
 [prune]
   go-tests = true

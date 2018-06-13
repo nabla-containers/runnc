@@ -20,8 +20,8 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.ibm.com/nabla-containers/nabla-lib/network"
-	"github.ibm.com/nabla-containers/nabla-lib/storage"
+	"github.com/nabla-containers/nabla-lib/network"
+	"github.com/nabla-containers/nabla-lib/storage"
 	"net"
 	"os"
 	"os/exec"
