@@ -17,11 +17,12 @@
 
 default: build
 
+# Synced relelase version to downlaod from
+RELEASE_VER=v0.1
+
 # Temporarily have server to download other binaries from, 
 # this will eventually be github release
-RELEASE_SERVER=9.12.247.246
-# Synced relelase version to downlaod from
-RELEASE_VER=NONE
+RELEASE_SERVER=https://github.com/nabla-containers/test-nablas/releases/download/${RELEASE_VER}/
 
 build: godep build/runnc build/runnc-cont build/nabla-run
 
@@ -36,16 +37,16 @@ build/runnc-cont: runnc-cont/*
 	GOOS=linux GOARCH=amd64 go build -ldflags "-linkmode external -extldflags -static" -o $@ ./runnc-cont
 
 build/nabla-run: 
-	wget -nc http://${RELEASE_SERVER}/nabla-build/nabla-run -O $@ && chmod +x $@
+	wget -nc http://9.12.247.246/nabla-build/nabla-run -O $@ && chmod +x $@
 
 tests/integration/node.nabla: 
-	wget -nc http://${RELEASE_SERVER}/nabla-build/node.nabla -O $@ && chmod +x $@
+	wget -nc ${RELEASE_SERVER}/node.nabla -O $@ && chmod +x $@
 
 tests/integration/test_hello.nabla: 
-	wget -nc http://${RELEASE_SERVER}/nabla-build/test_hello.nabla -O $@ && chmod +x $@
+	wget -nc ${RELEASE_SERVER}/test_hello.nabla -O $@ && chmod +x $@
 
 tests/integration/test_curl.nabla: 
-	wget -nc http://${RELEASE_SERVER}/nabla-build/test_curl.nabla -O $@ && chmod +x $@
+	wget -nc ${RELEASE_SERVER}/test_curl.nabla -O $@ && chmod +x $@
 
 preinstall: build
 	sudo hack/copy_binaries.sh
