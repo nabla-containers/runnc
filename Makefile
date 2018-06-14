@@ -20,9 +20,8 @@ default: build
 # Synced relelase version to downlaod from
 RELEASE_VER=v0.1
 
-# Temporarily have server to download other binaries from, 
-# this will eventually be github release
 RELEASE_SERVER=https://github.com/nabla-containers/test-nablas/releases/download/${RELEASE_VER}/
+SOLO5_RELEASE_SERVER=https://github.com/nabla-containers/solo5/releases/download/v0.2.2.1-seccomp/
 
 build: godep build/runnc build/runnc-cont build/nabla-run
 
@@ -36,14 +35,14 @@ build/runnc: runnc.go
 build/runnc-cont: runnc-cont/*
 	GOOS=linux GOARCH=amd64 go build -ldflags "-linkmode external -extldflags -static" -o $@ ./runnc-cont
 
-build/nabla-run: 
-	wget -nc http://9.12.247.246/nabla-build/nabla-run -O $@ && chmod +x $@
+build/nabla-run:
+	wget -nc ${SOLO5_RELEASE_SERVER}/nabla-run -O $@ && chmod +x $@
 
 tests/integration/node.nabla: 
 	wget -nc ${RELEASE_SERVER}/node.nabla -O $@ && chmod +x $@
 
 tests/integration/test_hello.nabla: 
-	wget -nc ${RELEASE_SERVER}/test_hello.nabla -O $@ && chmod +x $@
+	wget -nc ${SOLO5_RELEASE_SERVER}/test_hello.nabla -O $@ && chmod +x $@
 
 tests/integration/test_curl.nabla: 
 	wget -nc ${RELEASE_SERVER}/test_curl.nabla -O $@ && chmod +x $@
@@ -78,3 +77,7 @@ container-integration-test: test_images test/integration/node_tests.iso
 
 clean:
 	rm -rf build/
+	rm -f tests/integration/node.nabla \
+		tests/integration/test_hello.nabla \
+		tests/integration/test_curl.nabla
+
