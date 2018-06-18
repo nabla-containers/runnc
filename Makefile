@@ -26,6 +26,16 @@ SOLO5_RELEASE_SERVER=https://github.com/nabla-containers/solo5/releases/download
 
 build: godep build/runnc build/runnc-cont build/nabla-run
 
+container-build: 
+	sudo docker build . -f Dockerfile.build -t runnc-build
+	sudo docker run --rm -v ${PWD}:/go/src/github.com/nabla-containers/runnc -w /go/src/github.com/nabla-containers/runnc runnc-build make 
+
+container-install: 
+	sudo docker build . -f Dockerfile.build -t runnc-build
+	sudo docker run --rm -v /opt/runnc/lib/:/opt/runnc/lib/ -v /usr/local/bin:/usr/local/bin -v ${PWD}:/go/src/github.com/nabla-containers/runnc -w /go/src/github.com/nabla-containers/runnc runnc-build make install
+
+
+
 .PHONY: godep
 godep: 
 	dep ensure
@@ -48,7 +58,7 @@ tests/integration/test_hello.nabla:
 tests/integration/test_curl.nabla: 
 	wget -nc ${RELEASE_SERVER}/test_curl.nabla -O $@ && chmod +x $@
 
-preinstall: build
+install: build/runnc build/runnc-cont build/nabla-run
 	sudo hack/copy_binaries.sh
 	sudo hack/copy_libraries.sh
 
@@ -77,7 +87,7 @@ container-integration-test: test_images test/integration/node_tests.iso
 		ubuntu:16.04 /tests/bats-core/bats -p /tests/integration
 
 clean:
-	rm -rf build/
+	sudo rm -rf build/
 	rm -f tests/integration/node.nabla \
 		tests/integration/test_hello.nabla \
 		tests/integration/test_curl.nabla

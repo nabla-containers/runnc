@@ -1,12 +1,31 @@
-## Get started with the go repo!
+# Runnc
+
+`runnc` is the nabla-container runtime which interfaces with the container OCI runtime spec to create a nabla-container runtime. The runtime currently re-uses functionality from `runc` for some setup steps, but will eventually be self-sufficient in providing nabla-container equivalent setups.
+
+## Getting started with the go repo!
+
+1. Ensure that your `GOPATH` is set. (https://github.com/golang/go/wiki/SettingGOPATH)
+2. Go get the repo `go get github.com/nabla-containers/runnc`
+3. Install genisoimage on host `sudo apt install genisoimage`
+
+## Build and Install Runnc
+
+We have created two ways to build and install `runnc`. You may build inside a container, or perform a local build.
+
+
+### Build with a container
 ```
-a. Ensure that your `GOPATH` is set. (https://github.com/golang/go/wiki/SettingGOPATH)
-b. Go get the repo (`go get github.com/nabla-containers/runnc`).
+# Go to the repo
+cd $GOPATH/src/github.com/nabla-containers/runnc
+
+# make container-build to build runnc. 
+make container-build
+
+# make container-install to install runnc 
+make container-install
 ```
 
-## Install Runnc
-
-1. Make binaries and copy to bin dir
+### Build locally
 ```
 # Go to the repo
 cd $GOPATH/src/github.com/nabla-containers/runnc
@@ -14,14 +33,21 @@ cd $GOPATH/src/github.com/nabla-containers/runnc
 # Get the neceesary binaries for the runtime
 make build
 
-# Install genisoimage on host
-sudo apt install genisoimage
+# Install libseccomp on the host 
+sudo apt install libseccomp-dev
 
 # Install the appropriate binaries/libraries
-make preinstall
+make install
 ```
 
-2. Modify to add runtime to `/etc/docker/daemon.json`, for example:
+## Configure Docker to use new Runtime
+
+0. Install genisoimage on host
+```
+sudo apt install genisoimage
+```
+
+1. Modify to add runtime to `/etc/docker/daemon.json`, for example:
 ```
 {
     "runtimes": {
@@ -32,10 +58,14 @@ make preinstall
 }
 ```
 
-3. Restart docker 
+2. Restart docker 
 
-```systemctl restart docker```
+```
+systemctl restart docker
+```
 
-4. Run with runtime:
+3. Run with runtime:
 
-```sudo docker run --rm --runtime=runnc nablact/nabla-node-base```
+```
+sudo docker run --rm --runtime=runnc nablact/nabla-node-base
+```
