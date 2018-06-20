@@ -29,6 +29,14 @@
   name = "github.com/opencontainers/runtime-spec"
   version = "1.0.1"
 
+[[constraint]]
+  name = "github.com/vishvananda/netlink"
+  version = "1.0.0"
+
+[[constraint]]
+  branch = "master"
+  name = "golang.org/x/sys"
+
 [prune]
   go-tests = true
   unused-packages = true
