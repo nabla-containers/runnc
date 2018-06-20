@@ -21,7 +21,7 @@ import (
 	"encoding/json"
 	"fmt"
 	spec "github.com/opencontainers/runtime-spec/specs-go"
-	"github.com/nabla-containers/nabla-lib/storage"
+	"github.com/nabla-containers/runnc/nabla-lib/storage"
 	"github.com/nabla-containers/runnc/utils"
 	"io/ioutil"
 	"log"

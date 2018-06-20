@@ -47,7 +47,7 @@ build/runnc-cont: runnc-cont/*
 	GOOS=linux GOARCH=amd64 go build -ldflags "-linkmode external -extldflags -static" -o $@ ./runnc-cont
 
 build/nabla-run: Makefile
-	wget -nc ${SOLO5_RELEASE_SERVER}/nabla-run -O $@ && chmod +x $@
+	wget -N ${SOLO5_RELEASE_SERVER}/nabla-run -O $@ && chmod +x $@
 
 tests/integration/node.nabla: 
 	wget -nc ${RELEASE_SERVER}/node.nabla -O $@ && chmod +x $@

@@ -22,7 +22,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/nabla-containers/nabla-lib/network"
+	"github.com/nabla-containers/runnc/nabla-lib/network"
 	"net"
 	"strconv"
 	"strings"
