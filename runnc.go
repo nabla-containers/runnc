@@ -217,6 +217,24 @@ func modEntrypoint(s *spec.Spec) error {
 
 }
 
+func modDevicePermissions(s *spec.Spec) error {
+
+	if s.Linux == nil || s.Linux.Resources == nil {
+		return fmt.Errorf("Spec linux.resources is empty")
+	}
+
+	devs := []spec.LinuxDeviceCgroup{
+			{
+				Allow:  true,
+				Access: "rwm",
+			},
+		}
+
+	s.Linux.Resources.Devices = devs
+
+	return nil
+}
+
 // bundleMod modifies the bundle (config.json and associated rootfs)
 // of the OCI runtime spec for the use with nabla containers
 func bundleMod(bundlePath string) error {
@@ -229,6 +247,10 @@ func bundleMod(bundlePath string) error {
 	// Modify the spec to add caps
 	log.Printf("Adding NET_ADMIN to spec")
 	if err = addNetAdmin(spec); err != nil {
+		return err
+	}
+
+	if err = modDevicePermissions(spec); err != nil {
 		return err
 	}
 
@@ -257,6 +279,7 @@ func bundleMod(bundlePath string) error {
 
 	return nil
 }
+
 func main() {
 	// Create logfile (temp fix)
 	LogFile, err := os.OpenFile(LogFilePath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)

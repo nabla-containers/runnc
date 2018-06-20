@@ -122,17 +122,23 @@ func run(nablarun string, unikernel string, tapName string,
 		return 1
 	}
 
+	var mac string
+
 	if inDocker {
 		// The tap device will get the IP assigned to the Docker
 		// container veth pair.
-		ip, gw, mask, err = network.CreateTapInterfaceDocker(tapName, "eth0")
+		ip, gw, mask, mac, err = network.CreateMacvtapInterfaceDocker(&tapName, "eth0")
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Could not create %s: %v\n", tapName, err)
+			return 1
+		}
 	} else {
 		err = network.CreateTapInterface(tapName, gw, mask)
-	}
-	if err != nil {
-		// Ignore networking related errors (i.e., like if the TAP
-		// already exists).
-		fmt.Fprintf(os.Stderr, "Could not create the TAP: %v\n", err)
+		if err != nil {
+			// Ignore networking related errors (i.e., like if the TAP
+			// already exists).
+			fmt.Fprintf(os.Stderr, "Could not create %s: %v\n", tapName, err)
+		}
 	}
 
 	_, err = os.Stat(unikernel)
@@ -156,11 +162,21 @@ func run(nablarun string, unikernel string, tapName string,
 		return 1
 	}
 
-	args := []string{nablarun,
-		"--net=" + tapName,
-		"--disk=" + disk,
-		unikernel,
-		unikernelArgs}
+	var args []string
+	if mac != "" {
+		args = []string{nablarun,
+			"--net-mac=" + mac,
+			"--net=" + tapName,
+			"--disk=" + disk,
+			unikernel,
+			unikernelArgs}
+	} else {
+		args = []string{nablarun,
+			"--net=" + tapName,
+			"--disk=" + disk,
+			unikernel,
+			unikernelArgs}
+	}
 
 	fmt.Printf("%s\n", args)
 
