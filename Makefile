@@ -19,7 +19,7 @@ default: build
 
 # Synced relelase version to downlaod from
 RELEASE_VER=v0.1
-SOLO5_RELEASE_VER=v0.2.2.1-seccomp
+SOLO5_RELEASE_VER=v0.2.2.2-seccomp
 
 RELEASE_SERVER=https://github.com/nabla-containers/nabla-base-build/releases/download/${RELEASE_VER}/
 SOLO5_RELEASE_SERVER=https://github.com/nabla-containers/solo5/releases/download/${SOLO5_RELEASE_VER}/
