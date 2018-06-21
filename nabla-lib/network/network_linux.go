@@ -1,6 +1,12 @@
 // Copyright (c) 2018, IBM
 // Author(s): Brandon Lum, Ricardo Koller
 //
+// SPDX-License-Identifier: ISC
+//
+// Copyright (c) 2016 Intel Corporation
+//
+// SPDX-License-Identifier: Apache-2.0
+//
 // Permission to use, copy, modify, and/or distribute this software for
 // any purpose with or without fee is hereby granted, provided that the
 // above copyright notice and this permission notice appear in all
@@ -85,9 +91,10 @@ func CreateTapInterface(tapName string, ip net.IP, mask net.IPMask) error {
 	return nil
 }
 
-// CreateTapInterfaceDocker creates a new Macvtap interface.  Returns the
-// assigned IP/mask and gateway IP (previously owned by master) and the MAC of
-// the Macvtap interface that's has to be used by the unikernel's NIC.
+// CreateMacvtapInterfaceDocker creates a Macvtap interface associated with
+// master (usually "eth0").  Returns the assigned IP/mask and gateway IP
+// (previously owned by master) and the MAC of the Macvtap interface that has
+// to be used by the unikernel's NIC.
 //
 // Got the idea of using macvtap's and the fix for the inability to get the
 // right index in a network namespace from the Kata containers repository:
