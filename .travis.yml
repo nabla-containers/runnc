@@ -1,0 +1,39 @@
+# Copyright (c) 2018, IBM
+# Copyright 2012-2015 Docker, Inc.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+# Based on the opencontainers/runc .travis.yml file.
+
+language: go
+go:
+  - 1.8.x
+  - tip
+
+matrix:
+  allow_failures:
+    - go: tip
+
+go_import_path: github.com/nabla-containers/runnc
+
+sudo: required
+services:
+  - docker
+
+before_install:
+  - echo "deb http://archive.ubuntu.com/ubuntu trusty-backports main restricted universe multiverse" | sudo tee -a /etc/apt/sources.list
+  - sudo apt-get -qq update
+  - sudo apt-get install -y libseccomp-dev/trusty-backports genisoimage
+  - go get -u github.com/golang/lint/golint
+  - go get -u github.com/vbatts/git-validation
+  - go get -u github.com/opencontainers/runtime-spec/specs-go
+  - go get -u github.com/vishvananda/netlink
+  - env | grep TRAVIS_
+
+script:
+  - git-validation -run DCO,short-subject -v
+  - make build/runnc build/runnc-cont build/nabla-run
+  - make install
+  - echo '{"runtimes":{"runnc":{"path":"/usr/local/bin/runnc"}}}' | sudo tee /etc/docker/daemon.json
+  - sudo service docker restart
+  - make local-integration-test
