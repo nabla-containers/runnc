@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/nabla-containers/runnc.svg?branch=master)](https://travis-ci.org/nabla-containers/runnc)
 [![Go Report Card](https://goreportcard.com/badge/github.com/nabla-containers/runnc)](https://goreportcard.com/report/github.com/nabla-containers/runnc)
 
 # Runnc
