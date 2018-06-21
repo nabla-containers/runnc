@@ -19,10 +19,8 @@ default: build
 
 # Synced relelase version to downlaod from
 RELEASE_VER=v0.1
-SOLO5_RELEASE_VER=v0.2.2.2-seccomp
 
 RELEASE_SERVER=https://github.com/nabla-containers/nabla-base-build/releases/download/${RELEASE_VER}/
-SOLO5_RELEASE_SERVER=https://github.com/nabla-containers/solo5/releases/download/${SOLO5_RELEASE_VER}/
 
 build: godep build/runnc build/runnc-cont build/nabla-run
 
@@ -46,14 +44,22 @@ build/runnc: runnc.go
 build/runnc-cont: runnc-cont/*
 	GOOS=linux GOARCH=amd64 go build -ldflags "-linkmode external -extldflags -static" -o $@ ./runnc-cont
 
-build/nabla-run: Makefile
-	wget -N ${SOLO5_RELEASE_SERVER}/nabla-run -O $@ && chmod +x $@
+solo5/ukvm/ukvm-bin: FORCE
+	make -C solo5 ukvm
+
+solo5/tests/test_hello/test_hello.ukvm: FORCE
+	make -C solo5 ukvm
+
+.PHONY: FORCE
+
+build/nabla-run: solo5/ukvm/ukvm-bin
+	install -m 775 -D $< $@
 
 tests/integration/node.nabla: 
 	wget -nc ${RELEASE_SERVER}/node.nabla -O $@ && chmod +x $@
 
-tests/integration/test_hello.nabla: 
-	wget -nc ${SOLO5_RELEASE_SERVER}/test_hello.nabla -O $@ && chmod +x $@
+tests/integration/test_hello.nabla: solo5/tests/test_hello/test_hello.ukvm
+	install -m 664 -D $< $@
 
 tests/integration/test_curl.nabla: 
 	wget -nc ${RELEASE_SERVER}/test_curl.nabla -O $@ && chmod +x $@
@@ -91,4 +97,5 @@ clean:
 	rm -f tests/integration/node.nabla \
 		tests/integration/test_hello.nabla \
 		tests/integration/test_curl.nabla
+	make -C solo5 clean
 
