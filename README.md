@@ -1,3 +1,5 @@
+[![Go Report Card](https://goreportcard.com/badge/github.com/nabla-containers/runnc)](https://goreportcard.com/report/github.com/nabla-containers/runnc)
+
 # Runnc
 
 `runnc` is the nabla-container runtime which interfaces with the container OCI runtime spec to create a nabla-container runtime. The runtime currently re-uses functionality from `runc` for some setup steps, but will eventually be self-sufficient in providing nabla-container equivalent setups.
