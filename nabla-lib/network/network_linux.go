@@ -23,13 +23,13 @@ import (
 	"fmt"
 	"github.com/vishvananda/netlink"
 	"golang.org/x/sys/unix"
+	"io/ioutil"
+	"math/rand"
 	"net"
 	"os"
-	"math/rand"
-	"time"
-	"io/ioutil"
-	"strings"
 	"strconv"
+	"strings"
+	"time"
 )
 
 // CreateBridge creates and returns a netklink.Bridge
@@ -92,7 +92,7 @@ func CreateTapInterface(tapName string, ip net.IP, mask net.IPMask) error {
 // Got the idea of using macvtap's and the fix for the inability to get the
 // right index in a network namespace from the Kata containers repository:
 // https://github.com/kata-containers/runtime/blob/593bd44f207aa7b21e561184ca1b3fb79da47eb6/virtcontainers/network.go
-// 
+//
 func CreateMacvtapInterfaceDocker(tapName *string, master string) (
 	net.IP, net.IP, net.IPMask, string, error) {
 
@@ -189,7 +189,7 @@ func CreateMacvtapInterfaceDocker(tapName *string, master string) (
 	tapMac := _macvtapLink.Attrs().HardwareAddr.String()
 
 	d := fmt.Sprintf("/sys/devices/virtual/net/%s/tap%d/dev",
-				name, macvtapLink.Attrs().Index)
+		name, macvtapLink.Attrs().Index)
 	b, err := ioutil.ReadFile(d)
 	if err != nil {
 		return nil, nil, nil, "", err
@@ -209,7 +209,7 @@ func CreateMacvtapInterfaceDocker(tapName *string, master string) (
 	fmt.Printf("%s = %d %d\n", string(b), major, minor)
 
 	err = unix.Mknod(*tapName, unix.S_IFCHR|0600,
-			int(unix.Mkdev(uint32(major), uint32(minor))))
+		int(unix.Mkdev(uint32(major), uint32(minor))))
 	if err != nil {
 		return nil, nil, nil, "", err
 	}
@@ -301,7 +301,7 @@ func SetupTunDev() error {
 	if err := verifyTunDevice(); err != nil {
 		if err = createTunDevice(); err != nil {
 			return fmt.Errorf("Unable to create /dev/net/tun: %v",
-						err)
+				err)
 		}
 	} else {
 		return nil

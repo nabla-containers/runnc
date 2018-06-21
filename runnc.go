@@ -20,9 +20,9 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	spec "github.com/opencontainers/runtime-spec/specs-go"
 	"github.com/nabla-containers/runnc/nabla-lib/storage"
 	"github.com/nabla-containers/runnc/utils"
+	spec "github.com/opencontainers/runtime-spec/specs-go"
 	"io/ioutil"
 	"log"
 	"os"
@@ -224,11 +224,11 @@ func modDevicePermissions(s *spec.Spec) error {
 	}
 
 	devs := []spec.LinuxDeviceCgroup{
-			{
-				Allow:  true,
-				Access: "rwm",
-			},
-		}
+		{
+			Allow:  true,
+			Access: "rwm",
+		},
+	}
 
 	s.Linux.Resources.Devices = devs
 

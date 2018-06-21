@@ -34,28 +34,27 @@ func CreateDummy() (string, error) {
 	return file.Name(), nil
 }
 
-
 // CreateIso creates an ISO from the dir argument
 func CreateIso(dir string) (string, error) {
 	f, err := ioutil.TempFile("/tmp", "nabla")
 	if err != nil {
 		return "", err
 	}
-    
-    fname := f.Name()
-    if err := f.Close(); err != nil {
-        return "", err
-    }
+
+	fname := f.Name()
+	if err := f.Close(); err != nil {
+		return "", err
+	}
 
 	absDir, err := filepath.Abs(dir)
 	if err != nil {
 		return "", err
 	}
 
-    cmd := exec.Command("genisoimage", "-l", "-r", "-o", fname, absDir)
+	cmd := exec.Command("genisoimage", "-l", "-r", "-o", fname, absDir)
 	err = cmd.Run()
 	if err != nil {
-		return  "", err
+		return "", err
 	}
 
 	return fname, nil
