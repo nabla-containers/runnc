@@ -26,6 +26,7 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"strconv"
 	"syscall"
 )
 
@@ -81,6 +82,8 @@ func main() {
 		"Mask v4 (defaults to 24)")
 	gwv4 := flag.String("gwv4", "10.0.0.1",
 		"Gateway v4 (defaults to 10.0.0.1")
+	mem := flag.Int("mem", 512,
+		"Max memory size in MBs (defaults to 512)")
 	inDocker := flag.Bool("docker", false,
 		"Is this running in a Docker container")
 	volume := flag.String("volume", ":",
@@ -108,13 +111,13 @@ func main() {
 	cmdargs := strings.Join(flag.Args(), " ")
 
 	os.Exit(run(*nablarun, *unikernel, *tap, ip, ipNet.Mask, gw,
-		*inDocker, vol, cmdargs, envVars, *cwd))
+		*inDocker, vol, cmdargs, envVars, *cwd, *mem))
 }
 
 func run(nablarun string, unikernel string, tapName string,
 	ip net.IP, mask net.IPMask, gw net.IP,
 	inDocker bool, volume []string,
-	cmdargs string, envVars []string, cwd string) int {
+	cmdargs string, envVars []string, cwd string, mem int) int {
 
 	disk, err := setupDisk(volume[0])
 	if err != nil {
@@ -165,6 +168,7 @@ func run(nablarun string, unikernel string, tapName string,
 	var args []string
 	if mac != "" {
 		args = []string{nablarun,
+			"--mem=" + strconv.Itoa(mem),
 			"--net-mac=" + mac,
 			"--net=" + tapName,
 			"--disk=" + disk,
@@ -172,6 +176,7 @@ func run(nablarun string, unikernel string, tapName string,
 			unikernelArgs}
 	} else {
 		args = []string{nablarun,
+			"--mem=" + strconv.Itoa(mem),
 			"--net=" + tapName,
 			"--disk=" + disk,
 			unikernel,
