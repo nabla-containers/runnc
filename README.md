@@ -14,7 +14,7 @@
 
 Docker major versions tested with:
 
-1. docker-ce 17
+- docker-ce 17
 
 ## Build and Install Runnc
 
