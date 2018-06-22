@@ -17,12 +17,28 @@
 
 default: build
 
+SUBMOD_NEEDS_UPDATE=$(shell [ -z "`git submodule | grep "^ "`" ] && echo 1 || echo 0)
+
+ifeq ($(SUBMOD_NEEDS_UPDATE), 1)
+submodule_warning:
+	$(info #####################################################)
+	$(info # Warning: git submodule out of date!!!!            #)
+	$(info #          Please run `git submodule update --init` #)
+	$(info #####################################################)
+	$(info )
+	$(info Continuing in 5 seconds...)
+	$(shell	sleep 5)
+else
+submodule_warning:
+
+endif
+
 # Synced relelase version to downlaod from
 RELEASE_VER=v0.1
 
 RELEASE_SERVER=https://github.com/nabla-containers/nabla-base-build/releases/download/${RELEASE_VER}/
 
-build: godep build/runnc build/runnc-cont build/nabla-run
+build: submodule_warning godep build/runnc build/runnc-cont build/nabla-run
 
 container-build: 
 	sudo docker build . -f Dockerfile.build -t runnc-build
