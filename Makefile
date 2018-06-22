@@ -17,7 +17,7 @@
 
 default: build
 
-SUBMOD_NEEDS_UPDATE=$(shell [ -z "`git submodule | grep "^ "`" ] && echo 1 || echo 0)
+SUBMOD_NEEDS_UPDATE=$(shell [ -z "`git submodule | grep -v "^ "`" ] && echo 0 || echo 1)
 
 ifeq ($(SUBMOD_NEEDS_UPDATE), 1)
 submodule_warning:
