@@ -26,8 +26,7 @@ submodule_warning:
 	$(info #          Please run `git submodule update --init` #)
 	$(info #####################################################)
 	$(info )
-	$(info Continuing in 5 seconds...)
-	$(shell	sleep 5)
+	$(shell	read -p "Press ENTER to continue anyway..." _submodx)
 else
 submodule_warning:
 
