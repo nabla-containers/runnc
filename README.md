@@ -10,6 +10,11 @@
 1. Ensure that your `GOPATH` is set. (https://github.com/golang/go/wiki/SettingGOPATH)
 2. Go get the repo `go get github.com/nabla-containers/runnc`
 3. Install genisoimage on host `sudo apt install genisoimage`
+4. Ensure that docker is installed (docker-ce recent versions, i.e. v15 onwards)
+
+Docker major versions tested with:
+
+1. docker-ce 17
 
 ## Build and Install Runnc
 
