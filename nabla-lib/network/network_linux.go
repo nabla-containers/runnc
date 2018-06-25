@@ -213,8 +213,6 @@ func CreateMacvtapInterfaceDocker(tapName *string, master string) (
 		return nil, nil, nil, "", err
 	}
 
-	fmt.Printf("%s = %d %d\n", string(b), major, minor)
-
 	err = unix.Mknod(*tapName, unix.S_IFCHR|0600,
 		int(unix.Mkdev(uint32(major), uint32(minor))))
 	if err != nil {
