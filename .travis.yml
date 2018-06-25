@@ -26,8 +26,7 @@ before_install:
   - sudo apt-get install -y libseccomp-dev/trusty-backports genisoimage
   - go get -u github.com/golang/lint/golint
   - go get -u github.com/vbatts/git-validation
-  - go get -u github.com/opencontainers/runtime-spec/specs-go
-  - go get -u github.com/vishvananda/netlink
+  - go get -u github.com/golang/dep/cmd/dep
   - env | grep TRAVIS_
 
 script:
