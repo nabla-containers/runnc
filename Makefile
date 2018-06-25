@@ -54,10 +54,10 @@ container-install:
 godep: 
 	dep ensure
 
-build/runnc: runnc.go
+build/runnc: godep runnc.go
 	GOOS=linux GOARCH=amd64 go build -o $@ .
 
-build/runnc-cont: runnc-cont/*
+build/runnc-cont: godep runnc-cont/*
 	GOOS=linux GOARCH=amd64 go build -ldflags "-linkmode external -extldflags -static" -o $@ ./runnc-cont
 
 solo5/ukvm/ukvm-bin: FORCE
