@@ -52,7 +52,7 @@ func CreateIso(dir string) (string, error) {
 	}
 
 	cmd := exec.Command("genisoimage", "-m", "dev", "-m", "sys",
-			"-m", "proc", "-l", "-r", "-o", fname, absDir)
+		"-m", "proc", "-l", "-r", "-o", fname, absDir)
 	err = cmd.Run()
 	if err != nil {
 		return "", err

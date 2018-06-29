@@ -98,11 +98,9 @@ func writeSpec(bundlePath string, s *spec.Spec) error {
 	}
 	log.Printf("Write Spec bytes\n\n%v", string(specBytes))
 
-	if err = ioutil.WriteFile(specFile, specBytes, 0644); err != nil {
-		return err
-	}
+	err = ioutil.WriteFile(specFile, specBytes, 0644)
 
-	return nil
+	return err
 }
 
 // addRootfsISO creates an ISO from the rootfs of the target spec and adds it
@@ -165,11 +163,9 @@ func addNablaBinaries(bundlePath string, s *spec.Spec) error {
 		return err
 	}
 
-	if err := utils.Copy(libDstPath, libSrcPath); err != nil {
-		return err
-	}
+	err := utils.Copy(libDstPath, libSrcPath)
 
-	return nil
+	return err
 }
 
 func addNetAdmin(s *spec.Spec) error {
@@ -273,11 +269,9 @@ func bundleMod(bundlePath string) error {
 	}
 
 	// Output the spec
-	if err = writeSpec(bundlePath, spec); err != nil {
-		return err
-	}
+	err = writeSpec(bundlePath, spec)
 
-	return nil
+	return err
 }
 
 func main() {
