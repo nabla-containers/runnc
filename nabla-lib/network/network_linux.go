@@ -271,7 +271,6 @@ func CreateTapInterfaceDocker(tapName string, master string) (
 		return nil, nil, nil,
 			fmt.Errorf("no master interface: %v", err)
 	}
-	// add bhere
 	masterAddr, masterIP, masterMask, gwAddr, err := getMasterDetails(masterLink)
 	if err != nil {
 		return nil, nil, nil, err
