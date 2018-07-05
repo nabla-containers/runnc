@@ -213,6 +213,24 @@ func modEntrypoint(s *spec.Spec) error {
 
 }
 
+func checkHostNamespace(s *spec.Spec) error {
+	if s.Linux == nil {
+		return fmt.Errorf("Not a Linux Process")
+	}
+
+	if s.Linux.Namespaces == nil {
+		return fmt.Errorf("No namespace object")
+	}
+
+	for _, v := range s.Linux.Namespaces {
+		if v.Type == "network" && strings.Contains(v.Path, "default") {
+			return fmt.Errorf("Unable to use host network namespace")
+		}
+	}
+
+	return nil
+}
+
 func modDevicePermissions(s *spec.Spec) error {
 
 	if s.Linux == nil || s.Linux.Resources == nil {
@@ -237,6 +255,11 @@ func bundleMod(bundlePath string) error {
 	// Read the spec
 	spec, err := readSpec(bundlePath)
 	if err != nil {
+		return err
+	}
+
+	// Check for use of certain host namespaces
+	if err = checkHostNamespace(spec); err != nil {
 		return err
 	}
 
