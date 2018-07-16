@@ -77,3 +77,31 @@ systemctl restart docker
 ```
 sudo docker run --rm --runtime=runnc nablact/nabla-node-base
 ```
+
+## Limitations
+
+There are many. Some are fixable and being worked on, some are fixable but harder and will take some time, and some others are ones that we don't really know how to fix (or possibly not worth fixing).
+
+Here are some missing features that we are currently working on:
+- a golang base image
+- MirageOS and IncludeOS base images
+- base images for all the known apps that can run on rumprun (from rumprun-packages), like openjdk.
+- a writable file system. Currently only `/tmp` is writable.
+- support for committing the image
+- volumes (as in `docker -v /a:/a`)
+- not ignoring cgroups (start with the memory ones)
+- multiple network interfaces
+- not using `runc` as an intermediate step. Right now, `runnc` calls `runc` which then calls `nabla-run`
+
+These are some harder features (sorted from more to less important):
+- allow dynamic loading of libraries. The nabla runtime can only start static binaries and that seems to be OK for most things, but one big limitation is that python can't load modules with `.so`'s in them.
+- use something other than the rumprun netbsd libc: we could use LKL, or IncludeOS recent support for musl libc, or wrap the netbsd libc on something that looks like glibc
+- `mmap()` for sharing memory to/from another process (nabla and not nabla)
+- GPU support
+- support for custom/host namespaces
+- `docker exec`. What exactly would it run? what do people do for microcontainers (like an image with just one statically built go binary)
+- "real" TLS (Thread Local Storage) support. Right now, if you use the `pthread_key_create` call you won't be using real segment based TLS. Also, `__thread` is not supported.
+
+Harder limitations that we don't know how to fix (nor we don't know if they should be fixed):
+- support for running vanilla images. Currently nabla can only run nabla based images.
+- `fork()`. Should a nabla process fork another nabla process (unikernel)? a single unikernel can't run multiple address spaces
