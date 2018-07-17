@@ -195,6 +195,10 @@ func modEntrypoint(s *spec.Spec) error {
 		return fmt.Errorf("OCI process args are empty")
 	}
 
+	if !strings.HasSuffix(s.Process.Args[0], ".nabla") {
+		return fmt.Errorf("Entrypoint is not a .nabla file")
+	}
+
 	args := []string{"/runnc-cont", "-docker",
 		"-cwd", s.Process.Cwd,
 		"-volume", "/rootfs.iso:/",
