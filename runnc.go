@@ -326,6 +326,10 @@ func main() {
 	for i, v := range args {
 		if v == "--log" {
 			if i+1 < len(args) {
+                if strings.HasPrefix(args[i+1], "--") {
+					log.Fatalf("error parsing args")
+				}
+
 				logPath = args[i+1]
 				f, err := os.OpenFile(logPath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 				if err != nil {
