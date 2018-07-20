@@ -29,6 +29,8 @@ import (
 	"path/filepath"
 	"strings"
 	"syscall"
+
+	"github.com/sirupsen/logrus"
 )
 
 type config struct {
@@ -319,13 +321,44 @@ func main() {
 
 	Config.RuncBinaryPath = DefaultRuncBinaryPath
 
+	logPath := ""
+
+	for i, v := range args {
+		if v == "--log" {
+			if i+1 < len(args) {
+				logPath = args[i+1]
+				f, err := os.OpenFile(logPath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+				if err != nil {
+					log.Fatalf("error opening file: %v", err)
+				}
+
+				logrus.SetOutput(f)
+				logrus.SetFormatter(new(logrus.JSONFormatter))
+				defer f.Close()
+			} else {
+				panic("Unable to parse log path")
+			}
+		}
+
+		if v == "--log-format" {
+			if i+1 < len(args) {
+				if args[i+1] == "json" {
+					logrus.SetFormatter(new(logrus.JSONFormatter))
+				}
+			} else {
+				panic("Unable to parse log format")
+			}
+		}
+
+	}
+
 	for i, v := range args {
 		if v == "--bundle" {
 			if i+1 < len(args) {
 				bundlePath := args[i+1]
 				log.Printf("Bundle: %v\n\n", bundlePath)
 				if err := bundleMod(bundlePath); err != nil {
-					log.Printf("ERROR: %v", err)
+					logrus.Error(err.Error())
 					panic(err)
 				}
 				break
