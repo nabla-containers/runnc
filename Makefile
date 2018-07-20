@@ -52,7 +52,16 @@ container-install:
 godep: 
 	dep ensure
 
-build/runnc: godep runnc.go
+libisofs-1.4.8.tar.gz:
+	wget -nc http://files.libburnia-project.org/releases/libisofs-1.4.8.tar.gz
+
+libisofs-1.4.8/libisofs/.libs/libisofs.so: libisofs-1.4.8.tar.gz
+	tar xvf libisofs-1.4.8.tar.gz
+	cd libisofs-1.4.8 && ./bootstrap
+	cd libisofs-1.4.8 && ./configure --disable-libacl --disable-xattr --disable-zlib --disable-libjte
+	cd libisofs-1.4.8 && make
+
+build/runnc: godep runnc.go libisofs-1.4.8/libisofs/.libs/libisofs.so
 	GOOS=linux GOARCH=amd64 go build -o $@ .
 
 build/runnc-cont: godep runnc-cont/*
@@ -112,4 +121,3 @@ clean:
 		tests/integration/test_hello.nabla \
 		tests/integration/test_curl.nabla
 	sudo make -C solo5 clean
-
