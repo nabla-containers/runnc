@@ -20,8 +20,8 @@
 package storage
 
 /*
-#cgo CFLAGS: -I. -I../../libisofs-1.4.8
-#cgo LDFLAGS: -L/home/kollerr/go/src/github.com/nabla-containers/runnc/libisofs-1.4.8/libisofs/.libs -lisofs
+#cgo CFLAGS: -I.
+#cgo LDFLAGS: -L. -lisofs
 #define LIBISOFS_WITHOUT_LIBBURN yes
 #include <stdint.h>
 #include <libisofs/libisofs.h>
@@ -121,15 +121,6 @@ func CreateIso(dir string) (string, error) {
 
 	f.Sync()
 	return f.Name(), nil
-}
-
-// CreateDummy creates a dummy file in /tmp
-func CreateDummy() (string, error) {
-	file, err := ioutil.TempFile("/tmp", "nabla")
-	if err != nil {
-		return "", err
-	}
-	return file.Name(), nil
 }
 
 // CreateIso creates an ISO from the dir argument using
