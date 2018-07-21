@@ -23,7 +23,7 @@ services:
 before_install:
   - echo "deb http://archive.ubuntu.com/ubuntu trusty-backports main restricted universe multiverse" | sudo tee -a /etc/apt/sources.list
   - sudo apt-get -qq update
-  - sudo apt-get install -y libseccomp-dev/trusty-backports genisoimage
+  - sudo apt-get install -y libseccomp-dev/trusty-backports genisoimage libisofs-dev
   - go get -u github.com/golang/lint/golint
   - go get -u github.com/vbatts/git-validation
   - go get -u github.com/golang/dep/cmd/dep
