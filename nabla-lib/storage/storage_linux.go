@@ -38,9 +38,9 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os/exec"
+	"path"
 	"path/filepath"
 	"unsafe"
-	"path"
 )
 
 // CreateIso creates an ISO from the dir argument
@@ -83,9 +83,9 @@ func CreateIso(dir string) (string, error) {
 		return "", err
 	}
 
-	C.iso_tree_add_exclude(image, C.CString(path.Join(absDir, "dev")));
-	C.iso_tree_add_exclude(image, C.CString(path.Join(absDir, "sys")));
-	C.iso_tree_add_exclude(image, C.CString(path.Join(absDir, "proc")));
+	C.iso_tree_add_exclude(image, C.CString(path.Join(absDir, "dev")))
+	C.iso_tree_add_exclude(image, C.CString(path.Join(absDir, "sys")))
+	C.iso_tree_add_exclude(image, C.CString(path.Join(absDir, "proc")))
 
 	res = C.iso_tree_add_dir_rec(image,
 		C.iso_image_get_root(image),

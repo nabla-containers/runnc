@@ -328,7 +328,7 @@ func main() {
 	for i, v := range args {
 		if v == "--log" {
 			if i+1 < len(args) {
-                if strings.HasPrefix(args[i+1], "--") {
+				if strings.HasPrefix(args[i+1], "--") {
 					log.Fatalf("error parsing args")
 				}
 

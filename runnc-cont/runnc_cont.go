@@ -18,10 +18,10 @@
 package main
 
 import (
-	"io/ioutil"
 	"flag"
 	"fmt"
 	"github.com/nabla-containers/runnc/nabla-lib/network"
+	"io/ioutil"
 	"net"
 	"os"
 	"os/exec"
