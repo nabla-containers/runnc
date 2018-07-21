@@ -127,12 +127,14 @@ func addRootfsISO(bundlePath string, s *spec.Spec) error {
 
 	log.Printf("ISO: Created ISO %v", isoPath)
 	log.Printf("ISO: Target ISO %v", targetISOPath)
+
+	// Can't rename (mv), so we copy and then delete the source.
 	if err = utils.Copy(targetISOPath, isoPath); err != nil {
 		return err
 	}
-
-	// TODO: Delete old tmp iso or modify storage iso to create iso in specific
-	// directory
+	if err = os.Remove(isoPath); err != nil {
+		return err
+	}
 
 	return nil
 }
