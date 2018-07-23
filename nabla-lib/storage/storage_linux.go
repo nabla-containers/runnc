@@ -71,7 +71,6 @@ func CreateIso(dir string) (string, error) {
 	}
 
 	C.iso_tree_set_follow_symlinks(image, 0)
-	C.iso_tree_set_ignore_hidden(image, 1)
 	C.iso_tree_set_ignore_special(image, 1)
 
 	C.iso_set_abort_severity(C.CString("SORRY"))
