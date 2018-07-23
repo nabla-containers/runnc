@@ -33,6 +33,7 @@ script:
   - git-validation -run DCO,short-subject -v
   - make build/runnc build/runnc-cont build/nabla-run
   - git submodule update --init --recursive
+  - make build
   - make install
   - echo '{"runtimes":{"runnc":{"path":"/usr/local/bin/runnc"}}}' | sudo tee /etc/docker/daemon.json
   - sudo service docker restart

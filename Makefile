@@ -38,7 +38,7 @@ RELEASE_VER=v0.1
 
 RELEASE_SERVER=https://github.com/nabla-containers/nabla-base-build/releases/download/${RELEASE_VER}/
 
-build: submodule_warning godep build/runnc build/runnc-cont build/nabla-run
+build: submodule_warning godep build/runnc build/runnc-cont build/nabla-run test_images
 
 container-build: 
 	sudo docker build . -f Dockerfile.build -t runnc-build
@@ -47,8 +47,6 @@ container-build:
 container-install: 
 	sudo docker build . -f Dockerfile.build -t runnc-build
 	sudo docker run --rm -v /opt/runnc/lib/:/opt/runnc/lib/ -v /usr/local/bin:/usr/local/bin -v ${PWD}:/go/src/github.com/nabla-containers/runnc -w /go/src/github.com/nabla-containers/runnc runnc-build make install
-
-
 
 .PHONY: godep
 godep: 
@@ -97,10 +95,10 @@ integration: local-integration-test container-integration-test
 test/integration/node_tests.iso:
 	make -C tests/integration
 
-local-integration-test: test_images test/integration/node_tests.iso
+local-integration-test: test/integration/node_tests.iso
 	sudo tests/bats-core/bats -p tests/integration
 
-container-integration-test: test_images test/integration/node_tests.iso
+container-integration-test: test/integration/node_tests.iso
 	sudo docker run -it --rm \
 		-v $(CURDIR)/build:/build \
 		-v $(CURDIR)/tests:/tests \
@@ -113,5 +111,5 @@ clean:
 	rm -f tests/integration/node.nabla \
 		tests/integration/test_hello.nabla \
 		tests/integration/test_curl.nabla
-	make -C solo5 clean
+	sudo make -C solo5 clean
 
