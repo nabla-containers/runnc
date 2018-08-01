@@ -15,6 +15,7 @@
 Docker major versions tested with:
 
 - docker-ce 17
+- NOTE: Versions > 18.03-ce currently do not work. 
 
 ## Build and Install Runnc
 
