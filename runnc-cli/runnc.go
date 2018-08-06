@@ -80,13 +80,16 @@ func main() {
 		},
 	}
 	app.Commands = []cli.Command{
-		//		checkpointCommand,
+		// Implement essentials first (for baseic docker run to work)
 		createCommand,
-		//		deleteCommand,
+		deleteCommand,
+		stateCommand,
+		startCommand,
+		killCommand,
+		//		checkpointCommand,
 		//		eventsCommand,
 		//		execCommand,
 		//		initCommand,
-		//		killCommand,
 		//		listCommand,
 		//		pauseCommand,
 		//		psCommand,
@@ -94,8 +97,6 @@ func main() {
 		//		resumeCommand,
 		//		runCommand,
 		//		specCommand,
-		//		startCommand,
-		//		stateCommand,
 		//		updateCommand,
 	}
 	app.Before = func(context *cli.Context) error {
