@@ -52,8 +52,14 @@ to specify command(s) that get run when the container is started.
 	},
 	Action: func(context *cli.Context) error {
 		// TODO: Implement
-		status := -1
-
+		spec, err := setupSpec(context)
+		if err != nil {
+			return err
+		}
+		status, err := startContainer(context, spec, true)
+		if err != nil {
+			return err
+		}
 		// exit with the container's exit status so any external supervisor is
 		// notified of the exit with the correct exit status.
 		os.Exit(status)

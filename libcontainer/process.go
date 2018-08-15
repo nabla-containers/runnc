@@ -95,3 +95,29 @@ func (p Process) Signal(sig os.Signal) error {
 	}
 	return p.ops.signal(sig)
 }
+
+// IO holds the process's STDIO
+type IO struct {
+	Stdin  io.WriteCloser
+	Stdout io.ReadCloser
+	Stderr io.ReadCloser
+}
+
+// NewConsole creates new console for process and returns it
+func (p *Process) NewConsole(rootuid, rootgid int) (Console, error) {
+	console, err := NewConsole(rootuid, rootgid)
+	if err != nil {
+		return nil, err
+	}
+	p.consolePath = console.Path()
+	return console, nil
+}
+
+// ConsoleFromPath sets the process's console with the path provided
+func (p *Process) ConsoleFromPath(path string) error {
+	if p.consolePath != "" {
+		return fmt.Errorf("console path already exists for process")
+	}
+	p.consolePath = path
+	return nil
+}

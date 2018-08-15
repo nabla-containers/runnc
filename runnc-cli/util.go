@@ -1,8 +1,11 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"github.com/opencontainers/runtime-spec/specs-go"
 	"github.com/sirupsen/logrus"
+	"github.com/urfave/cli"
 	"os"
 )
 
@@ -13,4 +16,43 @@ func fatal(err error) {
 	logrus.Error(err)
 	fmt.Fprintln(os.Stderr, err)
 	os.Exit(1)
+}
+
+// setupSpec performs inital setup based on the cli.Context for the container
+func setupSpec(context *cli.Context) (*specs.Spec, error) {
+	bundle := context.String("bundle")
+	if bundle != "" {
+		if err := os.Chdir(bundle); err != nil {
+			return nil, err
+		}
+	}
+	spec, err := loadSpec(specConfig)
+	if err != nil {
+		return nil, err
+	}
+	notifySocket := os.Getenv("NOTIFY_SOCKET")
+	if notifySocket != "" {
+		setupSdNotify(spec, notifySocket)
+	}
+	if os.Geteuid() != 0 {
+		return nil, fmt.Errorf("runc should be run as root")
+	}
+	return spec, nil
+}
+
+// loadSpec loads the specification from the provided path.
+func loadSpec(cPath string) (spec *specs.Spec, err error) {
+	cf, err := os.Open(cPath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil, fmt.Errorf("JSON specification file %s not found", cPath)
+		}
+		return nil, err
+	}
+	defer cf.Close()
+
+	if err = json.NewDecoder(cf).Decode(&spec); err != nil {
+		return nil, err
+	}
+	return spec, validateProcessSpec(spec.Process)
 }

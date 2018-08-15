@@ -3,9 +3,9 @@
 package libcontainer
 
 import (
+	"github.com/nabla-containers/runnc/libcontainer/configs"
 	"os"
 	"regexp"
-    "github.com/nabla-containers/runnc/libcontainer/configs"
 )
 
 const (
@@ -27,8 +27,8 @@ func New(root string, options ...func(*NablaFactory) error) (Factory, error) {
 		}
 	}
 	l := &NablaFactory{
-		Root:      root,
-		InitArgs:  []string{"/proc/self/exe", "init"},
+		Root:     root,
+		InitArgs: []string{"/proc/self/exe", "init"},
 	}
 
 	for _, opt := range options {
@@ -50,15 +50,15 @@ type NablaFactory struct {
 }
 
 func (l *NablaFactory) Create(id string, config *configs.Config) (Container, error) {
-    return nil, nil
+	return nil, nil
 }
 
 func (l *NablaFactory) Load(id string) (Container, error) {
-    return nil, nil
+	return nil, nil
 }
 
-func (l *NablaFactory) StartInitialization () error {
-    return nil
+func (l *NablaFactory) StartInitialization() error {
+	return nil
 }
 
 func (l *NablaFactory) Type() string {
