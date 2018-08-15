@@ -33,6 +33,9 @@ func getContainer(context *cli.Context) (libcontainer.Container, error) {
     return factory.Load(id)
 }
 */
+
+
+// TODO(NABLA)
 func startContainer(context *cli.Context, spec *specs.Spec, create bool) (int, error) {
 	id := context.Args().First()
 	if id == "" {
@@ -59,6 +62,8 @@ func startContainer(context *cli.Context, spec *specs.Spec, create bool) (int, e
 	return r.run(spec.Process)
 }
 
+
+// TODO(NABLA)
 func createContainer(context *cli.Context, id string, spec *specs.Spec) (libcontainer.Container, error) {
 
 	config, err := configs.ParseSpec(spec)
@@ -120,6 +125,7 @@ func setupSdNotify(spec *specs.Spec, notifySocket string) {
 	spec.Process.Env = append(spec.Process.Env, fmt.Sprintf("NOTIFY_SOCKET=%s", notifySocket))
 }
 
+// TODO(NABLA)
 func validateProcessSpec(spec *specs.Process) error {
 	if spec.Cwd == "" {
 		return fmt.Errorf("Cwd property must not be empty")

@@ -18,6 +18,7 @@ var (
 	maxIdLen = 1024
 )
 
+// TODO(NABLA)
 // New returns a linux based container factory based in the root directory and
 // configures the factory with the provided option funcs.
 func New(root string, options ...func(*NablaFactory) error) (Factory, error) {
@@ -49,14 +50,17 @@ type NablaFactory struct {
 	InitArgs []string
 }
 
+// TODO(NABLA)
 func (l *NablaFactory) Create(id string, config *configs.Config) (Container, error) {
 	return nil, nil
 }
 
+// TODO(NABLA)
 func (l *NablaFactory) Load(id string) (Container, error) {
 	return nil, nil
 }
 
+// TODO(NABLA)
 func (l *NablaFactory) StartInitialization() error {
 	return nil
 }
