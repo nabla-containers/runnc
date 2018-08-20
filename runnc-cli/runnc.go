@@ -102,10 +102,12 @@ func main() {
 	app.Before = func(context *cli.Context) error {
 		if context.GlobalBool("debug") {
 			logrus.SetLevel(logrus.DebugLevel)
+			fmt.Fprintln(os.Stdout, "Setting debug level")
 		}
 		if path := context.GlobalString("log"); path != "" {
 			f, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_APPEND|os.O_SYNC, 0666)
 			if err != nil {
+				fmt.Fprintln(os.Stdout, err.Error())
 				return err
 			}
 			logrus.SetOutput(f)
@@ -125,7 +127,6 @@ func main() {
 	// the error on cli.ErrWriter and exit.
 	// Use our own writer here to ensure the log gets sent to the right location.
 	cli.ErrWriter = &FatalWriter{cli.ErrWriter}
-	logrus.Debugf("runnc called with %v", os.Args)
 	if err := app.Run(os.Args); err != nil {
 		fatal(err)
 	}

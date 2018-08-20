@@ -2,6 +2,12 @@
 
 package libcontainer
 
+import (
+	"github.com/nabla-containers/runnc/libcontainer/configs"
+	"sync"
+	"time"
+)
+
 const stdioFdCount = 3
 
 // State represents a running container's state
@@ -20,4 +26,19 @@ type Container interface {
 	BaseContainer
 
 	// Methods below here are platform specific
+}
+
+type nablaContainer struct {
+	id     string
+	root   string
+	config *configs.Config
+	//cgroupManager        cgroups.Manager
+	//initArgs             []string
+	//initProcess          parentProcess
+	//initProcessStartTime string
+	//criuPath             string
+	m sync.Mutex
+	//criuVersion          int
+	state   Status
+	created time.Time
 }

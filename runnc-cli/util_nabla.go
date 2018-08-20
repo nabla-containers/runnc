@@ -34,17 +34,18 @@ func getContainer(context *cli.Context) (libcontainer.Container, error) {
 }
 */
 
-
 // TODO(NABLA)
 func startContainer(context *cli.Context, spec *specs.Spec, create bool) (int, error) {
 	id := context.Args().First()
 	if id == "" {
 		return -1, errEmptyID
 	}
+
 	container, err := createContainer(context, id, spec)
 	if err != nil {
 		return -1, err
 	}
+
 	detach := context.Bool("detach")
 	// Support on-demand socket activation by passing file descriptors into   the container init process.
 	listenFDs := []*os.File{}
@@ -61,7 +62,6 @@ func startContainer(context *cli.Context, spec *specs.Spec, create bool) (int, e
 	}
 	return r.run(spec.Process)
 }
-
 
 // TODO(NABLA)
 func createContainer(context *cli.Context, id string, spec *specs.Spec) (libcontainer.Container, error) {
