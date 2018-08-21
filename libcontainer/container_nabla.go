@@ -4,6 +4,8 @@ package libcontainer
 
 import (
 	"github.com/nabla-containers/runnc/libcontainer/configs"
+	"github.com/pkg/errors"
+	"os"
 	"sync"
 	"time"
 )
@@ -41,4 +43,77 @@ type nablaContainer struct {
 	//criuVersion          int
 	state   Status
 	created time.Time
+}
+
+func (c *nablaContainer) Config() configs.Config {
+	return *c.config
+}
+
+// TODO(NABLA)
+func (c *nablaContainer) Status() (Status, error) {
+	c.m.Lock()
+	defer c.m.Unlock()
+	var sts Status
+	return sts, errors.New("NablaContainer.Status not implemented")
+}
+
+// TODO(NABLA)
+func (c *nablaContainer) State() (*State, error) {
+	c.m.Lock()
+	defer c.m.Unlock()
+	return nil, errors.New("NablaContainer.State not implemented")
+}
+
+// TODO(NABLA)
+func (c *nablaContainer) Destroy() error {
+	c.m.Lock()
+	defer c.m.Unlock()
+	return errors.New("NablaContainer.Destroy not implemented")
+}
+
+func (c *nablaContainer) ID() string {
+	return c.id
+}
+
+// TODO(NABLA)
+func (c *nablaContainer) Processes() ([]int, error) {
+	return nil, errors.New("NablaContainer.Processes not implemented")
+}
+
+// TODO(NABLA)
+func (c *nablaContainer) Stats() (*Stats, error) {
+	return nil, errors.New("NablaContainer.Stats not implemented")
+}
+
+// TODO(NABLA)
+func (c *nablaContainer) Set(config configs.Config) error {
+	c.m.Lock()
+	defer c.m.Unlock()
+	return errors.New("NablaContainer.Set not implemented")
+}
+
+// TODO(NABLA)
+func (c *nablaContainer) Start(process *Process) error {
+	c.m.Lock()
+	defer c.m.Unlock()
+	return errors.New("NablaContainer.Start not implemented")
+}
+
+// TODO(NABLA)
+func (c *nablaContainer) Run(process *Process) error {
+	c.m.Lock()
+	defer c.m.Unlock()
+	return errors.New("NablaContainer.Run not implemented")
+}
+
+// TODO(NABLA)
+func (c *nablaContainer) Exec() error {
+	c.m.Lock()
+	defer c.m.Unlock()
+	return errors.New("NablaContainer.Exec not implemented")
+}
+
+// TODO(NABLA)
+func (c *nablaContainer) Signal(s os.Signal) error {
+	return errors.New("NablaContainer.Signal not implemented")
 }
