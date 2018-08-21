@@ -3,10 +3,13 @@
 package libcontainer
 
 import (
+	"fmt"
 	"github.com/nabla-containers/runnc/libcontainer/configs"
 	"github.com/pkg/errors"
 	"os"
+	"os/exec"
 	"sync"
+	"syscall"
 	"time"
 )
 
@@ -96,7 +99,7 @@ func (c *nablaContainer) Set(config configs.Config) error {
 func (c *nablaContainer) Start(process *Process) error {
 	c.m.Lock()
 	defer c.m.Unlock()
-	return errors.New("NablaContainer.Start not implemented")
+	return c.start(process)
 }
 
 // TODO(NABLA)
@@ -116,4 +119,59 @@ func (c *nablaContainer) Exec() error {
 // TODO(NABLA)
 func (c *nablaContainer) Signal(s os.Signal) error {
 	return errors.New("NablaContainer.Signal not implemented")
+}
+
+type nablaProcess struct {
+	process *Process
+	cmd     *exec.Cmd
+}
+
+func (p *nablaProcess) wait() (*os.ProcessState, error) {
+	err := p.cmd.Wait()
+	return p.cmd.ProcessState, err
+}
+
+func (p *nablaProcess) pid() int {
+	return p.cmd.Process.Pid
+}
+
+func (p *nablaProcess) signal(sig os.Signal) error {
+	s, ok := sig.(syscall.Signal)
+	if !ok {
+		return errors.New("os: unsupported signal type")
+	}
+	return syscall.Kill(p.pid(), s)
+}
+
+func (c *nablaContainer) start(p *Process) error {
+	cmd := exec.Command(p.Args[0], p.Args[1:]...)
+	cmd.Stdin = p.Stdin
+	cmd.Stdout = p.Stdout
+	cmd.Stderr = p.Stderr
+	cmd.Dir = c.config.Rootfs
+	if cmd.SysProcAttr == nil {
+		cmd.SysProcAttr = &syscall.SysProcAttr{}
+	}
+	cmd.ExtraFiles = p.ExtraFiles
+	cmd.Env = append(cmd.Env,
+		fmt.Sprintf("_LIBCONTAINER_INITPIPE=%d", stdioFdCount+len(cmd.ExtraFiles)-2),
+		fmt.Sprintf("_LIBCONTAINER_STATEDIR=%d", stdioFdCount+len(cmd.ExtraFiles)-1))
+
+	if err := cmd.Start(); err != nil {
+		return err
+	}
+
+	if cmd.Process == nil {
+		return errors.New("Cmd.Process is nil after starting")
+	}
+
+	p.ops = &nablaProcess{
+		process: p,
+		cmd:     cmd,
+	}
+
+	c.state = Created
+
+	return nil
+	//return errors.New("NablaContainer.Start not implemented")
 }

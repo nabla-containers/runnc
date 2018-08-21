@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/pkg/errors"
+	//"github.com/pkg/errors"
 	"github.com/urfave/cli"
 )
 
@@ -62,7 +62,7 @@ to specify command(s) that get run when the container is started.
 		if err != nil {
 			return err
 		}
-		return errors.New("In Create")
+
 		// exit with the container's exit status so any external supervisor is
 		// notified of the exit with the correct exit status.
 		os.Exit(status)

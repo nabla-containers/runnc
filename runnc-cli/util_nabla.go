@@ -60,6 +60,8 @@ func startContainer(context *cli.Context, spec *specs.Spec, create bool) (int, e
 		pidFile:         context.String("pid-file"),
 		create:          create,
 	}
+	// DEBUG
+	fmt.Printf("Process: %v\n", spec.Process.Args)
 	return r.run(spec.Process)
 }
 
