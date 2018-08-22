@@ -18,21 +18,19 @@ var (
 	errEmptyID = errors.New("container id cannot be empty")
 )
 
-/*
 // getContainer returns the specified container instance by loading it from state
 // with the default factory.
 func getContainer(context *cli.Context) (libcontainer.Container, error) {
-    id := context.Args().First()
-    if id == "" {
-        return nil, errEmptyID
-    }
-    factory, err := loadFactory(context)
-    if err != nil {
-        return nil, err
-    }
-    return factory.Load(id)
+	id := context.Args().First()
+	if id == "" {
+		return nil, errEmptyID
+	}
+	factory, err := loadFactory(context)
+	if err != nil {
+		return nil, err
+	}
+	return factory.Load(id)
 }
-*/
 
 // TODO(NABLA)
 func startContainer(context *cli.Context, spec *specs.Spec, create bool) (int, error) {
@@ -72,6 +70,8 @@ func createContainer(context *cli.Context, id string, spec *specs.Spec) (libcont
 	if err != nil {
 		return nil, err
 	}
+
+	config.Labels = append(config.Labels, "bundle="+context.String("bundle"))
 
 	if _, err := os.Stat(config.Rootfs); err != nil {
 		if os.IsNotExist(err) {

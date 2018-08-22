@@ -55,12 +55,12 @@ to specify command(s) that get run when the container is started.
 		// TODO: Implement
 		spec, err := setupSpec(context)
 		if err != nil {
-			return err
+			fatal(err)
 		}
 
 		status, err := startContainer(context, spec, true)
 		if err != nil {
-			return err
+			fatal(err)
 		}
 
 		// exit with the container's exit status so any external supervisor is

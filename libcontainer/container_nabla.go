@@ -23,6 +23,7 @@ type State struct {
 	BaseState
 
 	// Platform specific fields below here
+	Status Status `json:"status"`
 }
 
 // Container is a libcontainer container object.
@@ -47,8 +48,7 @@ type nablaContainer struct {
 	//criuPath             string
 	m sync.Mutex
 	//criuVersion          int
-	status  Status
-	state   State
+	state   *State
 	created time.Time
 }
 
@@ -60,15 +60,14 @@ func (c *nablaContainer) Config() configs.Config {
 func (c *nablaContainer) Status() (Status, error) {
 	c.m.Lock()
 	defer c.m.Unlock()
-	var sts Status
-	return sts, errors.New("NablaContainer.Status not implemented")
+	return c.currentStatus()
 }
 
 // TODO(NABLA)
 func (c *nablaContainer) State() (*State, error) {
 	c.m.Lock()
 	defer c.m.Unlock()
-	return nil, errors.New("NablaContainer.State not implemented")
+	return c.currentState()
 }
 
 // TODO(NABLA)
@@ -176,17 +175,26 @@ func (c *nablaContainer) start(p *Process) error {
 
 	// TODO: Create state  and update state JSON
 	var err error
-	c.status = Created
-	c.state.BaseState.InitProcessPid = p.ops.pid()
-	c.state.BaseState.Created = time.Now().UTC()
-	c.state.BaseState.InitProcessStartTime, err = system.GetProcessStartTime(c.state.BaseState.InitProcessPid)
+	c.state.InitProcessPid = p.ops.pid()
+	c.state.Created = time.Now().UTC()
+	c.state.InitProcessStartTime, err = system.GetProcessStartTime(c.state.BaseState.InitProcessPid)
+	c.state.Status = Created
 	if err != nil {
 		return err
 	}
 
-	c.saveState(&c.state)
+	c.saveState(c.state)
 
 	return nil
+}
+
+func (c *nablaContainer) currentState() (*State, error) {
+	// TODO: refreshState (by looking at system info and verifying state)
+	return c.state, nil
+}
+
+func (c *nablaContainer) currentStatus() (Status, error) {
+	return c.state.Status, nil
 }
 
 func (c *nablaContainer) saveState(s *State) error {

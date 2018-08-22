@@ -3,6 +3,7 @@
 package libcontainer
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/nabla-containers/runnc/libcontainer/configs"
 	"github.com/pkg/errors"
@@ -101,12 +102,12 @@ func (l *NablaFactory) Create(id string, config *configs.Config) (Container, err
 		id:     id,
 		root:   containerRoot,
 		config: config,
-		status: Stopped,
-		state: State{
+		state: &State{
 			BaseState: BaseState{
 				ID:     id,
 				Config: *config,
 			},
+			Status: Stopped,
 		},
 	}
 	return c, nil
@@ -114,7 +115,23 @@ func (l *NablaFactory) Create(id string, config *configs.Config) (Container, err
 
 // TODO(NABLA)
 func (l *NablaFactory) Load(id string) (Container, error) {
-	return nil, errors.New("NablaFactory.Load not implemented")
+	if l.Root == "" {
+		return nil, newGenericError(fmt.Errorf("invalid root"), ConfigInvalid)
+	}
+	containerRoot := filepath.Join(l.Root, id)
+	state, err := l.loadState(containerRoot, id)
+	if err != nil {
+		return nil, err
+	}
+
+	c := &nablaContainer{
+		id:     id,
+		root:   containerRoot,
+		config: &state.Config,
+		state:  state,
+	}
+
+	return c, nil
 }
 
 // TODO(NABLA)
@@ -134,4 +151,20 @@ func (l *NablaFactory) validateID(id string) error {
 		return fmt.Errorf("invalid id format: %v", id)
 	}
 	return nil
+}
+
+func (l *NablaFactory) loadState(root, id string) (*State, error) {
+	f, err := os.Open(filepath.Join(root, stateFilename))
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil, newGenericError(fmt.Errorf("container %q does not exist", id), ContainerNotExists)
+		}
+		return nil, newGenericError(err, SystemError)
+	}
+	defer f.Close()
+	var state *State
+	if err := json.NewDecoder(f).Decode(&state); err != nil {
+		return nil, newGenericError(err, SystemError)
+	}
+	return state, nil
 }

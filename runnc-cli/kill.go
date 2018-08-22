@@ -29,6 +29,6 @@ signal to the init process of the "ubuntu01" container:
 	},
 	Action: func(context *cli.Context) error {
 		// TODO: implement
-		return fmt.Errorf("Not implemented")
+		return fmt.Errorf("OCI Kill Not Implemented")
 	},
 }
