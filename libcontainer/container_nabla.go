@@ -5,9 +5,12 @@ package libcontainer
 import (
 	"fmt"
 	"github.com/nabla-containers/runnc/libcontainer/configs"
+	"github.com/opencontainers/runc/libcontainer/system"
+	"github.com/opencontainers/runc/libcontainer/utils"
 	"github.com/pkg/errors"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"sync"
 	"syscall"
 	"time"
@@ -44,7 +47,8 @@ type nablaContainer struct {
 	//criuPath             string
 	m sync.Mutex
 	//criuVersion          int
-	state   Status
+	status  Status
+	state   State
 	created time.Time
 }
 
@@ -170,8 +174,26 @@ func (c *nablaContainer) start(p *Process) error {
 		cmd:     cmd,
 	}
 
-	c.state = Created
+	// TODO: Create state  and update state JSON
+	var err error
+	c.status = Created
+	c.state.BaseState.InitProcessPid = p.ops.pid()
+	c.state.BaseState.Created = time.Now().UTC()
+	c.state.BaseState.InitProcessStartTime, err = system.GetProcessStartTime(c.state.BaseState.InitProcessPid)
+	if err != nil {
+		return err
+	}
+
+	c.saveState(&c.state)
 
 	return nil
-	//return errors.New("NablaContainer.Start not implemented")
+}
+
+func (c *nablaContainer) saveState(s *State) error {
+	f, err := os.Create(filepath.Join(c.root, stateFilename))
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	return utils.WriteJSON(f, s)
 }

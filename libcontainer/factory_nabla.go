@@ -101,7 +101,13 @@ func (l *NablaFactory) Create(id string, config *configs.Config) (Container, err
 		id:     id,
 		root:   containerRoot,
 		config: config,
-		state:  Stopped,
+		status: Stopped,
+		state: State{
+			BaseState: BaseState{
+				ID:     id,
+				Config: *config,
+			},
+		},
 	}
 	return c, nil
 }
