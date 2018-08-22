@@ -15,6 +15,6 @@ Where "<container-id>" is your name for the instance of the container.`,
 instance of a container.`,
 	Action: func(context *cli.Context) error {
 		// TODO: implement
-		return fmt.Errorf("Not Implemented")
+		return fmt.Errorf("OCI State Not Implemented")
 	},
 }

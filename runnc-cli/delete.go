@@ -27,6 +27,6 @@ status of "ubuntu01" as "stopped" the following will delete resources held for
 	},
 	Action: func(context *cli.Context) error {
 		// TODO: implement
-		return fmt.Errorf("Not Implemented")
+		return fmt.Errorf("OCI Delete Not Implemented")
 	},
 }

@@ -83,7 +83,7 @@ following will output a list of processes running in the container:
 	},
 	Action: func(context *cli.Context) error {
 		// TODO: implement
-		return fmt.Errorf("Not Implemented")
+		return fmt.Errorf("OCI Exec Not Implemented")
 	},
 	SkipArgReorder: true,
 }
