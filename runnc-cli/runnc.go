@@ -89,7 +89,7 @@ func main() {
 		//		checkpointCommand,
 		//		eventsCommand,
 		//		execCommand,
-		//		initCommand,
+		initCommand,
 		//		listCommand,
 		//		pauseCommand,
 		//		psCommand,

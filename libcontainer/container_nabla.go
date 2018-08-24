@@ -3,6 +3,7 @@
 package libcontainer
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/nabla-containers/runnc/libcontainer/configs"
 	"github.com/opencontainers/runc/libcontainer/system"
@@ -113,6 +114,7 @@ func (c *nablaContainer) Run(process *Process) error {
 }
 
 // TODO(NABLA)
+// TODO(824): Read from pipe
 func (c *nablaContainer) Exec() error {
 	c.m.Lock()
 	defer c.m.Unlock()
@@ -146,19 +148,61 @@ func (p *nablaProcess) signal(sig os.Signal) error {
 	return syscall.Kill(p.pid(), s)
 }
 
-func (c *nablaContainer) start(p *Process) error {
-	cmd := exec.Command(p.Args[0], p.Args[1:]...)
-	cmd.Stdin = p.Stdin
-	cmd.Stdout = p.Stdout
-	cmd.Stderr = p.Stderr
-	cmd.Dir = c.config.Rootfs
-	if cmd.SysProcAttr == nil {
-		cmd.SysProcAttr = &syscall.SysProcAttr{}
+// TODO: TEMP COPY OUTDATED VERSION OF RUNC
+// NewSockPair returns a new unix socket pair
+func NewSockPair(name string) (parent *os.File, child *os.File, err error) {
+	fds, err := syscall.Socketpair(syscall.AF_LOCAL, syscall.SOCK_STREAM|syscall.SOCK_CLOEXEC, 0)
+	if err != nil {
+		return nil, nil, err
 	}
-	cmd.ExtraFiles = p.ExtraFiles
-	cmd.Env = append(cmd.Env,
-		fmt.Sprintf("_LIBCONTAINER_INITPIPE=%d", stdioFdCount+len(cmd.ExtraFiles)-2),
-		fmt.Sprintf("_LIBCONTAINER_STATEDIR=%d", stdioFdCount+len(cmd.ExtraFiles)-1))
+	return os.NewFile(uintptr(fds[1]), name+"-p"), os.NewFile(uintptr(fds[0]), name+"-c"), nil
+}
+
+func (c *nablaContainer) start(p *Process) error {
+
+	// TODO(824): Create init process instead
+	parentPipe, childPipe, err := NewSockPair("init")
+	if err != nil {
+		return newSystemErrorWithCause(err, "creating new init pipe")
+	}
+	cmd, err := c.commandTemplate(p, childPipe)
+	if err != nil {
+		return newSystemErrorWithCause(err, "creating new command template")
+	}
+
+	/*
+
+	   I Don't think we need this...
+
+	   // We only set up rootDir if we're not doing a `runc exec`. The reason for
+	   // this is to avoid cases where a racing, unprivileged process inside the
+	   // container can get access to the statedir file descriptor (which would
+	   // allow for container rootfs escape).
+	   rootDir, err := os.Open(c.root)
+	   if err != nil {
+	       return err
+	   }
+	   cmd.ExtraFiles = append(cmd.ExtraFiles, rootDir)
+	   cmd.Env = append(cmd.Env,
+	       fmt.Sprintf("_LIBCONTAINER_STATEDIR=%d", stdioFdCount+len(cmd.ExtraFiles)-1))
+	*/
+
+	// newInitProcess
+	p.ops = &nablaProcess{
+		process: p,
+		cmd:     cmd,
+	}
+
+	// TODO: Write config to pipe for child to receive JSON
+	defer parentPipe.Close()
+	config := initConfig{
+		Args: c.config.Args,
+	}
+
+	enc := json.NewEncoder(parentPipe)
+	if err := enc.Encode(config); err != nil {
+		return err
+	}
 
 	if err := cmd.Start(); err != nil {
 		return err
@@ -168,13 +212,30 @@ func (c *nablaContainer) start(p *Process) error {
 		return errors.New("Cmd.Process is nil after starting")
 	}
 
-	p.ops = &nablaProcess{
-		process: p,
-		cmd:     cmd,
-	}
+	/*
+		cmd := exec.Command(p.Args[0], p.Args[1:]...)
+		cmd.Stdin = p.Stdin
+		cmd.Stdout = p.Stdout
+		cmd.Stderr = p.Stderr
+		cmd.Dir = c.config.Rootfs
+		if cmd.SysProcAttr == nil {
+			cmd.SysProcAttr = &syscall.SysProcAttr{}
+		}
+		cmd.ExtraFiles = p.ExtraFiles
+		cmd.Env = append(cmd.Env,
+			fmt.Sprintf("_LIBCONTAINER_INITPIPE=%d", stdioFdCount+len(cmd.ExtraFiles)-2),
+			fmt.Sprintf("_LIBCONTAINER_STATEDIR=%d", stdioFdCount+len(cmd.ExtraFiles)-1))
+
+		if err := cmd.Start(); err != nil {
+			return err
+		}
+
+		if cmd.Process == nil {
+			return errors.New("Cmd.Process is nil after starting")
+		}
+	*/
 
 	// TODO: Create state  and update state JSON
-	var err error
 	c.state.InitProcessPid = p.ops.pid()
 	c.state.Created = time.Now().UTC()
 	c.state.InitProcessStartTime, err = system.GetProcessStartTime(c.state.BaseState.InitProcessPid)
@@ -186,6 +247,31 @@ func (c *nablaContainer) start(p *Process) error {
 	c.saveState(c.state)
 
 	return nil
+}
+
+func (c *nablaContainer) commandTemplate(p *Process, childPipe *os.File) (*exec.Cmd, error) {
+	cmd := exec.Command("/proc/self/exe", "init")
+	cmd.Stdin = p.Stdin
+	cmd.Stdout = p.Stdout
+	cmd.Stderr = p.Stderr
+	cmd.Dir = c.config.Rootfs
+	if cmd.SysProcAttr == nil {
+		cmd.SysProcAttr = &syscall.SysProcAttr{}
+	}
+	cmd.ExtraFiles = append(cmd.ExtraFiles, p.ExtraFiles...)
+	cmd.ExtraFiles = append(cmd.ExtraFiles, childPipe)
+	cmd.Env = append(cmd.Env,
+		fmt.Sprintf("_LIBCONTAINER_INITPIPE=%d", stdioFdCount+len(cmd.ExtraFiles)-1),
+	)
+	// NOTE: when running a container with no PID namespace and the parent process spawning the      container is
+	// PID1 the pdeathsig is being delivered to the container's init process by the kernel for some  reason
+	// even with the parent still running.
+	/* TODO: Check if needed
+	   if c.config.ParentDeathSignal > 0 {
+	       cmd.SysProcAttr.Pdeathsig = syscall.Signal(c.config.ParentDeathSignal)
+	   }
+	*/
+	return cmd, nil
 }
 
 func (c *nablaContainer) currentState() (*State, error) {

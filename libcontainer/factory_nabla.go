@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/nabla-containers/runnc/libcontainer/configs"
-	"github.com/pkg/errors"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -135,8 +134,9 @@ func (l *NablaFactory) Load(id string) (Container, error) {
 }
 
 // TODO(NABLA)
+// TODO(824): Implement actual process
 func (l *NablaFactory) StartInitialization() error {
-	return errors.New("NablaFactory.StartInitialization not implemented")
+	return initNabla()
 }
 
 func (l *NablaFactory) Type() string {
