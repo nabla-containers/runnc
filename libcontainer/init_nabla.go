@@ -25,7 +25,6 @@ func initNabla() error {
 		return fmt.Errorf("unable to convert _LIBCONTAINER_INITPIPE=%s to int: %s", envInitPipe, err)
 	}
 
-	fmt.Println("Reading config from parent:")
 	pipe := os.NewFile(uintptr(pipefd), "pipe")
 	defer pipe.Close()
 
