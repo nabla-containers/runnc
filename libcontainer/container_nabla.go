@@ -40,16 +40,10 @@ type Container interface {
 }
 
 type nablaContainer struct {
-	id     string
-	root   string
-	config *configs.Config
-	//cgroupManager        cgroups.Manager
-	//initArgs             []string
-	//initProcess          parentProcess
-	//initProcessStartTime string
-	//criuPath             string
-	m sync.Mutex
-	//criuVersion          int
+	id      string
+	root    string
+	config  *configs.Config
+	m       sync.Mutex
 	state   *State
 	created time.Time
 }

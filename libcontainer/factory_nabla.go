@@ -48,10 +48,6 @@ func New(root string, options ...func(*NablaFactory) error) (Factory, error) {
 type NablaFactory struct {
 	// Root directory for the factory to store state.
 	Root string
-
-	// InitArgs are arguments for calling the init responsibilities for spawning
-	// a container.
-	//InitArgs []string
 }
 
 // TODO(NABLA)
