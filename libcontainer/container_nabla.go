@@ -9,6 +9,7 @@ import (
 	"github.com/opencontainers/runc/libcontainer/system"
 	"github.com/opencontainers/runc/libcontainer/utils"
 	"github.com/pkg/errors"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -114,11 +115,10 @@ func (c *nablaContainer) Run(process *Process) error {
 }
 
 // TODO(NABLA)
-// TODO(824): Read from pipe
 func (c *nablaContainer) Exec() error {
 	c.m.Lock()
 	defer c.m.Unlock()
-	return errors.New("NablaContainer.Exec not implemented")
+	return c.exec()
 }
 
 // TODO(NABLA)
@@ -159,8 +159,6 @@ func NewSockPair(name string) (parent *os.File, child *os.File, err error) {
 }
 
 func (c *nablaContainer) start(p *Process) error {
-
-	// TODO(824): Create init process instead
 	parentPipe, childPipe, err := NewSockPair("init")
 	if err != nil {
 		return newSystemErrorWithCause(err, "creating new init pipe")
@@ -170,22 +168,17 @@ func (c *nablaContainer) start(p *Process) error {
 		return newSystemErrorWithCause(err, "creating new command template")
 	}
 
-	/*
-
-	   I Don't think we need this...
-
-	   // We only set up rootDir if we're not doing a `runc exec`. The reason for
-	   // this is to avoid cases where a racing, unprivileged process inside the
-	   // container can get access to the statedir file descriptor (which would
-	   // allow for container rootfs escape).
-	   rootDir, err := os.Open(c.root)
-	   if err != nil {
-	       return err
-	   }
-	   cmd.ExtraFiles = append(cmd.ExtraFiles, rootDir)
-	   cmd.Env = append(cmd.Env,
-	       fmt.Sprintf("_LIBCONTAINER_STATEDIR=%d", stdioFdCount+len(cmd.ExtraFiles)-1))
-	*/
+	// We only set up rootDir if we're not doing a `runc exec`. The reason for
+	// this is to avoid cases where a racing, unprivileged process inside the
+	// container can get access to the statedir file descriptor (which would
+	// allow for container rootfs escape).
+	rootDir, err := os.Open(c.root)
+	if err != nil {
+		return err
+	}
+	cmd.ExtraFiles = append(cmd.ExtraFiles, rootDir)
+	cmd.Env = append(cmd.Env,
+		fmt.Sprintf("_LIBCONTAINER_STATEDIR=%d", stdioFdCount+len(cmd.ExtraFiles)-1))
 
 	// newInitProcess
 	p.ops = &nablaProcess{
@@ -212,34 +205,11 @@ func (c *nablaContainer) start(p *Process) error {
 		return errors.New("Cmd.Process is nil after starting")
 	}
 
-	/*
-		cmd := exec.Command(p.Args[0], p.Args[1:]...)
-		cmd.Stdin = p.Stdin
-		cmd.Stdout = p.Stdout
-		cmd.Stderr = p.Stderr
-		cmd.Dir = c.config.Rootfs
-		if cmd.SysProcAttr == nil {
-			cmd.SysProcAttr = &syscall.SysProcAttr{}
-		}
-		cmd.ExtraFiles = p.ExtraFiles
-		cmd.Env = append(cmd.Env,
-			fmt.Sprintf("_LIBCONTAINER_INITPIPE=%d", stdioFdCount+len(cmd.ExtraFiles)-2),
-			fmt.Sprintf("_LIBCONTAINER_STATEDIR=%d", stdioFdCount+len(cmd.ExtraFiles)-1))
-
-		if err := cmd.Start(); err != nil {
-			return err
-		}
-
-		if cmd.Process == nil {
-			return errors.New("Cmd.Process is nil after starting")
-		}
-	*/
-
 	// TODO: Create state  and update state JSON
 	c.state.InitProcessPid = p.ops.pid()
 	c.state.Created = time.Now().UTC()
-	c.state.InitProcessStartTime, err = system.GetProcessStartTime(c.state.BaseState.InitProcessPid)
 	c.state.Status = Created
+	c.state.InitProcessStartTime, err = system.GetProcessStartTime(c.state.BaseState.InitProcessPid)
 	if err != nil {
 		return err
 	}
@@ -247,6 +217,26 @@ func (c *nablaContainer) start(p *Process) error {
 	c.saveState(c.state)
 
 	return nil
+}
+
+func (c *nablaContainer) exec() error {
+	path := filepath.Join(c.root, execFifoFilename)
+	f, err := os.OpenFile(path, os.O_RDONLY, 0)
+	if err != nil {
+		return newSystemErrorWithCause(err, "open exec fifo for reading")
+	}
+	defer f.Close()
+	data, err := ioutil.ReadAll(f)
+	if err != nil {
+		return err
+	}
+	if len(data) > 0 {
+		c.state.Status = Running
+		c.saveState(c.state)
+		os.Remove(path)
+		return nil
+	}
+	return fmt.Errorf("cannot start an already running container")
 }
 
 func (c *nablaContainer) commandTemplate(p *Process, childPipe *os.File) (*exec.Cmd, error) {

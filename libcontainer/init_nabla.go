@@ -6,7 +6,6 @@ import (
 	"os"
 	"strconv"
 	"syscall"
-	"time"
 )
 
 type initConfig struct {
@@ -14,13 +13,10 @@ type initConfig struct {
 }
 
 func initNabla() error {
-	// Ricardo special
-	time.Sleep(1 * time.Second)
-	fmt.Println("HELLO CALLING FROM START_INITIALIZATION")
-
 	var (
-		pipefd      int
-		envInitPipe = os.Getenv("_LIBCONTAINER_INITPIPE")
+		pipefd, rootfd int
+		envInitPipe    = os.Getenv("_LIBCONTAINER_INITPIPE")
+		envStateDir    = os.Getenv("_LIBCONTAINER_STATEDIR")
 	)
 
 	// Get the INITPIPE.
@@ -38,13 +34,25 @@ func initNabla() error {
 		return err
 	}
 
-	fmt.Printf("Got config: %v\n", config)
+	// Only init processes have STATEDIR.
+	if rootfd, err = strconv.Atoi(envStateDir); err != nil {
+		return fmt.Errorf("unable to convert _LIBCONTAINER_STATEDIR=%s to int: %s", envStateDir, err)
+	}
 
 	// clear the current process's environment to clean any libcontainer
 	// specific env vars.
 	os.Clearenv()
 
-	// TODO: WAIT FOR EXEC.FIFO
+	// wait for the fifo to be opened on the other side before
+	// exec'ing the users process.
+	fd, err := syscall.Openat(rootfd, execFifoFilename, os.O_WRONLY|syscall.O_CLOEXEC, 0)
+	if err != nil {
+		return newSystemErrorWithCause(err, "openat exec fifo")
+	}
+	if _, err := syscall.Write(fd, []byte("0")); err != nil {
+		return newSystemErrorWithCause(err, "write 0 exec fifo")
+	}
+	syscall.Close(rootfd)
 
 	if err := syscall.Exec(config.Args[0], config.Args, os.Environ()); err != nil {
 		return err

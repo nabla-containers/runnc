@@ -1,7 +1,9 @@
 package main
 
 import (
-	//"fmt"
+	"fmt"
+	"github.com/nabla-containers/runnc/libcontainer"
+	"github.com/pkg/errors"
 	"github.com/urfave/cli"
 )
 
@@ -15,8 +17,23 @@ are starting. The name you provide for the container instance must be unique on
 your host.`,
 	Description: `The start command executes the user defined process in a created container.`,
 	Action: func(context *cli.Context) error {
-		// TODO: implement
-		return nil
-		//return fmt.Errorf("OCI start Not Implemented")
+		container, err := getContainer(context)
+		if err != nil {
+			return err
+		}
+		status, err := container.Status()
+		if err != nil {
+			return err
+		}
+		switch status {
+		case libcontainer.Created:
+			return container.Exec()
+		case libcontainer.Stopped:
+			return errors.New("cannot start a container that has stopped")
+		case libcontainer.Running:
+			return errors.New("cannot start an already running container")
+		default:
+			return fmt.Errorf("cannot start a container in the %s state\n", status)
+		}
 	},
 }

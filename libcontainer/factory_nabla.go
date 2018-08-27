@@ -134,7 +134,6 @@ func (l *NablaFactory) Load(id string) (Container, error) {
 }
 
 // TODO(NABLA)
-// TODO(824): Implement actual process
 func (l *NablaFactory) StartInitialization() error {
 	return initNabla()
 }
