@@ -76,7 +76,7 @@ func (c *nablaContainer) State() (*State, error) {
 func (c *nablaContainer) Destroy() error {
 	c.m.Lock()
 	defer c.m.Unlock()
-	return errors.New("NablaContainer.Destroy not implemented")
+	return c.destroy()
 }
 
 func (c *nablaContainer) ID() string {
@@ -247,6 +247,15 @@ func (c *nablaContainer) exec() error {
 	return fmt.Errorf("cannot start an already running container")
 }
 
+func (c *nablaContainer) destroy() error {
+	c.state.InitProcessPid = 0
+	c.state.Status = Stopped
+	if err := os.RemoveAll(c.root); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (c *nablaContainer) commandTemplate(p *Process, childPipe *os.File) (*exec.Cmd, error) {
 	cmd := exec.Command("/proc/self/exe", "init")
 	cmd.Stdin = p.Stdin
@@ -273,11 +282,33 @@ func (c *nablaContainer) commandTemplate(p *Process, childPipe *os.File) (*exec.
 
 func (c *nablaContainer) currentState() (*State, error) {
 	// TODO: refreshState (by looking at system info and verifying state)
+
+	//
+	process, err := os.FindProcess(int(c.state.InitProcessPid))
+	if err != nil {
+		return nil, err
+	}
+
+	// [kill(2)]  If  sig  is 0, then no signal is sent, but error checking is still per‐
+	// formed; this can be used to check for the existence of a process ID  or
+	// process group ID.
+	err = process.Signal(syscall.Signal(0))
+	if err != nil {
+		c.state.Status = Stopped
+		c.saveState(c.state)
+	}
+
 	return c.state, nil
 }
 
 func (c *nablaContainer) currentStatus() (Status, error) {
-	return c.state.Status, nil
+	var sts Status
+	state, err := c.currentState()
+	if err != nil {
+		return sts, err
+	}
+
+	return state.Status, nil
 }
 
 func (c *nablaContainer) saveState(s *State) error {
