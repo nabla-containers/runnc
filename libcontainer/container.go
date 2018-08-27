@@ -143,7 +143,7 @@ type BaseContainer interface {
 	//
 	// errors:
 	// SystemError - System error.
-	Signal(s os.Signal) error
+	Signal(s os.Signal, all bool) error
 
 	// Exec signals the container to exec the users process at the end of the init.
 	//

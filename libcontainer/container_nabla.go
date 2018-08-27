@@ -121,9 +121,17 @@ func (c *nablaContainer) Exec() error {
 	return c.exec()
 }
 
-// TODO(NABLA)
-func (c *nablaContainer) Signal(s os.Signal) error {
-	return errors.New("NablaContainer.Signal not implemented")
+func (c *nablaContainer) Signal(sig os.Signal, all bool) error {
+	// For nabla container, we only have 1 process
+	s, ok := sig.(syscall.Signal)
+	if !ok {
+		return errors.New("os: unsupported signal type")
+	}
+	pid := c.state.InitProcessPid
+	if all {
+		pid = -pid
+	}
+	return syscall.Kill(pid, s)
 }
 
 type nablaProcess struct {
@@ -245,9 +253,8 @@ func (c *nablaContainer) commandTemplate(p *Process, childPipe *os.File) (*exec.
 	cmd.Stdout = p.Stdout
 	cmd.Stderr = p.Stderr
 	cmd.Dir = c.config.Rootfs
-	if cmd.SysProcAttr == nil {
-		cmd.SysProcAttr = &syscall.SysProcAttr{}
-	}
+	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
+
 	cmd.ExtraFiles = append(cmd.ExtraFiles, p.ExtraFiles...)
 	cmd.ExtraFiles = append(cmd.ExtraFiles, childPipe)
 	cmd.Env = append(cmd.Env,
