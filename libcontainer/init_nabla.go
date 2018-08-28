@@ -51,6 +51,7 @@ func initNabla() error {
 	if _, err := syscall.Write(fd, []byte("0")); err != nil {
 		return newSystemErrorWithCause(err, "write 0 exec fifo")
 	}
+    syscall.Close(fd)
 	syscall.Close(rootfd)
 
 	if err := syscall.Exec(config.Args[0], config.Args, os.Environ()); err != nil {
