@@ -24,9 +24,6 @@ import (
 	"path/filepath"
 	"regexp"
 	"syscall"
-
-	"github.com/nabla-containers/runnc/nabla-lib/storage"
-	"github.com/nabla-containers/runnc/utils"
 )
 
 const (
@@ -65,23 +62,6 @@ func New(root string, options ...func(*NablaFactory) error) (Factory, error) {
 type NablaFactory struct {
 	// Root directory for the factory to store state.
 	Root string
-}
-
-func createRootfsISO(config *configs.Config) (string, error) {
-	rootfsPath := config.Rootfs
-	isoPath, err := storage.CreateIso(rootfsPath)
-	if err != nil {
-		// TODO: Add wrap
-		return "", err
-	}
-	targetISOPath := filepath.Join(rootfsPath, "rootfs.iso")
-
-	if err = utils.Copy(targetISOPath, isoPath); err != nil {
-		// TODO: Do cleanup
-		return "", err
-	}
-
-	return targetISOPath, nil
 }
 
 // TODO(NABLA)
@@ -127,17 +107,9 @@ func (l *NablaFactory) Create(id string, config *configs.Config) (Container, err
 		return nil, err
 	}
 
-	fsPath, err := createRootfsISO(config)
-	if err != nil {
-		return nil, err
-	}
-
-	// TODO(912): Create Tap here and store name of tap
-
 	c := &nablaContainer{
 		id:     id,
 		root:   containerRoot,
-		fsPath: fsPath,
 		config: config,
 		state: &State{
 			BaseState: BaseState{
