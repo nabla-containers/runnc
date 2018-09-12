@@ -1,9 +1,9 @@
 package configs
 
 import (
+	"fmt"
 	"github.com/opencontainers/runtime-spec/specs-go"
 	"github.com/pkg/errors"
-    "fmt"
 )
 
 // TODO(NABLA)
@@ -19,16 +19,18 @@ func ParseSpec(s *specs.Spec) (*Config, error) {
 		return nil, errors.New("Root is nil")
 	}
 
-    labels := []string{}
-    for k, v := range s.Annotations {
-        labels = append(labels, fmt.Sprintf("%s=%s", k, v))
-    }
+	labels := []string{}
+	for k, v := range s.Annotations {
+		labels = append(labels, fmt.Sprintf("%s=%s", k, v))
+	}
 
 	cfg := Config{
-		Args:   s.Process.Args,
-		Rootfs: s.Root.Path,
-        Version: s.Version,
-		Labels: labels,
+		Args:    s.Process.Args,
+		Rootfs:  s.Root.Path,
+		Env:     s.Process.Env,
+		Cwd:     s.Process.Cwd,
+		Version: s.Version,
+		Labels:  labels,
 	}
 
 	return &cfg, nil

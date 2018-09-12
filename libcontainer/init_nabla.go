@@ -18,12 +18,51 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strconv"
+	"strings"
 	"syscall"
 )
 
+var (
+	NablaBinDir       = "/opt/runnc/bin/"
+	NablaRunncContBin = NablaBinDir + "runnc-cont"
+	NablaRunBin       = NablaBinDir + "nabla-run"
+)
+
+func nablaRunArgs(cfg *initConfig) ([]string, error) {
+	if len(cfg.Args) == 0 {
+		return nil, fmt.Errorf("OCI process args are empty")
+	}
+
+	if !strings.HasSuffix(cfg.Args[0], ".nabla") {
+		return nil, fmt.Errorf("Entrypoint is not a .nabla file")
+	}
+
+	// TODO(912): Add tap
+	args := []string{NablaRunncContBin,
+		"-nabla-run", NablaRunBin,
+		"-cwd", cfg.Cwd,
+		"-volume", cfg.FsPath + ":/",
+		"-unikernel", filepath.Join(cfg.Root, cfg.Args[0])}
+
+	for _, e := range cfg.Env {
+		args = append(args, "-env", e)
+	}
+
+	args = append(args, "--")
+	args = append(args, cfg.Args[1:]...)
+
+	fmt.Printf("Running with args: %v", args)
+	return args, nil
+}
+
 type initConfig struct {
-	Args []string `json:"args"`
+	Root   string   `json:"root"`
+	Args   []string `json:"args"`
+	FsPath string   `json:"fspath"`
+	Cwd    string   `json:"cwd"`
+	Env    []string `json:"env"`
 }
 
 func initNabla() error {
@@ -68,7 +107,12 @@ func initNabla() error {
 	syscall.Close(fd)
 	syscall.Close(rootfd)
 
-	if err := syscall.Exec(config.Args[0], config.Args, os.Environ()); err != nil {
+	runArgs, err := nablaRunArgs(config)
+	if err != nil {
+		return newSystemErrorWithCause(err, "Unable to construct nabla run args")
+	}
+
+	if err := syscall.Exec(runArgs[0], runArgs, os.Environ()); err != nil {
 		return err
 	}
 
