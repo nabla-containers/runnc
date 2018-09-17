@@ -57,8 +57,8 @@ func MaskCIDR(mask net.IPMask) int {
 }
 
 // CreateTapInterface creates a new TAP interface and assignes it ip/mask as
-// the new address.
-func CreateTapInterface(tapName string, ip net.IP, mask net.IPMask) error {
+// the new address. nil pointers to ip/mask indicates not to set ip/mask
+func CreateTapInterface(tapName string, ip *net.IP, mask *net.IPMask) error {
 
 	err := SetupTunDev()
 	if err != nil {
@@ -74,14 +74,16 @@ func CreateTapInterface(tapName string, ip net.IP, mask net.IPMask) error {
 		return err
 	}
 
-	// ip addr add %s/%s dev %s
-	netstr := fmt.Sprintf("%s/%d", ip.String(), MaskCIDR(mask))
-	addr, err := netlink.ParseAddr(netstr)
-	if err != nil {
-		return err
-	}
+	if ip != nil && mask != nil {
+		// ip addr add %s/%s dev %s
+		netstr := fmt.Sprintf("%s/%d", (*ip).String(), MaskCIDR(*mask))
+		addr, err := netlink.ParseAddr(netstr)
+		if err != nil {
+			return err
+		}
 
-	netlink.AddrAdd(tap, addr)
+		netlink.AddrAdd(tap, addr)
+	}
 
 	// ip link set dev %s up'
 	err = netlink.LinkSetUp(tap)
