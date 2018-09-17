@@ -146,9 +146,11 @@ func main() {
 	}
 }
 
+/*
 type FatalWriter struct {
 	cliErrWriter io.Writer
 }
+*/
 
 func (f *FatalWriter) Write(p []byte) (n int, err error) {
 	logrus.Error(string(p))

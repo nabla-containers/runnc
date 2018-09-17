@@ -42,7 +42,6 @@ var (
 
 // New returns a linux based container factory based in the root directory and
 // configures the factory with the provided option funcs.
-// TODO(NABLA)
 func New(root string, options ...func(*NablaFactory) error) (Factory, error) {
 	if root != "" {
 		if err := os.MkdirAll(root, 0700); err != nil {
@@ -90,7 +89,6 @@ func nablaTapName(id string) string {
 	return ("tap" + id)[:syscall.IFNAMSIZ-1]
 }
 
-// TODO(NABLA)
 func (l *NablaFactory) Create(id string, config *configs.Config) (Container, error) {
 	if l.Root == "" {
 		return nil, fmt.Errorf("invalid root")
@@ -159,7 +157,6 @@ func (l *NablaFactory) Create(id string, config *configs.Config) (Container, err
 	return c, nil
 }
 
-// TODO(NABLA)
 func (l *NablaFactory) Load(id string) (Container, error) {
 	if l.Root == "" {
 		return nil, newGenericError(fmt.Errorf("invalid root"), ConfigInvalid)
@@ -180,7 +177,6 @@ func (l *NablaFactory) Load(id string) (Container, error) {
 	return c, nil
 }
 
-// TODO(NABLA)
 func (l *NablaFactory) StartInitialization() error {
 	return initNabla()
 }

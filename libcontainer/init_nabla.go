@@ -67,7 +67,6 @@ type initConfig struct {
 }
 
 func initNabla() error {
-	fmt.Printf("In initNabla()")
 	var (
 		pipefd, rootfd int
 		envInitPipe    = os.Getenv("_LIBCONTAINER_INITPIPE")

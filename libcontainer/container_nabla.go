@@ -68,21 +68,18 @@ func (c *nablaContainer) Config() configs.Config {
 	return *c.config
 }
 
-// TODO(NABLA)
 func (c *nablaContainer) Status() (Status, error) {
 	c.m.Lock()
 	defer c.m.Unlock()
 	return c.currentStatus()
 }
 
-// TODO(NABLA)
 func (c *nablaContainer) State() (*State, error) {
 	c.m.Lock()
 	defer c.m.Unlock()
 	return c.currentState()
 }
 
-// TODO(NABLA)
 func (c *nablaContainer) Destroy() error {
 	c.m.Lock()
 	defer c.m.Unlock()
@@ -110,7 +107,6 @@ func (c *nablaContainer) Set(config configs.Config) error {
 	return errors.New("NablaContainer.Set not implemented")
 }
 
-// TODO(NABLA)
 func (c *nablaContainer) Start(process *Process) error {
 	c.m.Lock()
 	defer c.m.Unlock()
@@ -204,7 +200,6 @@ func (c *nablaContainer) start(p *Process) error {
 		cmd:     cmd,
 	}
 
-	// TODO: Write config to pipe for child to receive JSON
 	defer parentPipe.Close()
 	config := initConfig{
 		Root:    c.config.Rootfs,
@@ -228,7 +223,6 @@ func (c *nablaContainer) start(p *Process) error {
 		return errors.New("Cmd.Process is nil after starting")
 	}
 
-	// TODO: Create state  and update state JSON
 	c.state.InitProcessPid = p.ops.pid()
 	c.state.Created = time.Now().UTC()
 	c.state.Status = Created
@@ -301,9 +295,6 @@ func (c *nablaContainer) commandTemplate(p *Process, childPipe *os.File) (*exec.
 }
 
 func (c *nablaContainer) currentState() (*State, error) {
-	// TODO: refreshState (by looking at system info and verifying state)
-
-	//
 	process, err := os.FindProcess(int(c.state.InitProcessPid))
 	if err != nil {
 		return nil, err
