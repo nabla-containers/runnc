@@ -25,6 +25,7 @@ import (
 	"regexp"
 	"syscall"
 
+	"github.com/nabla-containers/runnc/nabla-lib/network"
 	"github.com/nabla-containers/runnc/nabla-lib/storage"
 	"github.com/nabla-containers/runnc/utils"
 )
@@ -84,6 +85,11 @@ func createRootfsISO(config *configs.Config) (string, error) {
 	return targetISOPath, nil
 }
 
+// nablaTapName returns the tapname of a given container ID
+func nablaTapName(id string) string {
+	return ("tap" + id)[:syscall.IFNAMSIZ-1]
+}
+
 // TODO(NABLA)
 func (l *NablaFactory) Create(id string, config *configs.Config) (Container, error) {
 	if l.Root == "" {
@@ -132,7 +138,10 @@ func (l *NablaFactory) Create(id string, config *configs.Config) (Container, err
 		return nil, err
 	}
 
-	// TODO(912): Create Tap here and store name of tap
+	err = network.CreateTapInterface(nablaTapName(id), nil, nil)
+	if err != nil {
+		return nil, fmt.Errorf("Unable to create tap interface: %v", err)
+	}
 
 	c := &nablaContainer{
 		id:     id,

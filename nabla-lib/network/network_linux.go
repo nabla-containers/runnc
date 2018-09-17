@@ -36,6 +36,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/pkg/errors"
 )
 
 // CreateBridge creates and returns a netklink.Bridge
@@ -62,7 +64,7 @@ func CreateTapInterface(tapName string, ip *net.IP, mask *net.IPMask) error {
 
 	err := SetupTunDev()
 	if err != nil {
-		return err
+		return errors.Wrap(err, "Unable to get tun device ready")
 	}
 
 	// ip tuntap add %s mode tap
@@ -71,7 +73,7 @@ func CreateTapInterface(tapName string, ip *net.IP, mask *net.IPMask) error {
 		Mode:      netlink.TUNTAP_MODE_TAP}
 	err = netlink.LinkAdd(tap)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "Unable to add link")
 	}
 
 	if ip != nil && mask != nil {
@@ -79,7 +81,7 @@ func CreateTapInterface(tapName string, ip *net.IP, mask *net.IPMask) error {
 		netstr := fmt.Sprintf("%s/%d", (*ip).String(), MaskCIDR(*mask))
 		addr, err := netlink.ParseAddr(netstr)
 		if err != nil {
-			return err
+			return errors.Wrap(err, "Unable to add ip/mask to link")
 		}
 
 		netlink.AddrAdd(tap, addr)
@@ -88,9 +90,23 @@ func CreateTapInterface(tapName string, ip *net.IP, mask *net.IPMask) error {
 	// ip link set dev %s up'
 	err = netlink.LinkSetUp(tap)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "Unable to set tap to up")
 	}
 	return nil
+}
+
+// RemoveTapDevices removes the tap device with name tapName
+func RemoveTapDevice(tapName string) error {
+	err := SetupTunDev()
+	if err != nil {
+		return err
+	}
+
+	// ip tuntap add %s mode tap
+	tap := &netlink.Tuntap{
+		LinkAttrs: netlink.LinkAttrs{Name: tapName},
+		Mode:      netlink.TUNTAP_MODE_TAP}
+	return netlink.LinkDel(tap)
 }
 
 // createMacvtapInterface creates a macvtap interface with the attributes taken

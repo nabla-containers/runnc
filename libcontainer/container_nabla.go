@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/nabla-containers/runnc/libcontainer/configs"
+	"github.com/nabla-containers/runnc/nabla-lib/network"
 	"github.com/opencontainers/runc/libcontainer/system"
 	"github.com/opencontainers/runc/libcontainer/utils"
 	"github.com/pkg/errors"
@@ -206,11 +207,12 @@ func (c *nablaContainer) start(p *Process) error {
 	// TODO: Write config to pipe for child to receive JSON
 	defer parentPipe.Close()
 	config := initConfig{
-		Root:   c.config.Rootfs,
-		Args:   c.config.Args,
-		FsPath: c.fsPath,
-		Cwd:    c.config.Cwd,
-		Env:    c.config.Env,
+		Root:    c.config.Rootfs,
+		Args:    c.config.Args,
+		FsPath:  c.fsPath,
+		Cwd:     c.config.Cwd,
+		Env:     c.config.Env,
+		TapName: nablaTapName(c.id),
 	}
 
 	enc := json.NewEncoder(parentPipe)
@@ -260,13 +262,17 @@ func (c *nablaContainer) exec() error {
 	return fmt.Errorf("cannot start an already running container")
 }
 
-// TODO(912): Add removal of tap device
 func (c *nablaContainer) destroy() error {
 	c.state.InitProcessPid = 0
 	c.state.Status = Stopped
 	if err := os.RemoveAll(c.root); err != nil {
 		return err
 	}
+
+	if err := network.RemoveTapDevice(nablaTapName(c.id)); err != nil {
+		return err
+	}
+
 	return nil
 }
 

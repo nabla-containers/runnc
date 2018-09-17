@@ -39,9 +39,9 @@ func nablaRunArgs(cfg *initConfig) ([]string, error) {
 		return nil, fmt.Errorf("Entrypoint is not a .nabla file")
 	}
 
-	// TODO(912): Add tap
 	args := []string{NablaRunncContBin,
 		"-nabla-run", NablaRunBin,
+		"-tap", cfg.TapName,
 		"-cwd", cfg.Cwd,
 		"-volume", cfg.FsPath + ":/",
 		"-unikernel", filepath.Join(cfg.Root, cfg.Args[0])}
@@ -58,14 +58,16 @@ func nablaRunArgs(cfg *initConfig) ([]string, error) {
 }
 
 type initConfig struct {
-	Root   string   `json:"root"`
-	Args   []string `json:"args"`
-	FsPath string   `json:"fspath"`
-	Cwd    string   `json:"cwd"`
-	Env    []string `json:"env"`
+	Root    string   `json:"root"`
+	Args    []string `json:"args"`
+	FsPath  string   `json:"fspath"`
+	Cwd     string   `json:"cwd"`
+	Env     []string `json:"env"`
+	TapName string   `json:"tap"`
 }
 
 func initNabla() error {
+	fmt.Printf("In initNabla()")
 	var (
 		pipefd, rootfd int
 		envInitPipe    = os.Getenv("_LIBCONTAINER_INITPIPE")
