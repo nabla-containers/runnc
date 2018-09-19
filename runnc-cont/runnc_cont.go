@@ -21,7 +21,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/nabla-containers/runnc/nabla-lib/network"
-	"github.com/nabla-containers/runnc/nabla-lib/storage"
+	"io/ioutil"
 	"net"
 	"os"
 	"os/exec"
@@ -43,10 +43,19 @@ func (i *arrayEnvVars) Set(value string) error {
 
 var envVars arrayEnvVars
 
+// createDummy creates a dummy file in /tmp
+func createDummy() (string, error) {
+	file, err := ioutil.TempFile("/tmp", "nabla")
+	if err != nil {
+		return "", err
+	}
+	return file.Name(), nil
+}
+
 func setupDisk(path string) (string, error) {
 
 	if path == "" {
-		return storage.CreateDummy()
+		return createDummy()
 	}
 
 	pathInfo, err := os.Stat(path)

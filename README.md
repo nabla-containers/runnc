@@ -9,7 +9,7 @@
 
 1. Ensure that your `GOPATH` is set. (https://github.com/golang/go/wiki/SettingGOPATH)
 2. Go get the repo `go get github.com/nabla-containers/runnc`
-3. Install genisoimage on host `sudo apt install genisoimage`
+3. Install libisofs on host `sudo apt install libisofs-dev`
 4. Ensure that docker is installed (docker-ce recent versions, i.e. v15 onwards)
 
 Docker major versions tested with:
@@ -50,9 +50,9 @@ make install
 
 ## Configure Docker to use new Runtime
 
-0. Install genisoimage on host
+0. Install libisofs on host
 ```
-sudo apt install genisoimage
+sudo apt install libisofs-dev
 ```
 
 1. Modify to add runtime to `/etc/docker/daemon.json`, for example:

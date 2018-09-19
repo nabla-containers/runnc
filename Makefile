@@ -112,4 +112,3 @@ clean:
 		tests/integration/test_hello.nabla \
 		tests/integration/test_curl.nabla
 	sudo make -C solo5 clean
-
