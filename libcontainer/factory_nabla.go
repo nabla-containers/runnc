@@ -75,14 +75,6 @@ func createRootfsISO(config *configs.Config, containerRoot string) (string, erro
 	if err != nil {
 		return "", errors.Wrap(err, "Error creating iso from rootfs")
 	}
-	/*
-		targetISOPath := filepath.Join(containerRoot, "rootfs.iso")
-
-		if err = utils.Copy(targetISOPath, isoPath); err != nil {
-			// TODO: Do cleanup
-			return "", err
-		}
-	*/
 	return targetISOPath, nil
 }
 
