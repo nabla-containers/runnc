@@ -27,7 +27,8 @@ import (
 
 	"github.com/nabla-containers/runnc/nabla-lib/network"
 	"github.com/nabla-containers/runnc/nabla-lib/storage"
-	"github.com/nabla-containers/runnc/utils"
+
+	"github.com/pkg/errors"
 )
 
 const (
@@ -67,25 +68,29 @@ type NablaFactory struct {
 	Root string
 }
 
-func createRootfsISO(config *configs.Config) (string, error) {
+func createRootfsISO(config *configs.Config, containerRoot string) (string, error) {
 	rootfsPath := config.Rootfs
-	isoPath, err := storage.CreateIso(rootfsPath)
+	targetISOPath := filepath.Join(containerRoot, "rootfs.iso")
+	_, err := storage.CreateIso(rootfsPath, &targetISOPath)
 	if err != nil {
-		// TODO: Add wrap
-		return "", err
+		return "", errors.Wrap(err, "Error creating iso from rootfs")
 	}
-	targetISOPath := filepath.Join(rootfsPath, "rootfs.iso")
+	/*
+		targetISOPath := filepath.Join(containerRoot, "rootfs.iso")
 
-	if err = utils.Copy(targetISOPath, isoPath); err != nil {
-		// TODO: Do cleanup
-		return "", err
-	}
-
+		if err = utils.Copy(targetISOPath, isoPath); err != nil {
+			// TODO: Do cleanup
+			return "", err
+		}
+	*/
 	return targetISOPath, nil
 }
 
 // nablaTapName returns the tapname of a given container ID
 func nablaTapName(id string) string {
+	if len(id) < 8 {
+		panic("Insufficient uniqueness in ID")
+	}
 	return ("tap" + id)[:syscall.IFNAMSIZ-1]
 }
 
@@ -131,13 +136,14 @@ func (l *NablaFactory) Create(id string, config *configs.Config) (Container, err
 		return nil, err
 	}
 
-	fsPath, err := createRootfsISO(config)
+	fsPath, err := createRootfsISO(config, containerRoot)
 	if err != nil {
 		return nil, err
 	}
 
 	err = network.CreateTapInterface(nablaTapName(id), nil, nil)
 	if err != nil {
+		os.Remove(fsPath)
 		return nil, fmt.Errorf("Unable to create tap interface: %v", err)
 	}
 

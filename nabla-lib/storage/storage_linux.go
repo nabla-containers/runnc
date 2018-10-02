@@ -35,15 +35,25 @@ func CreateDummy() (string, error) {
 }
 
 // CreateIso creates an ISO from the dir argument
-func CreateIso(dir string) (string, error) {
-	f, err := ioutil.TempFile("/tmp", "nabla")
-	if err != nil {
-		return "", err
-	}
+func CreateIso(dir string, target *string) (string, error) {
+	var fname string
 
-	fname := f.Name()
-	if err := f.Close(); err != nil {
-		return "", err
+	if target == nil {
+		f, err := ioutil.TempFile("/tmp", "nabla")
+		if err != nil {
+			return "", err
+		}
+
+		fname = f.Name()
+		if err := f.Close(); err != nil {
+			return "", err
+		}
+	} else {
+		var err error
+		fname, err = filepath.Abs(*target)
+		if err != nil {
+			return "", err
+		}
 	}
 
 	absDir, err := filepath.Abs(dir)
