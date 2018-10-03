@@ -24,6 +24,11 @@ import (
 	"path/filepath"
 	"regexp"
 	"syscall"
+
+	"github.com/nabla-containers/runnc/nabla-lib/network"
+	"github.com/nabla-containers/runnc/nabla-lib/storage"
+
+	"github.com/pkg/errors"
 )
 
 const (
@@ -38,7 +43,6 @@ var (
 
 // New returns a linux based container factory based in the root directory and
 // configures the factory with the provided option funcs.
-// TODO(NABLA)
 func New(root string, options ...func(*NablaFactory) error) (Factory, error) {
 	if root != "" {
 		if err := os.MkdirAll(root, 0700); err != nil {
@@ -64,7 +68,24 @@ type NablaFactory struct {
 	Root string
 }
 
-// TODO(NABLA)
+func createRootfsISO(config *configs.Config, containerRoot string) (string, error) {
+	rootfsPath := config.Rootfs
+	targetISOPath := filepath.Join(containerRoot, "rootfs.iso")
+	_, err := storage.CreateIso(rootfsPath, &targetISOPath)
+	if err != nil {
+		return "", errors.Wrap(err, "Error creating iso from rootfs")
+	}
+	return targetISOPath, nil
+}
+
+// nablaTapName returns the tapname of a given container ID
+func nablaTapName(id string) string {
+	if len(id) < 8 {
+		panic("Insufficient uniqueness in ID")
+	}
+	return ("tap" + id)[:syscall.IFNAMSIZ-1]
+}
+
 func (l *NablaFactory) Create(id string, config *configs.Config) (Container, error) {
 	if l.Root == "" {
 		return nil, fmt.Errorf("invalid root")
@@ -107,9 +128,21 @@ func (l *NablaFactory) Create(id string, config *configs.Config) (Container, err
 		return nil, err
 	}
 
+	fsPath, err := createRootfsISO(config, containerRoot)
+	if err != nil {
+		return nil, err
+	}
+
+	err = network.CreateTapInterface(nablaTapName(id), nil, nil)
+	if err != nil {
+		os.Remove(fsPath)
+		return nil, fmt.Errorf("Unable to create tap interface: %v", err)
+	}
+
 	c := &nablaContainer{
 		id:     id,
 		root:   containerRoot,
+		fsPath: fsPath,
 		config: config,
 		state: &State{
 			BaseState: BaseState{
@@ -122,7 +155,6 @@ func (l *NablaFactory) Create(id string, config *configs.Config) (Container, err
 	return c, nil
 }
 
-// TODO(NABLA)
 func (l *NablaFactory) Load(id string) (Container, error) {
 	if l.Root == "" {
 		return nil, newGenericError(fmt.Errorf("invalid root"), ConfigInvalid)
@@ -143,7 +175,6 @@ func (l *NablaFactory) Load(id string) (Container, error) {
 	return c, nil
 }
 
-// TODO(NABLA)
 func (l *NablaFactory) StartInitialization() error {
 	return initNabla()
 }

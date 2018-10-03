@@ -136,7 +136,7 @@ func run(nablarun string, unikernel string, tapName string,
 			return 1
 		}
 	} else {
-		err = network.CreateTapInterface(tapName, gw, mask)
+		err = network.CreateTapInterface(tapName, &gw, &mask)
 		if err != nil {
 			// Ignore networking related errors (i.e., like if the TAP
 			// already exists).

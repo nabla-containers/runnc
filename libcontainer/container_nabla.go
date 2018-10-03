@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/nabla-containers/runnc/libcontainer/configs"
+	"github.com/nabla-containers/runnc/nabla-lib/network"
 	"github.com/opencontainers/runc/libcontainer/system"
 	"github.com/opencontainers/runc/libcontainer/utils"
 	"github.com/pkg/errors"
@@ -56,6 +57,7 @@ type Container interface {
 type nablaContainer struct {
 	id      string
 	root    string
+	fsPath  string
 	config  *configs.Config
 	m       sync.Mutex
 	state   *State
@@ -66,21 +68,18 @@ func (c *nablaContainer) Config() configs.Config {
 	return *c.config
 }
 
-// TODO(NABLA)
 func (c *nablaContainer) Status() (Status, error) {
 	c.m.Lock()
 	defer c.m.Unlock()
 	return c.currentStatus()
 }
 
-// TODO(NABLA)
 func (c *nablaContainer) State() (*State, error) {
 	c.m.Lock()
 	defer c.m.Unlock()
 	return c.currentState()
 }
 
-// TODO(NABLA)
 func (c *nablaContainer) Destroy() error {
 	c.m.Lock()
 	defer c.m.Unlock()
@@ -108,7 +107,6 @@ func (c *nablaContainer) Set(config configs.Config) error {
 	return errors.New("NablaContainer.Set not implemented")
 }
 
-// TODO(NABLA)
 func (c *nablaContainer) Start(process *Process) error {
 	c.m.Lock()
 	defer c.m.Unlock()
@@ -202,10 +200,14 @@ func (c *nablaContainer) start(p *Process) error {
 		cmd:     cmd,
 	}
 
-	// TODO: Write config to pipe for child to receive JSON
 	defer parentPipe.Close()
 	config := initConfig{
-		Args: c.config.Args,
+		Root:    c.config.Rootfs,
+		Args:    c.config.Args,
+		FsPath:  c.fsPath,
+		Cwd:     c.config.Cwd,
+		Env:     c.config.Env,
+		TapName: nablaTapName(c.id),
 	}
 
 	enc := json.NewEncoder(parentPipe)
@@ -221,7 +223,6 @@ func (c *nablaContainer) start(p *Process) error {
 		return errors.New("Cmd.Process is nil after starting")
 	}
 
-	// TODO: Create state  and update state JSON
 	c.state.InitProcessPid = p.ops.pid()
 	c.state.Created = time.Now().UTC()
 	c.state.Status = Created
@@ -261,6 +262,11 @@ func (c *nablaContainer) destroy() error {
 	if err := os.RemoveAll(c.root); err != nil {
 		return err
 	}
+
+	if err := network.RemoveTapDevice(nablaTapName(c.id)); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -289,9 +295,6 @@ func (c *nablaContainer) commandTemplate(p *Process, childPipe *os.File) (*exec.
 }
 
 func (c *nablaContainer) currentState() (*State, error) {
-	// TODO: refreshState (by looking at system info and verifying state)
-
-	//
 	process, err := os.FindProcess(int(c.state.InitProcessPid))
 	if err != nil {
 		return nil, err

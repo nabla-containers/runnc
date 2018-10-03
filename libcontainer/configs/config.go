@@ -3,12 +3,14 @@ package configs
 type Config struct {
 	Args   []string `json:"args"`
 	Rootfs string   `json:"rootfs"`
+	Env    []string `json:"env"`
+	Cwd    string   `json:"cwd"`
 
-    // Version is the version of opencontainer specification that is supported.
-    Version string `json:"version"`
+	// Version is the version of opencontainer specification that is supported.
+	Version string `json:"version"`
 
-    // Labels are user defined metadata that is stored in the config and populated on the state
-    Labels []string `json:"labels"`
+	// Labels are user defined metadata that is stored in the config and populated on the state
+	Labels []string `json:"labels"`
 }
 
 // HostUID returns the UID to run the nabla container as. Default is root.

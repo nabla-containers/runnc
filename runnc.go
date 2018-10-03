@@ -117,7 +117,7 @@ func addRootfsISO(bundlePath string, s *spec.Spec) error {
 	}
 
 	log.Printf("ISO: Rootfs path determined as %v", rootfsPath)
-	isoPath, err := storage.CreateIso(rootfsPath)
+	isoPath, err := storage.CreateIso(rootfsPath, nil)
 	if err != nil {
 		log.Printf("ISO: Failed to create ISO")
 		return err
@@ -326,7 +326,7 @@ func main() {
 	for i, v := range args {
 		if v == "--log" {
 			if i+1 < len(args) {
-                if strings.HasPrefix(args[i+1], "--") {
+				if strings.HasPrefix(args[i+1], "--") {
 					log.Fatalf("error parsing args")
 				}
 
