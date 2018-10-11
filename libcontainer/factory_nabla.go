@@ -34,6 +34,7 @@ import (
 const (
 	stateFilename    = "state.json"
 	execFifoFilename = "exec.fifo"
+	pauseNablaName   = "pause.nabla"
 )
 
 var (
@@ -68,6 +69,19 @@ type NablaFactory struct {
 	Root string
 }
 
+func isPauseContainer(config *configs.Config) bool {
+	return len(config.Args) == 1 && config.Args[0] == "/pause"
+}
+
+func applyPauseHack(config *configs.Config, containerRoot string) (*configs.Config, error) {
+	if !isPauseContainer(config) {
+		return nil, errors.New("Trying to make pause changes on non-pause container")
+	}
+
+	config.Args = []string{pauseNablaName}
+	return config, nil
+}
+
 func createRootfsISO(config *configs.Config, containerRoot string) (string, error) {
 	rootfsPath := config.Rootfs
 	targetISOPath := filepath.Join(containerRoot, "rootfs.iso")
@@ -93,6 +107,7 @@ func (l *NablaFactory) Create(id string, config *configs.Config) (Container, err
 	if err := l.validateID(id); err != nil {
 		return nil, err
 	}
+
 	//if err := l.Validator.Validate(config); err != nil {
 	//    return nil, err
 	//}
@@ -128,14 +143,26 @@ func (l *NablaFactory) Create(id string, config *configs.Config) (Container, err
 		return nil, err
 	}
 
-	fsPath, err := createRootfsISO(config, containerRoot)
-	if err != nil {
-		return nil, err
+	// If it is a pause container for kubernetes, set config so that init
+	// will just pause instead of executing a nabla
+	fsPath := ""
+	if isPauseContainer(config) {
+		config, err = applyPauseHack(config, containerRoot)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		fsPath, err = createRootfsISO(config, containerRoot)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	err = network.CreateTapInterface(nablaTapName(id), nil, nil)
 	if err != nil {
-		os.Remove(fsPath)
+		if fsPath != "" {
+			os.Remove(fsPath)
+		}
 		return nil, fmt.Errorf("Unable to create tap interface: %v", err)
 	}
 

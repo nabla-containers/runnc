@@ -20,6 +20,7 @@
 package storage
 
 import (
+	"github.com/pkg/errors"
 	"io/ioutil"
 	"os/exec"
 	"path/filepath"
@@ -52,20 +53,20 @@ func CreateIso(dir string, target *string) (string, error) {
 		var err error
 		fname, err = filepath.Abs(*target)
 		if err != nil {
-			return "", err
+			return "", errors.Wrap(err, "Unable to resolve abs target path")
 		}
 	}
 
 	absDir, err := filepath.Abs(dir)
 	if err != nil {
-		return "", err
+		return "", errors.Wrap(err, "Unable to resolve abs dir path")
 	}
 
 	cmd := exec.Command("genisoimage", "-m", "dev", "-m", "sys",
 		"-m", "proc", "-l", "-r", "-o", fname, absDir)
 	err = cmd.Run()
 	if err != nil {
-		return "", err
+		return "", errors.Wrap(err, "Unable to run geniso command")
 	}
 
 	return fname, nil

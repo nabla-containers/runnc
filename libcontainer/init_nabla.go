@@ -53,7 +53,7 @@ func nablaRunArgs(cfg *initConfig) ([]string, error) {
 	args = append(args, "--")
 	args = append(args, cfg.Args[1:]...)
 
-	fmt.Printf("Running with args: %v", args)
+	fmt.Fprintf(os.Stderr, "Running with args: %v", args)
 	return args, nil
 }
 
@@ -107,6 +107,11 @@ func initNabla() error {
 	}
 	syscall.Close(fd)
 	syscall.Close(rootfd)
+
+	// Check if it is a pause container, if it is, just pause
+	if len(config.Args) == 1 && config.Args[0] == pauseNablaName {
+		select {}
+	}
 
 	runArgs, err := nablaRunArgs(config)
 	if err != nil {
