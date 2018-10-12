@@ -21,6 +21,8 @@ BIN_PATH=/usr/local/bin/
 BIN_PATH2=/opt/runnc/bin/
 COPY_BINS=("build/runnc" "build/runnc-cont" "build/nabla-run")
 
+mkdir -p ${BIN_PATH2}
+
 for i in ${COPY_BINS[@]}; do
     echo $i
     cp $i ${BIN_PATH}/
