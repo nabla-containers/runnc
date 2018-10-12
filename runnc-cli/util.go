@@ -21,6 +21,8 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 	"os"
+	"path/filepath"
+	"strings"
 )
 
 // fatal prints the error's details if it is a libcontainer specific error type
@@ -44,6 +46,11 @@ func setupSpec(context *cli.Context) (*specs.Spec, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	if spec.Root != nil && !strings.HasPrefix(spec.Root.Path, "/") {
+		spec.Root.Path = filepath.Join(bundle, spec.Root.Path)
+	}
+
 	notifySocket := os.Getenv("NOTIFY_SOCKET")
 	if notifySocket != "" {
 		setupSdNotify(spec, notifySocket)
