@@ -23,13 +23,23 @@ func ParseSpec(s *specs.Spec) (*Config, error) {
 		labels = append(labels, fmt.Sprintf("%s=%s", k, v))
 	}
 
+	netnsPath := ""
+	if s.Linux != nil {
+		for _, v := range s.Linux.Namespaces {
+			if v.Type == specs.NetworkNamespace {
+				netnsPath = v.Path
+			}
+		}
+	}
+
 	cfg := Config{
-		Args:    s.Process.Args,
-		Rootfs:  s.Root.Path,
-		Env:     s.Process.Env,
-		Cwd:     s.Process.Cwd,
-		Version: s.Version,
-		Labels:  labels,
+		Args:      s.Process.Args,
+		Rootfs:    s.Root.Path,
+		Env:       s.Process.Env,
+		Cwd:       s.Process.Cwd,
+		Version:   s.Version,
+		NetnsPath: netnsPath,
+		Labels:    labels,
 	}
 
 	return &cfg, nil

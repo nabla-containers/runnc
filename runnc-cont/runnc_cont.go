@@ -86,6 +86,8 @@ func main() {
 		"Max memory size in MBs (defaults to 512)")
 	inDocker := flag.Bool("docker", false,
 		"Is this running in a Docker container")
+	inK8s := flag.Bool("k8s", false,
+		"Is this running in a K8s cluster")
 	volume := flag.String("volume", ":",
 		"'--volume <SRC>:<DST>'. "+
 			"<SRC> is the directory or device to mount, and <DST> "+
@@ -111,12 +113,12 @@ func main() {
 	cmdargs := strings.Join(flag.Args(), " ")
 
 	os.Exit(run(*nablarun, *unikernel, *tap, ip, ipNet.Mask, gw,
-		*inDocker, vol, cmdargs, envVars, *cwd, *mem))
+		*inDocker, *inK8s, vol, cmdargs, envVars, *cwd, *mem))
 }
 
 func run(nablarun string, unikernel string, tapName string,
 	ip net.IP, mask net.IPMask, gw net.IP,
-	inDocker bool, volume []string,
+	inDocker bool, inK8s bool, volume []string,
 	cmdargs string, envVars []string, cwd string, mem int) int {
 
 	disk, err := setupDisk(volume[0])
@@ -131,6 +133,14 @@ func run(nablarun string, unikernel string, tapName string,
 		// The tap device will get the IP assigned to the Docker
 		// container veth pair.
 		ip, gw, mask, mac, err = network.CreateMacvtapInterfaceDocker(&tapName, "eth0")
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Could not create %s: %v\n", tapName, err)
+			return 1
+		}
+	} else if inK8s {
+		// The tap device will get the IP assigned to the Docker
+		// container veth pair.
+		ip, gw, mask, err = network.CreateTapInterfaceDocker(tapName, "eth0")
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Could not create %s: %v\n", tapName, err)
 			return 1

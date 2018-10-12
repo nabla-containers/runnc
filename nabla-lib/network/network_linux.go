@@ -159,12 +159,12 @@ func CreateMacvtapInterfaceDocker(tapName *string, master string) (
 
 	netHandle, err := netlink.NewHandle()
 	if err != nil {
-		return nil, nil, nil, "", err
+		return nil, nil, nil, "", errors.Wrap(err, "Unable to create netlink handler")
 	}
 
 	err = SetupTunDev()
 	if err != nil {
-		return nil, nil, nil, "", err
+		return nil, nil, nil, "", errors.Wrap(err, "Unable to setup tun dev")
 	}
 
 	masterLink, err := netlink.LinkByName(master)
@@ -175,13 +175,13 @@ func CreateMacvtapInterfaceDocker(tapName *string, master string) (
 
 	macvtapLink, name, tapNameTmp, err := createMacvtapInterface(netHandle, masterLink)
 	if err != nil {
-		return nil, nil, nil, "", err
+		return nil, nil, nil, "", errors.Wrap(err, "Unable to create Macvtapint")
 	}
 	*tapName = tapNameTmp
 
 	addrs, err := netlink.AddrList(masterLink, netlink.FAMILY_V4)
 	if err != nil {
-		return nil, nil, nil, "", err
+		return nil, nil, nil, "", errors.Wrap(err, "Unable to get address list")
 	}
 	if len(addrs) == 0 {
 		return nil, nil, nil, "", fmt.Errorf("master should have an IP")
@@ -192,7 +192,7 @@ func CreateMacvtapInterfaceDocker(tapName *string, master string) (
 
 	routes, err := netlink.RouteList(masterLink, netlink.FAMILY_V4)
 	if err != nil {
-		return nil, nil, nil, "", err
+		return nil, nil, nil, "", errors.Wrap(err, "Unable to get route list")
 	}
 	if len(routes) == 0 {
 		return nil, nil, nil, "",
@@ -204,17 +204,17 @@ func CreateMacvtapInterfaceDocker(tapName *string, master string) (
 	// ip addr del $INET_STR dev master
 	err = netlink.AddrDel(masterLink, &masterAddr)
 	if err != nil {
-		return nil, nil, nil, "", err
+		return nil, nil, nil, "", errors.Wrap(err, "Unable to delete address of master")
 	}
 
 	err = netlink.LinkSetUp(macvtapLink)
 	if err != nil {
-		return nil, nil, nil, "", err
+		return nil, nil, nil, "", errors.Wrap(err, "Unable to set up tap link")
 	}
 
 	err = netlink.LinkSetUp(masterLink)
 	if err != nil {
-		return nil, nil, nil, "", err
+		return nil, nil, nil, "", errors.Wrap(err, "Unable to set up master link")
 	}
 
 	// The HardwareAddr Attr doesn't automatically get updated

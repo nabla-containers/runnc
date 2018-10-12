@@ -202,12 +202,13 @@ func (c *nablaContainer) start(p *Process) error {
 
 	defer parentPipe.Close()
 	config := initConfig{
-		Root:    c.config.Rootfs,
-		Args:    c.config.Args,
-		FsPath:  c.fsPath,
-		Cwd:     c.config.Cwd,
-		Env:     c.config.Env,
-		TapName: nablaTapName(c.id),
+		Root:      c.config.Rootfs,
+		Args:      c.config.Args,
+		FsPath:    c.fsPath,
+		Cwd:       c.config.Cwd,
+		Env:       c.config.Env,
+		TapName:   nablaTapName(c.id),
+		NetnsPath: c.config.NetnsPath,
 	}
 
 	enc := json.NewEncoder(parentPipe)
