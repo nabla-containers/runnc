@@ -11,6 +11,9 @@ type Config struct {
 
 	// Labels are user defined metadata that is stored in the config and populated on the state
 	Labels []string `json:"labels"`
+
+	// Network namespace
+	NetnsPath string `json:"netnspath"`
 }
 
 // HostUID returns the UID to run the nabla container as. Default is root.
