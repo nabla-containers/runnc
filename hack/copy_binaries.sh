@@ -18,7 +18,11 @@
 # PERFORMANCE OF THIS SOFTWARE.
 
 BIN_PATH=/usr/local/bin/
+
+# We add binaries like runnc-cont and nabla-run to /opt/X since they are not 
+# to be consumed directly by the user.
 BIN_PATH2=/opt/runnc/bin/
+
 COPY_BINS=("build/runnc" "build/runnc-cont" "build/nabla-run")
 
 mkdir -p ${BIN_PATH2}

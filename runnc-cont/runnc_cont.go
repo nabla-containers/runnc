@@ -138,8 +138,10 @@ func run(nablarun string, unikernel string, tapName string,
 			return 1
 		}
 	} else if inK8s {
-		// The tap device will get the IP assigned to the Docker
+		// The tap device will get the IP assigned to the k8s nabla
 		// container veth pair.
+		// XXX: This is a workaround due to an error with MacvTap, error was :
+		// Could not create /dev/tap8863: open /sys/devices/virtual/net/macvtap8863/tap8863/dev: no such file or directory
 		ip, gw, mask, err = network.CreateTapInterfaceDocker(tapName, "eth0")
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Could not create %s: %v\n", tapName, err)
