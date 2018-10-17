@@ -17,6 +17,7 @@ package libcontainer
 import (
 	"encoding/json"
 	"fmt"
+	spec "github.com/opencontainers/runtime-spec/specs-go"
 	"github.com/vishvananda/netns"
 	"os"
 	"path/filepath"
@@ -41,15 +42,12 @@ func nablaRunArgs(cfg *initConfig) ([]string, error) {
 	}
 
 	args := []string{NablaRunncContBin,
+		"-k8s",
 		"-nabla-run", NablaRunBin,
 		"-tap", cfg.TapName,
 		"-cwd", cfg.Cwd,
 		"-volume", cfg.FsPath + ":/",
 		"-unikernel", filepath.Join(cfg.Root, cfg.Args[0])}
-
-	if cfg.NetnsPath != "" {
-		args = append(args, "-k8s")
-	}
 
 	for _, e := range cfg.Env {
 		args = append(args, "-env", e)
@@ -63,13 +61,16 @@ func nablaRunArgs(cfg *initConfig) ([]string, error) {
 }
 
 type initConfig struct {
-	Root      string   `json:"root"`
-	Args      []string `json:"args"`
-	FsPath    string   `json:"fspath"`
-	Cwd       string   `json:"cwd"`
-	Env       []string `json:"env"`
-	TapName   string   `json:"tap"`
-	NetnsPath string   `json:"netnspath"`
+	Id         string      `json:"id"`
+	BundlePath string      `json:"bundlepath"`
+	Root       string      `json:"root"`
+	Args       []string    `json:"args"`
+	FsPath     string      `json:"fspath"`
+	Cwd        string      `json:"cwd"`
+	Env        []string    `json:"env"`
+	TapName    string      `json:"tap"`
+	NetnsPath  string      `json:"netnspath"`
+	Hooks      *spec.Hooks `json:"hooks"`
 }
 
 func initNabla() error {
@@ -102,6 +103,37 @@ func initNabla() error {
 	// specific env vars.
 	os.Clearenv()
 
+	// Go into network namespace for temporary hack for CNI plugin using veth pairs
+	// K8s case
+	if config.NetnsPath != "" {
+		nsh, err := netns.GetFromPath(config.NetnsPath)
+		if err != nil {
+			return newSystemErrorWithCause(err, "unable to get netns handle")
+		}
+
+		if err := netns.Set(nsh); err != nil {
+			return newSystemErrorWithCause(err, "unable to get set netns")
+		}
+	} else {
+		// Docker case for docker cli
+		// TODO: case on specific --docker-cli flag
+		nsh, err := netns.New()
+		if err != nil {
+			return newSystemErrorWithCause(err, "unable to create netns handle")
+		}
+
+		if err := netns.Set(nsh); err != nil {
+			return newSystemErrorWithCause(err, "unable to get set netns")
+		}
+	}
+	if config.Hooks != nil {
+		for _, hook := range config.Hooks.Prestart {
+			if err := runHook(hook, config.Id, config.BundlePath); err != nil {
+				return newSystemErrorWithCause(err, "unable to run prestart hook")
+			}
+		}
+	}
+
 	// wait for the fifo to be opened on the other side before
 	// exec'ing the users process.
 	fd, err := syscall.Openat(rootfd, execFifoFilename, os.O_WRONLY|syscall.O_CLOEXEC, 0)
@@ -113,18 +145,6 @@ func initNabla() error {
 	}
 	syscall.Close(fd)
 	syscall.Close(rootfd)
-
-	// Go into network namespace for temporary hack for CNI plugin using veth pairs
-	if config.NetnsPath != "" {
-		nsh, err := netns.GetFromPath(config.NetnsPath)
-		if err != nil {
-			return newSystemErrorWithCause(err, "unable to get netns handle")
-		}
-
-		if err := netns.Set(nsh); err != nil {
-			return newSystemErrorWithCause(err, "unable to get set netns")
-		}
-	}
 
 	// Check if it is a pause container, if it is, just pause
 	if len(config.Args) == 1 && config.Args[0] == pauseNablaName {
