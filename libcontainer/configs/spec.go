@@ -40,6 +40,7 @@ func ParseSpec(s *specs.Spec) (*Config, error) {
 		Version:   s.Version,
 		NetnsPath: netnsPath,
 		Labels:    labels,
+		Hooks:     s.Hooks,
 	}
 
 	return &cfg, nil

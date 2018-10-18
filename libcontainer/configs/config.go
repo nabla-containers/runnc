@@ -1,5 +1,9 @@
 package configs
 
+import (
+	spec "github.com/opencontainers/runtime-spec/specs-go"
+)
+
 type Config struct {
 	Args   []string `json:"args"`
 	Rootfs string   `json:"rootfs"`
@@ -14,6 +18,9 @@ type Config struct {
 
 	// Network namespace
 	NetnsPath string `json:"netnspath"`
+
+	// Hooks configures callbacks for container lifecycle events.
+	Hooks *spec.Hooks `json:"hooks,omitempty"`
 }
 
 // HostUID returns the UID to run the nabla container as. Default is root.

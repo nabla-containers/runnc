@@ -116,7 +116,6 @@ func main() {
 	app.Before = func(context *cli.Context) error {
 		if context.GlobalBool("debug") {
 			logrus.SetLevel(logrus.DebugLevel)
-			fmt.Fprintln(os.Stderr, "Setting debug level")
 		}
 		if path := context.GlobalString("log"); path != "" {
 			f, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_APPEND|os.O_SYNC, 0666)
