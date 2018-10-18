@@ -76,7 +76,7 @@ systemctl restart docker
 3. Run with runtime:
 
 ```
-sudo docker run --rm --runtime=runnc nablact/nabla-node-express:latest
+sudo docker run --rm --runtime=runnc nablact/nabla-node-base:latest
 ```
 
 ## Limitations
