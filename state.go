@@ -63,6 +63,9 @@ instance of a container.`,
 		}
 		os.Stdout.Write(data)
 
+		// DEBUG
+		//os.Stderr.Write(data)
+
 		return nil
 	},
 }

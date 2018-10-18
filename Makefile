@@ -46,13 +46,13 @@ container-build:
 
 container-install: 
 	sudo docker build . -f Dockerfile.build -t runnc-build
-	sudo docker run --rm -v /opt/runnc/lib/:/opt/runnc/lib/ -v /usr/local/bin:/usr/local/bin -v ${PWD}:/go/src/github.com/nabla-containers/runnc -w /go/src/github.com/nabla-containers/runnc runnc-build make install
+	sudo docker run --rm -v /opt/runnc/:/opt/runnc/ -v /usr/local/bin:/usr/local/bin -v ${PWD}:/go/src/github.com/nabla-containers/runnc -w /go/src/github.com/nabla-containers/runnc runnc-build make install
 
 .PHONY: godep
 godep: 
 	dep ensure
 
-build/runnc: godep runnc.go
+build/runnc: godep *.go
 	GOOS=linux GOARCH=amd64 go build -o $@ .
 
 build/runnc-cont: godep runnc-cont/*
@@ -80,7 +80,6 @@ tests/integration/test_curl.nabla:
 
 install: build/runnc build/runnc-cont build/nabla-run
 	sudo hack/copy_binaries.sh
-	sudo hack/copy_libraries.sh
 
 .PHONY: test,container-integration-test,local-integration-test,integration
 test: integration
@@ -108,8 +107,9 @@ container-integration-test: test/integration/node_tests.iso
 
 clean:
 	sudo rm -rf build/
-	rm -f tests/integration/node.nabla \
+	sudo rm -f tests/integration/node.nabla \
 		tests/integration/test_hello.nabla \
-		tests/integration/test_curl.nabla
+		tests/integration/test_curl.nabla \
+		tests/integration/node_tests.iso
 	sudo make -C solo5 clean
 

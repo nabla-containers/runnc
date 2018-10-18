@@ -1,376 +1,155 @@
-// Copyright (c) 2018, IBM
-// Author(s): Brandon Lum, Ricardo Koller, Dan Williams
+// Copyright 2014 Docker, Inc.
 //
-// Permission to use, copy, modify, and/or distribute this software for
-// any purpose with or without fee is hereby granted, provided that the
-// above copyright notice and this permission notice appear in all
-// copies.
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
 //
-// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL
-// WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED
-// WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE
-// AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL
-// DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA
-// OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
-// TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
-// PERFORMANCE OF THIS SOFTWARE.
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 package main
 
 import (
-	"encoding/json"
 	"fmt"
-	"github.com/nabla-containers/runnc/nabla-lib/storage"
-	"github.com/nabla-containers/runnc/utils"
-	spec "github.com/opencontainers/runtime-spec/specs-go"
-	"io/ioutil"
-	"log"
+	"io"
 	"os"
-	"path/filepath"
 	"strings"
-	"syscall"
+
+	"github.com/opencontainers/runtime-spec/specs-go"
 
 	"github.com/sirupsen/logrus"
+	"github.com/urfave/cli"
 )
 
-type config struct {
-	RuncBinaryPath string
-	Bundle         string
-	PidFile        string
-	Root           string
-	Log            string
-	LogFormat      string
-	ConsoleSocket  string
-}
+// version will be populated by the Makefile, read from
+// VERSION file of the source code.
+var version = ""
 
-var (
-	// LogFile handlier to use for logging
-	LogFile *os.File
-	// LogFilePath to log to
-	LogFilePath = "/tmp/runnc.log"
-	// Config is the config for the runc command invoked
-	Config = config{}
-	// DefaultRuncBinaryPath is the default path to the docker-runc binary
-	DefaultRuncBinaryPath = "/usr/bin/docker-runc"
+// gitCommit will be the hash that the binary was built from
+// and will be populated by the Makefile
+var gitCommit = ""
+
+const (
+	specConfig = "config.json"
+	usage      = `Nabla Containers runtime
+
+runnc is a command line client for running applications packaged according to
+the Open Container Initiative (OCI) format.
+
+Containers are configured using bundles. A bundle for a container is a directory
+that includes a specification file named "` + specConfig + `" and a root filesystem.
+The root filesystem contains the contents of the container.
+
+To start a new instance of a container:
+
+    # runnc run [ -b bundle ] <container-id>
+
+Where "<container-id>" is your name for the instance of the container that you
+are starting. The name you provide for the container instance must be unique on
+your host. Providing the bundle directory using "-b" is optional. The default
+value for "bundle" is the current directory.`
 )
-
-func runRunc(args, env []string) {
-	newargs := append([]string{Config.RuncBinaryPath}, args[1:]...)
-
-	newenv := make([]string, len(env))
-	for i, v := range env {
-		if strings.HasPrefix(v, "_=") {
-			newenv[i] = "_=" + Config.RuncBinaryPath
-		} else {
-			newenv[i] = v
-		}
-	}
-	log.Printf("Calling runc with following args: %v, %v, %v", Config.RuncBinaryPath, newargs, newenv)
-
-	if execErr := syscall.Exec(Config.RuncBinaryPath, newargs, newenv); execErr != nil {
-		panic(execErr)
-	}
-}
-
-// linuxPermCapNetAdmin is the string to signify the CAP_NET_ADMIN linux capability
-var linuxPermCapNetAdmin = "CAP_NET_ADMIN"
-
-// readSpec reads the runtime spec (config.json) from the bundle
-func readSpec(bundlePath string) (*spec.Spec, error) {
-	specFile := filepath.Join(bundlePath, "/config.json")
-	specBytes, err := ioutil.ReadFile(specFile)
-	if err != nil {
-		return nil, err
-	}
-
-	var spec spec.Spec
-	if err := json.Unmarshal(specBytes, &spec); err != nil {
-		return nil, err
-	}
-	return &spec, nil
-}
-
-// writeSpec writes the runtimespec (config.json) to the bundle
-func writeSpec(bundlePath string, s *spec.Spec) error {
-	specFile := filepath.Join(bundlePath, "/config.json")
-
-	specBytes, err := json.Marshal(s)
-	if err != nil {
-		return err
-	}
-	log.Printf("Write Spec bytes\n\n%v", string(specBytes))
-
-	err = ioutil.WriteFile(specFile, specBytes, 0644)
-
-	return err
-}
-
-// addRootfsISO creates an ISO from the rootfs of the target spec and adds it
-// to the root of the rootfs.
-func addRootfsISO(bundlePath string, s *spec.Spec) error {
-	rootfsPath := ""
-
-	if s.Root == nil {
-		rootfsPath = filepath.Join(bundlePath, "rootfs")
-	} else {
-		rootfsPath = s.Root.Path
-	}
-
-	log.Printf("ISO: Rootfs path determined as %v", rootfsPath)
-	isoPath, err := storage.CreateIso(rootfsPath, nil)
-	if err != nil {
-		log.Printf("ISO: Failed to create ISO")
-		return err
-	}
-
-	targetISOPath := filepath.Join(rootfsPath, "rootfs.iso")
-
-	log.Printf("ISO: Created ISO %v", isoPath)
-	log.Printf("ISO: Target ISO %v", targetISOPath)
-	if err = utils.Copy(targetISOPath, isoPath); err != nil {
-		return err
-	}
-
-	// TODO: Delete old tmp iso or modify storage iso to create iso in specific
-	// directory
-
-	return nil
-}
-
-// addNablaBinaries adds the nabla runtime binaries to the rootfs
-func addNablaBinaries(bundlePath string, s *spec.Spec) error {
-	rootfsPath := ""
-
-	if s.Root == nil {
-		rootfsPath = filepath.Join(bundlePath, "rootfs")
-	} else {
-		rootfsPath = s.Root.Path
-	}
-
-	binSrcPath := "/usr/local/bin"
-	libSrcPath := "/opt/runnc/lib"
-
-	ukvmBinSrcPath := filepath.Join(binSrcPath, "nabla-run")
-	nablaRunSrcPath := filepath.Join(binSrcPath, "runnc-cont")
-
-	ukvmBinDstPath := filepath.Join(rootfsPath, "nabla-run")
-	nablaRunDstPath := filepath.Join(rootfsPath, "runnc-cont")
-	libDstPath := filepath.Join(rootfsPath, "/lib64")
-
-	if err := utils.Copy(ukvmBinDstPath, ukvmBinSrcPath); err != nil {
-		return err
-	}
-
-	if err := utils.Copy(nablaRunDstPath, nablaRunSrcPath); err != nil {
-		return err
-	}
-
-	err := utils.Copy(libDstPath, libSrcPath)
-
-	return err
-}
-
-func addNetAdmin(s *spec.Spec) error {
-	if s.Process == nil {
-		return fmt.Errorf("Spec process is nil")
-	}
-
-	if s.Process.Capabilities == nil {
-		return fmt.Errorf("Spec process capabilities is nil")
-	}
-
-	s.Process.Capabilities.Bounding = utils.AddAbsentSlice(s.Process.Capabilities.Bounding, linuxPermCapNetAdmin)
-	s.Process.Capabilities.Effective = utils.AddAbsentSlice(s.Process.Capabilities.Effective, linuxPermCapNetAdmin)
-	s.Process.Capabilities.Inheritable = utils.AddAbsentSlice(s.Process.Capabilities.Inheritable, linuxPermCapNetAdmin)
-	s.Process.Capabilities.Permitted = utils.AddAbsentSlice(s.Process.Capabilities.Permitted, linuxPermCapNetAdmin)
-	s.Process.Capabilities.Ambient = utils.AddAbsentSlice(s.Process.Capabilities.Ambient, linuxPermCapNetAdmin)
-
-	return nil
-}
-
-func modEntrypoint(s *spec.Spec) error {
-	if s.Process == nil {
-		return fmt.Errorf("Spec process is nil")
-	}
-
-	if len(s.Process.Args) == 0 {
-		return fmt.Errorf("OCI process args are empty")
-	}
-
-	if !strings.HasSuffix(s.Process.Args[0], ".nabla") {
-		return fmt.Errorf("Entrypoint is not a .nabla file")
-	}
-
-	args := []string{"/runnc-cont", "-docker",
-		"-cwd", s.Process.Cwd,
-		"-volume", "/rootfs.iso:/",
-		"-unikernel", s.Process.Args[0]}
-
-	for _, e := range s.Process.Env {
-		args = append(args, "-env", e)
-	}
-
-	args = append(args, "--")
-	args = append(args, s.Process.Args[1:]...)
-
-	s.Process.Args = args
-
-	return nil
-
-}
-
-func checkHostNamespace(s *spec.Spec) error {
-	if s.Linux == nil {
-		return fmt.Errorf("Not a Linux Process")
-	}
-
-	if s.Linux.Namespaces == nil {
-		return fmt.Errorf("No namespace object")
-	}
-
-	for _, v := range s.Linux.Namespaces {
-		if v.Type == "network" && strings.Contains(v.Path, "default") {
-			return fmt.Errorf("Unable to use host network namespace")
-		}
-	}
-
-	return nil
-}
-
-func modDevicePermissions(s *spec.Spec) error {
-
-	if s.Linux == nil || s.Linux.Resources == nil {
-		return fmt.Errorf("Spec linux.resources is empty")
-	}
-
-	devs := []spec.LinuxDeviceCgroup{
-		{
-			Allow:  true,
-			Access: "rwm",
-		},
-	}
-
-	s.Linux.Resources.Devices = devs
-
-	return nil
-}
-
-// bundleMod modifies the bundle (config.json and associated rootfs)
-// of the OCI runtime spec for the use with nabla containers
-func bundleMod(bundlePath string) error {
-	// Read the spec
-	spec, err := readSpec(bundlePath)
-	if err != nil {
-		return err
-	}
-
-	// Check for use of certain host namespaces
-	if err = checkHostNamespace(spec); err != nil {
-		return err
-	}
-
-	// Modify the spec to add caps
-	log.Printf("Adding NET_ADMIN to spec")
-	if err = addNetAdmin(spec); err != nil {
-		return err
-	}
-
-	if err = modDevicePermissions(spec); err != nil {
-		return err
-	}
-
-	// Modify the spec to change entrypoint to launcher
-	log.Printf("Modifying entrypoint")
-	if err = modEntrypoint(spec); err != nil {
-		return err
-	}
-
-	// Create an ISO from the rootfs
-	log.Printf("Adding ISO to Rootfs")
-	if err = addRootfsISO(bundlePath, spec); err != nil {
-		return err
-	}
-
-	// Copy the necessary runtime binaries into the rootfs
-	log.Printf("Copying runtime binaries into rootfs")
-	if err = addNablaBinaries(bundlePath, spec); err != nil {
-		return err
-	}
-
-	// Output the spec
-	err = writeSpec(bundlePath, spec)
-
-	return err
-}
 
 func main() {
-	// Create logfile (temp fix)
-	LogFile, err := os.OpenFile(LogFilePath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
-	if err != nil {
-		log.Fatalf("error opening file: %v", err)
+	app := cli.NewApp()
+	app.Name = "runnc"
+	app.Usage = usage
+
+	var v []string
+	if version != "" {
+		v = append(v, version)
 	}
-	defer LogFile.Close()
+	if gitCommit != "" {
+		v = append(v, fmt.Sprintf("commit: %s", gitCommit))
+	}
+	v = append(v, fmt.Sprintf("spec: %s", specs.Version))
+	app.Version = strings.Join(v, "\n")
 
-	log.SetOutput(LogFile)
-	log.Println("This is a test log entry")
+	root := "/run/runnc"
 
-	// Get arguments and env to pass onto runc later
-	args := os.Args
-	log.Printf("Runnc called with args: %v\n", args)
-	env := os.Environ()
-
-	Config.RuncBinaryPath = DefaultRuncBinaryPath
-
-	logPath := ""
-
-	for i, v := range args {
-		if v == "--log" {
-			if i+1 < len(args) {
-				if strings.HasPrefix(args[i+1], "--") {
-					log.Fatalf("error parsing args")
-				}
-
-				logPath = args[i+1]
-				f, err := os.OpenFile(logPath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
-				if err != nil {
-					log.Fatalf("error opening file: %v", err)
-				}
-
-				logrus.SetOutput(f)
-				logrus.SetFormatter(new(logrus.JSONFormatter))
-				defer f.Close()
-			} else {
-				panic("Unable to parse log path")
-			}
+	app.Flags = []cli.Flag{
+		cli.BoolFlag{
+			Name:  "debug",
+			Usage: "enable debug output for logging",
+		},
+		cli.StringFlag{
+			Name:  "log",
+			Value: "/dev/null",
+			Usage: "set the log file path where internal debug information is written",
+		},
+		cli.StringFlag{
+			Name:  "log-format",
+			Value: "text",
+			Usage: "set the format used by logs ('text' (default), or 'json')",
+		},
+		cli.StringFlag{
+			Name:  "root",
+			Value: root,
+			Usage: "root directory for storage of container state (this should be located in tmpfs)",
+		},
+	}
+	app.Commands = []cli.Command{
+		// Implement essentials first (for baseic docker run to work)
+		createCommand,
+		deleteCommand,
+		stateCommand,
+		startCommand,
+		killCommand,
+		//		checkpointCommand,
+		//		eventsCommand,
+		//		execCommand,
+		initCommand,
+		//		listCommand,
+		//		pauseCommand,
+		//		psCommand,
+		//		restoreCommand,
+		//		resumeCommand,
+		//		runCommand,
+		//		specCommand,
+		//		updateCommand,
+	}
+	app.Before = func(context *cli.Context) error {
+		if context.GlobalBool("debug") {
+			logrus.SetLevel(logrus.DebugLevel)
 		}
-
-		if v == "--log-format" {
-			if i+1 < len(args) {
-				if args[i+1] == "json" {
-					logrus.SetFormatter(new(logrus.JSONFormatter))
-				}
-			} else {
-				panic("Unable to parse log format")
+		if path := context.GlobalString("log"); path != "" {
+			f, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_APPEND|os.O_SYNC, 0666)
+			if err != nil {
+				fmt.Fprintln(os.Stdout, err.Error())
+				return err
 			}
+			logrus.SetOutput(f)
 		}
-
+		switch context.GlobalString("log-format") {
+		case "text":
+			// retain logrus's default.
+		case "json":
+			logrus.SetFormatter(new(logrus.JSONFormatter))
+		default:
+			return fmt.Errorf("unknown log-format %q", context.GlobalString("log-format"))
+		}
+		return nil
 	}
 
-	for i, v := range args {
-		if v == "--bundle" {
-			if i+1 < len(args) {
-				bundlePath := args[i+1]
-				log.Printf("Bundle: %v\n\n", bundlePath)
-				if err := bundleMod(bundlePath); err != nil {
-					logrus.Error(err.Error())
-					panic(err)
-				}
-				break
-			} else {
-				panic("Unable to parse bundle")
-			}
-		}
+	// If the command returns an error, cli takes upon itself to print
+	// the error on cli.ErrWriter and exit.
+	// Use our own writer here to ensure the log gets sent to the right location.
+	cli.ErrWriter = &FatalWriter{cli.ErrWriter}
+	if err := app.Run(os.Args); err != nil {
+		fatal(err)
 	}
+}
 
-	runRunc(args, env)
+type FatalWriter struct {
+	cliErrWriter io.Writer
+}
+
+func (f *FatalWriter) Write(p []byte) (n int, err error) {
+	logrus.Error(string(p))
+	return f.cliErrWriter.Write(p)
 }

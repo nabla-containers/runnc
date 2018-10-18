@@ -11,10 +11,10 @@
   version = "v1.5.0"
 
 [[projects]]
-  branch = "master"
   name = "github.com/konsorten/go-windows-terminal-sequences"
   packages = ["."]
-  revision = "b729f2633dfe35f4d1d8a32385f6685610ce1cb5"
+  revision = "5c8c8bd35d3832f5d134ae1e1e375b69a4d25242"
+  version = "v1.0.1"
 
 [[projects]]
   name = "github.com/opencontainers/runc"
@@ -44,7 +44,7 @@
   branch = "master"
   name = "github.com/sirupsen/logrus"
   packages = ["."]
-  revision = "d23a0f20d429b5da960216daca3b37e075cbdcd1"
+  revision = "680f584d621da87ee04ea659130e149ba9d23cae"
 
 [[projects]]
   name = "github.com/urfave/cli"
@@ -71,7 +71,7 @@
   branch = "master"
   name = "golang.org/x/crypto"
   packages = ["ssh/terminal"]
-  revision = "0e37d006457bf46f9e6692014ba72ef82c33022c"
+  revision = "0c41d7ab0a0ee717d4590a44bcb987dfd9e183eb"
 
 [[projects]]
   branch = "master"
@@ -80,11 +80,11 @@
     "unix",
     "windows"
   ]
-  revision = "d0be0721c37eeb5299f245a996a483160fc36940"
+  revision = "fa43e7bc11baaae89f3f902b2b4d832b68234844"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "881e70c64fd1971ed20cf9d539dfa001a880edf1d4bc1b63cd0adef04efda61d"
+  inputs-digest = "161a6358b5d2b899cb8a657abf464b14118ff68e1531d527d326703010500ad6"
   solver-name = "gps-cdcl"
   solver-version = 1
