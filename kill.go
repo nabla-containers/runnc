@@ -100,7 +100,7 @@ signal to the init process of the "ubuntu01" container:
 
 		// We ignore the all flag since we are using an older version of
 		// runc libcontainer libraries and we only have a single process
-		err := container.Signal(signal, context.Bool("all"))
+		err = container.Signal(signal, context.Bool("all"))
 
 		return err
 	},

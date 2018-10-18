@@ -156,7 +156,7 @@ func initNabla() error {
 		return newSystemErrorWithCause(err, "Unable to construct nabla run args")
 	}
 
-	err := syscall.Exec(runArgs[0], runArgs, os.Environ())
+	err = syscall.Exec(runArgs[0], runArgs, os.Environ())
 
 	return err
 
