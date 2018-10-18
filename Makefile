@@ -52,7 +52,7 @@ container-install:
 godep: 
 	dep ensure
 
-build/runnc: godep *.go
+build/runnc: godep create.go exec.go kill.go start.go util.go util_runner.go util_tty.go delete.go  init.go runnc.go state.go util_nabla.go util_signal.go
 	GOOS=linux GOARCH=amd64 go build -o $@ .
 
 build/runnc-cont: godep runnc-cont/*
