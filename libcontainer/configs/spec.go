@@ -6,6 +6,7 @@ import (
 	"github.com/pkg/errors"
 )
 
+// ParseSpec parses the OCI runtime spec and returns a nabla container configuration
 func ParseSpec(s *specs.Spec) (*Config, error) {
 	if s == nil {
 		return nil, errors.New("Spec is nil")

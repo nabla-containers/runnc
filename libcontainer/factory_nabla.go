@@ -63,7 +63,7 @@ func New(root string, options ...func(*NablaFactory) error) (Factory, error) {
 	return l, nil
 }
 
-// LinuxFactory implements the default factory interface for linux based systems.
+// NablaFactory implements the default factory interface for nabla containers.
 type NablaFactory struct {
 	// Root directory for the factory to store state.
 	Root string
@@ -100,6 +100,7 @@ func nablaTapName(id string) string {
 	return ("tap" + id)[:syscall.IFNAMSIZ-1]
 }
 
+// Create creates a new nabla container
 func (l *NablaFactory) Create(id string, config *configs.Config) (Container, error) {
 	if l.Root == "" {
 		return nil, fmt.Errorf("invalid root")
@@ -182,6 +183,7 @@ func (l *NablaFactory) Create(id string, config *configs.Config) (Container, err
 	return c, nil
 }
 
+// Load returns the data structure representing a nabla container
 func (l *NablaFactory) Load(id string) (Container, error) {
 	if l.Root == "" {
 		return nil, newGenericError(fmt.Errorf("invalid root"), ConfigInvalid)
@@ -202,10 +204,12 @@ func (l *NablaFactory) Load(id string) (Container, error) {
 	return c, nil
 }
 
+// StartInitialization starts the initialization of a nabla container process
 func (l *NablaFactory) StartInitialization() error {
 	return initNabla()
 }
 
+// Type returns the name of the container type
 func (l *NablaFactory) Type() string {
 	return "nabla"
 }

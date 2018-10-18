@@ -162,8 +162,8 @@ func (p *nablaProcess) signal(sig os.Signal) error {
 	return syscall.Kill(p.pid(), s)
 }
 
-// TODO: TEMP COPY OUTDATED VERSION OF RUNC
 // NewSockPair returns a new unix socket pair
+// TODO: TEMP COPY OUTDATED VERSION OF RUNC
 func NewSockPair(name string) (parent *os.File, child *os.File, err error) {
 	fds, err := syscall.Socketpair(syscall.AF_LOCAL, syscall.SOCK_STREAM|syscall.SOCK_CLOEXEC, 0)
 	if err != nil {
@@ -267,11 +267,9 @@ func (c *nablaContainer) destroy() error {
 		return err
 	}
 
-	if err := network.RemoveTapDevice(nablaTapName(c.id)); err != nil {
-		return err
-	}
+	err := network.RemoveTapDevice(nablaTapName(c.id))
 
-	return nil
+	return err
 }
 
 func (c *nablaContainer) commandTemplate(p *Process, childPipe *os.File) (*exec.Cmd, error) {

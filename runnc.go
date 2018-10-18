@@ -145,6 +145,7 @@ func main() {
 	}
 }
 
+// FatalWriter is writer for error logs
 type FatalWriter struct {
 	cliErrWriter io.Writer
 }

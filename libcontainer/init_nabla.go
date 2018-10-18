@@ -27,9 +27,9 @@ import (
 )
 
 var (
-	NablaBinDir       = "/opt/runnc/bin/"
-	NablaRunncContBin = NablaBinDir + "runnc-cont"
-	NablaRunBin       = NablaBinDir + "nabla-run"
+	nablaBinDir       = "/opt/runnc/bin/"
+	nablaRunncContBin = nablaBinDir + "runnc-cont"
+	nablaRunBin       = nablaBinDir + "nabla-run"
 )
 
 func nablaRunArgs(cfg *initConfig) ([]string, error) {
@@ -41,9 +41,9 @@ func nablaRunArgs(cfg *initConfig) ([]string, error) {
 		return nil, fmt.Errorf("Entrypoint is not a .nabla file")
 	}
 
-	args := []string{NablaRunncContBin,
+	args := []string{nablaRunncContBin,
 		"-k8s",
-		"-nabla-run", NablaRunBin,
+		"-nabla-run", nablaRunBin,
 		"-tap", cfg.TapName,
 		"-cwd", cfg.Cwd,
 		"-volume", cfg.FsPath + ":/",
@@ -156,10 +156,8 @@ func initNabla() error {
 		return newSystemErrorWithCause(err, "Unable to construct nabla run args")
 	}
 
-	if err := syscall.Exec(runArgs[0], runArgs, os.Environ()); err != nil {
-		return err
-	}
+	err := syscall.Exec(runArgs[0], runArgs, os.Environ())
 
-	return nil
+	return err
 
 }

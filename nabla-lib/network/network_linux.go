@@ -95,7 +95,7 @@ func CreateTapInterface(tapName string, ip *net.IP, mask *net.IPMask) error {
 	return nil
 }
 
-// RemoveTapDevices removes the tap device with name tapName
+// RemoveTapDevice removes the tap device with name tapName
 func RemoveTapDevice(tapName string) error {
 	err := SetupTunDev()
 	if err != nil {

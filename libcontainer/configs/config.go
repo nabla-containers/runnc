@@ -4,6 +4,7 @@ import (
 	spec "github.com/opencontainers/runtime-spec/specs-go"
 )
 
+// Config represents the configuration necessary for nabla containers from the OCI runtime spec
 type Config struct {
 	Args   []string `json:"args"`
 	Rootfs string   `json:"rootfs"`

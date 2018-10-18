@@ -18,6 +18,7 @@ import (
 	"github.com/nabla-containers/runnc/libcontainer/configs"
 )
 
+// Factory is an interface for management for containers
 type Factory interface {
 	// Creates a new container with the given id and starts the initial process inside it.
 	// id must be a string containing only letters, digits and underscores and must contain
