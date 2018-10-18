@@ -54,7 +54,7 @@ status of "ubuntu01" as "stopped" the following will delete resources held for
 				// libcontainer does not see it because the state.json file inside that directory    was never created.
 				path := filepath.Join(context.GlobalString("root"), id)
 				if e := os.RemoveAll(path); e != nil {
-					fmt.Fprintf(os.Stderr, "remove %s: %v\n", path, e)
+					//	fmt.Fprintf(os.Stderr, "remove %s: %v\n", path, e)
 				}
 			}
 			return err

@@ -50,9 +50,10 @@ make install
 
 ## Configure Docker to use new Runtime
 
-0. Install genisoimage on host
+0. Install genisoimage and libseccomp on host
 ```
 sudo apt install genisoimage
+sudo apt install libseccomp-dev
 ```
 
 1. Modify to add runtime to `/etc/docker/daemon.json`, for example:
