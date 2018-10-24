@@ -251,13 +251,13 @@ func CreateMacvtapInterfaceDocker(tapName *string, master string) (
 	return masterIP, gwAddr, masterMask, tapMac, nil
 }
 
-func getMasterDetails(masterLink netlink.Link) (masterAddr *netlink.Addr, masterIP net.IP, masterMask net.IPMask, gwAddr net.IP, err error) {
+func getMasterDetails(masterLink netlink.Link) (masterAddr *netlink.Addr, masterIP net.IP, masterMask net.IPMask, gwAddr net.IP, mac string, err error) {
 	addrs, err := netlink.AddrList(masterLink, netlink.FAMILY_V4)
 	if err != nil {
-		return nil, nil, nil, nil, err
+		return nil, nil, nil, nil, "", err
 	}
 	if len(addrs) == 0 {
-		return nil, nil, nil, nil, fmt.Errorf("master should have an IP")
+		return nil, nil, nil, nil, "", fmt.Errorf("master should have an IP")
 	}
 	masterAddr = &addrs[0]
 	masterIP = addrs[0].IPNet.IP
@@ -265,16 +265,17 @@ func getMasterDetails(masterLink netlink.Link) (masterAddr *netlink.Addr, master
 
 	routes, err := netlink.RouteList(masterLink, netlink.FAMILY_V4)
 	if err != nil {
-		return nil, nil, nil, nil, err
+		return nil, nil, nil, nil, "", err
 	}
 	if len(routes) == 0 {
-		return nil, nil, nil, nil,
+		return nil, nil, nil, nil, "",
 			fmt.Errorf("master should have at least one route")
 	}
 	// XXX: is the "gateway" always the first route?
 	gwAddr = routes[0].Gw
 
-	return masterAddr, masterIP, masterMask, gwAddr, nil
+	macAddr := masterLink.Attrs().HardwareAddr.String()
+	return masterAddr, masterIP, masterMask, gwAddr, macAddr, nil
 }
 
 // CreateTapInterfaceDocker creates a new TAP interface and a bridge, adds both
@@ -282,21 +283,21 @@ func getMasterDetails(masterLink netlink.Link) (masterAddr *netlink.Addr, master
 // of the master link to be used by the unikernel NIC.  Returns the assigned
 // IP/mask and gateway IP.
 func CreateTapInterfaceDocker(tapName string, master string) (
-	net.IP, net.IP, net.IPMask, error) {
+	net.IP, net.IP, net.IPMask, string, error) {
 
 	masterLink, err := netlink.LinkByName(master)
 	if err != nil {
-		return nil, nil, nil,
+		return nil, nil, nil, "",
 			fmt.Errorf("no master interface: %v", err)
 	}
-	masterAddr, masterIP, masterMask, gwAddr, err := getMasterDetails(masterLink)
+	masterAddr, masterIP, masterMask, gwAddr, mac, err := getMasterDetails(masterLink)
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, nil, "", err
 	}
 
 	err = SetupTunDev()
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, nil, "", err
 	}
 
 	// ip tuntap add tap100 mode tap
@@ -305,24 +306,34 @@ func CreateTapInterfaceDocker(tapName string, master string) (
 		Mode:      netlink.TUNTAP_MODE_TAP}
 	err = netlink.LinkAdd(tap)
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, nil, "", err
 	}
 
 	// ip link set dev tap100 up'
 	err = netlink.LinkSetUp(tap)
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, nil, "", err
 	}
 
 	// ip addr del $INET_STR dev master
 	err = netlink.AddrDel(masterLink, masterAddr)
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, nil, "", err
+	}
+
+	genmac, err := net.ParseMAC("aa:aa:aa:aa:bb:cc")
+	if err != nil {
+		return nil, nil, nil, "", err
+	}
+
+	err = netlink.LinkSetHardwareAddr(masterLink, genmac)
+	if err != nil {
+		return nil, nil, nil, "", err
 	}
 
 	br0, err := CreateBridge("br0")
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, nil, "", err
 	}
 
 	netlink.LinkSetMaster(masterLink, br0)
@@ -331,10 +342,9 @@ func CreateTapInterfaceDocker(tapName string, master string) (
 	// ip link set dev br0 up'
 	err = netlink.LinkSetUp(br0)
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, nil, "", err
 	}
-
-	return masterIP, gwAddr, masterMask, nil
+	return masterIP, gwAddr, masterMask, mac, nil
 }
 
 // SetupTunDev sets up the /dev/net/tun device if it doesn't exists

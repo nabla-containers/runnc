@@ -105,13 +105,21 @@ func CreateRumprunArgs(ip net.IP, mask net.IPMask, gw net.IP,
 	mountPoint string, envVars []string, cwd string,
 	unikernel string, cmdargs string) (string, error) {
 
+	// XXX: Due to bug in: https://github.com/nabla-containers/runnc/issues/40
+	// If we detect a /32 mask, we set it to 1 as a "fix", and hope we are in
+	// the same subnet... (working on a fix for mask:0)
+	cidr := strconv.Itoa(network.MaskCIDR(mask))
+	if cidr == "32" {
+		cidr = "1"
+	}
+
 	net := rumpArgsNetwork{
 		If:     "ukvmif0",
 		Cloner: "True",
 		Type:   "inet",
 		Method: "static",
 		Addr:   ip.String(),
-		Mask:   strconv.Itoa(network.MaskCIDR(mask)),
+		Mask:   cidr,
 		Gw:     gw.String(),
 	}
 
