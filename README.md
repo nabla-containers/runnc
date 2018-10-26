@@ -83,6 +83,9 @@ sudo docker run --rm --runtime=runnc nablact/nabla-node-base:latest
 
 There are many. Some are fixable and being worked on, some are fixable but harder and will take some time, and some others are ones that we don't really know how to fix (or possibly not worth fixing).
 
+Container runtime limitations:
+- Unable to properly handle /32 IP address assignments. Current hack converts cidr from 32 to 1
+
 Here are some missing features that we are currently working on:
 - a golang base image
 - MirageOS and IncludeOS base images
