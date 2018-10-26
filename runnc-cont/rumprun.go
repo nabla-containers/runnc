@@ -110,6 +110,7 @@ func CreateRumprunArgs(ip net.IP, mask net.IPMask, gw net.IP,
 	// the same subnet... (working on a fix for mask:0)
 	cidr := strconv.Itoa(network.MaskCIDR(mask))
 	if cidr == "32" {
+		fmt.Printf("WARNING: Changing CIDR from 32 to 1 due to Issue https://github.com/nabla-containers/runnc/issues/40\n")
 		cidr = "1"
 	}
 
