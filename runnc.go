@@ -94,7 +94,7 @@ func main() {
 		},
 	}
 	app.Commands = []cli.Command{
-		// Implement essentials first (for baseic docker run to work)
+		// Implement essentials first (for basic docker run to work)
 		createCommand,
 		deleteCommand,
 		stateCommand,

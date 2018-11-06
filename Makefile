@@ -33,23 +33,23 @@ submodule_warning:
 
 endif
 
-# Synced relelase version to downlaod from
+# Synced release version to download from
 RELEASE_VER=v0.1
 
 RELEASE_SERVER=https://github.com/nabla-containers/nabla-base-build/releases/download/${RELEASE_VER}/
 
 build: submodule_warning godep build/runnc build/runnc-cont build/nabla-run test_images
 
-container-build: 
+container-build:
 	sudo docker build . -f Dockerfile.build -t runnc-build
-	sudo docker run --rm -v ${PWD}:/go/src/github.com/nabla-containers/runnc -w /go/src/github.com/nabla-containers/runnc runnc-build make 
+	sudo docker run --rm -v ${PWD}:/go/src/github.com/nabla-containers/runnc -w /go/src/github.com/nabla-containers/runnc runnc-build make
 
-container-install: 
+container-install:
 	sudo docker build . -f Dockerfile.build -t runnc-build
 	sudo docker run --rm -v /opt/runnc/:/opt/runnc/ -v /usr/local/bin:/usr/local/bin -v ${PWD}:/go/src/github.com/nabla-containers/runnc -w /go/src/github.com/nabla-containers/runnc runnc-build make install
 
 .PHONY: godep
-godep: 
+godep:
 	dep ensure
 
 build/runnc: godep create.go exec.go kill.go start.go util.go util_runner.go util_tty.go delete.go  init.go runnc.go state.go util_nabla.go util_signal.go
@@ -69,13 +69,13 @@ solo5/tests/test_hello/test_hello.ukvm: FORCE
 build/nabla-run: solo5/ukvm/ukvm-bin
 	install -m 775 -D $< $@
 
-tests/integration/node.nabla: 
+tests/integration/node.nabla:
 	wget -nc ${RELEASE_SERVER}/node.nabla -O $@ && chmod +x $@
 
 tests/integration/test_hello.nabla: solo5/tests/test_hello/test_hello.ukvm
 	install -m 664 -D $< $@
 
-tests/integration/test_curl.nabla: 
+tests/integration/test_curl.nabla:
 	wget -nc ${RELEASE_SERVER}/test_curl.nabla -O $@ && chmod +x $@
 
 install: build/runnc build/runnc-cont build/nabla-run
@@ -112,4 +112,3 @@ clean:
 		tests/integration/test_curl.nabla \
 		tests/integration/node_tests.iso
 	sudo make -C solo5 clean
-

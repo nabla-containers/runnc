@@ -26,10 +26,10 @@ We have created two ways to build and install `runnc`. You may build inside a co
 # Go to the repo
 cd $GOPATH/src/github.com/nabla-containers/runnc
 
-# make container-build to build runnc. 
+# make container-build to build runnc.
 make container-build
 
-# make container-install to install runnc 
+# make container-install to install runnc
 make container-install
 ```
 
@@ -41,7 +41,7 @@ cd $GOPATH/src/github.com/nabla-containers/runnc
 # Get the neceesary binaries for the runtime
 make build
 
-# Install libseccomp on the host 
+# Install libseccomp on the host
 sudo apt install libseccomp-dev
 
 # Install the appropriate binaries/libraries
@@ -67,7 +67,7 @@ sudo apt install libseccomp-dev
 }
 ```
 
-2. Restart docker 
+2. Restart docker
 
 ```
 systemctl restart docker
