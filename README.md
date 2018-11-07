@@ -87,7 +87,7 @@ Container runtime limitations:
 - Unable to properly handle /32 IP address assignments. Current hack converts cidr from 32 to 1
 
 Here are some missing features that we are currently working on:
-- a golang base image
+- ~~a golang base image~~
 - MirageOS and IncludeOS base images
 - base images for all the known apps that can run on rumprun (from rumprun-packages), like openjdk.
 - a writable file system. Currently only `/tmp` is writable.
@@ -95,7 +95,7 @@ Here are some missing features that we are currently working on:
 - volumes (as in `docker -v /a:/a`)
 - not ignoring cgroups (start with the memory ones)
 - multiple network interfaces
-- not using `runc` as an intermediate step. Right now, `runnc` calls `runc` which then calls `nabla-run`
+- ~~not using `runc` as an intermediate step. Right now, `runnc` calls `runc` which then calls `nabla-run`~~
 
 These are some harder features (sorted from more to less important):
 - allow dynamic loading of libraries. The nabla runtime can only start static binaries and that seems to be OK for most things, but one big limitation is that python can't load modules with `.so`'s in them.
