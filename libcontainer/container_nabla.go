@@ -19,11 +19,6 @@ package libcontainer
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/nabla-containers/runnc/libcontainer/configs"
-	"github.com/nabla-containers/runnc/nabla-lib/network"
-	"github.com/opencontainers/runc/libcontainer/system"
-	"github.com/opencontainers/runc/libcontainer/utils"
-	"github.com/pkg/errors"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -31,6 +26,12 @@ import (
 	"sync"
 	"syscall"
 	"time"
+
+	"github.com/nabla-containers/runnc/libcontainer/configs"
+	"github.com/nabla-containers/runnc/nabla-lib/network"
+	"github.com/opencontainers/runc/libcontainer/system"
+	"github.com/opencontainers/runc/libcontainer/utils"
+	"github.com/pkg/errors"
 )
 
 const stdioFdCount = 3
@@ -212,6 +213,7 @@ func (c *nablaContainer) start(p *Process) error {
 		TapName:    nablaTapName(c.id),
 		NetnsPath:  c.config.NetnsPath,
 		Hooks:      c.config.Hooks,
+		Memory:     c.config.Memory,
 	}
 
 	enc := json.NewEncoder(parentPipe)

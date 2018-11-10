@@ -17,13 +17,14 @@ package libcontainer
 import (
 	"encoding/json"
 	"fmt"
-	spec "github.com/opencontainers/runtime-spec/specs-go"
-	"github.com/vishvananda/netns"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
 	"syscall"
+
+	spec "github.com/opencontainers/runtime-spec/specs-go"
+	"github.com/vishvananda/netns"
 )
 
 var (
@@ -47,6 +48,7 @@ func nablaRunArgs(cfg *initConfig) ([]string, error) {
 		"-tap", cfg.TapName,
 		"-cwd", cfg.Cwd,
 		"-volume", cfg.FsPath + ":/",
+		"-mem", strconv.FormatInt(cfg.Memory, 10),
 		"-unikernel", filepath.Join(cfg.Root, cfg.Args[0])}
 
 	for _, e := range cfg.Env {
@@ -71,6 +73,7 @@ type initConfig struct {
 	TapName    string      `json:"tap"`
 	NetnsPath  string      `json:"netnspath"`
 	Hooks      *spec.Hooks `json:"hooks"`
+	Memory     int64       `json:"mem"`
 }
 
 func initNabla() error {
