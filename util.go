@@ -17,12 +17,13 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/opencontainers/runtime-spec/specs-go"
-	"github.com/sirupsen/logrus"
-	"github.com/urfave/cli"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/opencontainers/runtime-spec/specs-go"
+	"github.com/sirupsen/logrus"
+	"github.com/urfave/cli"
 )
 
 // fatal prints the error's details if it is a libcontainer specific error type
@@ -56,7 +57,7 @@ func setupSpec(context *cli.Context) (*specs.Spec, error) {
 		setupSdNotify(spec, notifySocket)
 	}
 	if os.Geteuid() != 0 {
-		return nil, fmt.Errorf("runc should be run as root")
+		return nil, fmt.Errorf("runnc should be run as root")
 	}
 	return spec, nil
 }

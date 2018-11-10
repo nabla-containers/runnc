@@ -14,7 +14,9 @@
 
 package libcontainer
 
-import "io"
+import (
+	"io"
+)
 
 // ErrorCode is the API error code type.
 type ErrorCode int

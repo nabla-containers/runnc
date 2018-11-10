@@ -20,14 +20,15 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/nabla-containers/runnc/nabla-lib/network"
-	"github.com/nabla-containers/runnc/nabla-lib/storage"
 	"net"
 	"os"
 	"os/exec"
 	"strconv"
 	"strings"
 	"syscall"
+
+	"github.com/nabla-containers/runnc/nabla-lib/network"
+	"github.com/nabla-containers/runnc/nabla-lib/storage"
 )
 
 type arrayEnvVars []string
