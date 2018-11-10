@@ -173,7 +173,7 @@ function docker_node_nabla_run() {
 @test "test memory runnc" {
 	local-test
 
-	# env.js just prints the NABLA_ENV_TEST environment variable
+	# Check that 1024m is passed correct to runnc as 1024.
 	run sudo docker run --rm --runtime=runnc -m 1024m nablact/nabla-node:test /hello/app.js
 	echo "$output"
 	[[ "$output" == *"--mem=1024"* ]]
