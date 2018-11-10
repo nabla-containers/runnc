@@ -97,7 +97,7 @@ function docker_node_nabla_run() {
 @test "test hello runnc" {
 	local-test
 
-	run sudo docker run --rm --runtime=runnc nablact/nabla-hello:test /test_hello.nabla 
+	run sudo docker run --rm --runtime=runnc nablact/nabla-hello:test /test_hello.nabla
 	[[ "$output" == *"Hello, World"* ]]
 	[ "$status" -eq 0 ]
 }
@@ -148,7 +148,7 @@ function docker_node_nabla_run() {
 	HOSTIP=$( ip route get 1 | awk '{print $NF;exit}' )
 	nabla_run -ipv4 10.0.0.2 -gwv4 10.0.0.1 \
 			-unikernel test_curl.nabla -- "$HOSTIP"
-	
+
 	[[ "$output" == *"XXXXXXXXXX"* ]]
 	[ "$status" -eq 0 ]
 }
@@ -167,5 +167,15 @@ function docker_node_nabla_run() {
 
 	echo "$output"
 	[[ "$output" == *"XXXXXXXXXX"* ]]
+	[ "$status" -eq 0 ]
+}
+
+@test "test memory runnc" {
+	local-test
+
+	# env.js just prints the NABLA_ENV_TEST environment variable
+	run sudo docker run --rm --runtime=runnc -m 1024m nablact/nabla-node:test /hello/app.js
+	echo "$output"
+	[[ "$output" == *"--mem=1024"* ]]
 	[ "$status" -eq 0 ]
 }
