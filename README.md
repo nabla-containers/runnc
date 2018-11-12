@@ -96,6 +96,7 @@ Here are some missing features that we are currently working on:
 - not ignoring cgroups (start with the memory ones)
 - multiple network interfaces
 - ~~not using `runc` as an intermediate step. Right now, `runnc` calls `runc` which then calls `nabla-run`~~
+- `runnc` use of interactive console/tty (i.e. `docker run -it`)
 
 These are some harder features (sorted from more to less important):
 - allow dynamic loading of libraries. The nabla runtime can only start static binaries and that seems to be OK for most things, but one big limitation is that python can't load modules with `.so`'s in them.
