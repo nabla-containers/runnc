@@ -3,7 +3,6 @@ package configs
 import (
 	"fmt"
 
-	"github.com/nabla-containers/runnc/utils"
 	"github.com/opencontainers/runtime-spec/specs-go"
 	"github.com/pkg/errors"
 )
@@ -37,9 +36,9 @@ func ParseSpec(s *specs.Spec) (*Config, error) {
 
 	// Setting default memory to pass to runnc as an argument.
 	if s.Linux.Resources.Memory.Limit != nil {
-		memory = utils.ConvertBytes(s.Linux.Resources.Memory.Limit)
+		memory = (*s.Linux.Resources.Memory.Limit) / (1 << 20)
 	} else {
-		memory = int64(512)
+		memory = 512
 	}
 
 	cfg := Config{
