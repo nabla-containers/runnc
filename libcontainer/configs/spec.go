@@ -35,7 +35,8 @@ func ParseSpec(s *specs.Spec) (*Config, error) {
 	}
 
 	// Setting default memory to pass to runnc as an argument.
-	if s.Linux.Resources.Memory.Limit != nil {
+	// Docker passes it as bytes, nabla-run expects MB.
+	if s.Linux != nil && s.Linux.Resources != nil && s.Linux.Resources.Memory != nil && s.Linux.Resources.Memory.Limit != nil {
 		memory = (*s.Linux.Resources.Memory.Limit) / (1 << 20)
 	} else {
 		memory = 512

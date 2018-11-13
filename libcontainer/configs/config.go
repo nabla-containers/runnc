@@ -23,7 +23,7 @@ type Config struct {
 	Hooks *spec.Hooks `json:"hooks,omitempty"`
 
 	// Memory is passed from docker cli to runtime.
-	Memory int64 `json:"mem,omitempty"`
+	Memory int64 `json:"memory,omitempty"`
 }
 
 // HostUID returns the UID to run the nabla container as. Default is root.
