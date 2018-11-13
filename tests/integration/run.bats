@@ -175,7 +175,7 @@ function docker_node_nabla_run() {
 
 	# Check that 1024m is passed correct to runnc as 1024.
 	run sudo docker run --rm --runtime=runnc -m 1024m nablact/nabla-node:test /hello/app.js
-	echo "$output"
+	cat /proc/$!/cmdline
 	[[ "$output" == *"--mem=1024"* ]]
 	[ "$status" -eq 0 ]
 }
