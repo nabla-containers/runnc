@@ -174,8 +174,15 @@ function docker_node_nabla_run() {
 	local-test
 
 	# Check that 1024m is passed correct to runnc as 1024.
-	run sudo docker run --rm --runtime=runnc -m 1024m nablact/nabla-node:test /hello/app.js
-	cat /proc/$!/cmdline
+	# Redirecting stderr to dev/null because there is a kernel warning
+	memory_check() {
+	  sudo docker run -d --rm --runtime=runnc -m 1024m nablact/nabla-node:test /hello/app.js 2>/dev/null
+	}
+
+	run memory_check
+	container_id=${output}
+	container_pid=$(docker inspect --format '{{.State.Pid}}' ${container_id})
+	run bash -c "sudo ps -e -o pid,command | grep ${container_pid}"
 	[[ "$output" == *"--mem=1024"* ]]
 	[ "$status" -eq 0 ]
 }
