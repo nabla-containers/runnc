@@ -39,7 +39,7 @@ func ParseSpec(s *specs.Spec) (*Config, error) {
 	if s.Linux != nil && s.Linux.Resources != nil && s.Linux.Resources.Memory != nil && s.Linux.Resources.Memory.Limit != nil {
 		memory = (*s.Linux.Resources.Memory.Limit) / (1 << 20)
 	} else {
-		memory = 512
+		memory = ContainerMemoryMinimum
 	}
 
 	cfg := Config{
