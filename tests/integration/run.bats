@@ -180,9 +180,8 @@ function docker_node_nabla_run() {
 	}
 
 	run memory_check
-	container_id=${output}
-	container_pid=$(docker inspect --format '{{.State.Pid}}' ${container_id})
+	container_pid=$(docker inspect --format '{{.State.Pid}}' ${output})
 	run bash -c "sudo ps -e -o pid,command | grep ${container_pid}"
-	[[ "$output" == *"--mem=1024"* ]]
 	[ "$status" -eq 0 ]
+	[[ "$output" == *"--mem=1024"* ]]
 }
