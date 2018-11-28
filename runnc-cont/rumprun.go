@@ -22,10 +22,11 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/nabla-containers/runnc/nabla-lib/network"
 	"net"
 	"strconv"
 	"strings"
+
+	"github.com/nabla-containers/runnc/nabla-lib/network"
 )
 
 type rumpArgsNetwork struct {
@@ -51,6 +52,7 @@ type rumpArgs struct {
 	Blk     *rumpArgsBlock  `json:"blk,omitempty"`
 	Env     []string        `json:"env,omitempty"`
 	Cwd     string          `json:"cwd,omitempty"`
+	Mem     string          `json:"mem,omitempty"`
 }
 
 // Overwrite the rumprum args marshalling since rump expects multiple env

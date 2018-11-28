@@ -2,6 +2,7 @@ package configs
 
 import (
 	"fmt"
+
 	"github.com/opencontainers/runtime-spec/specs-go"
 	"github.com/pkg/errors"
 )
@@ -23,13 +24,22 @@ func ParseSpec(s *specs.Spec) (*Config, error) {
 		labels = append(labels, fmt.Sprintf("%s=%s", k, v))
 	}
 
-	netnsPath := ""
+	var netnsPath string
+	var memory int64
 	if s.Linux != nil {
 		for _, v := range s.Linux.Namespaces {
 			if v.Type == specs.NetworkNamespace {
 				netnsPath = v.Path
 			}
 		}
+	}
+
+	// Setting default memory to pass to runnc as an argument.
+	// Docker passes it as bytes, nabla-run expects MB.
+	if s.Linux != nil && s.Linux.Resources != nil && s.Linux.Resources.Memory != nil && s.Linux.Resources.Memory.Limit != nil {
+		memory = (*s.Linux.Resources.Memory.Limit) / (1 << 20)
+	} else {
+		memory = ContainerMemoryMinimum
 	}
 
 	cfg := Config{
@@ -41,6 +51,7 @@ func ParseSpec(s *specs.Spec) (*Config, error) {
 		NetnsPath: netnsPath,
 		Labels:    labels,
 		Hooks:     s.Hooks,
+		Memory:    memory,
 	}
 
 	return &cfg, nil

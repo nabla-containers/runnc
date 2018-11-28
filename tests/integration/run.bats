@@ -97,7 +97,7 @@ function docker_node_nabla_run() {
 @test "test hello runnc" {
 	local-test
 
-	run sudo docker run --rm --runtime=runnc nablact/nabla-hello:test /test_hello.nabla 
+	run sudo docker run --rm --runtime=runnc nablact/nabla-hello:test /test_hello.nabla
 	[[ "$output" == *"Hello, World"* ]]
 	[ "$status" -eq 0 ]
 }
@@ -148,7 +148,7 @@ function docker_node_nabla_run() {
 	HOSTIP=$( ip route get 1 | awk '{print $NF;exit}' )
 	nabla_run -ipv4 10.0.0.2 -gwv4 10.0.0.1 \
 			-unikernel test_curl.nabla -- "$HOSTIP"
-	
+
 	[[ "$output" == *"XXXXXXXXXX"* ]]
 	[ "$status" -eq 0 ]
 }
@@ -168,4 +168,21 @@ function docker_node_nabla_run() {
 	echo "$output"
 	[[ "$output" == *"XXXXXXXXXX"* ]]
 	[ "$status" -eq 0 ]
+}
+
+@test "test memory runnc" {
+	local-test
+
+	# Check that 1024m is passed correct to runnc as 1024.
+	# Redirecting stderr to dev/null because there is a kernel warning
+	memory_check() {
+	  sudo docker run -d --rm --runtime=runnc -m 1024m nablact/nabla-node:test /hello/app.js 2>/dev/null
+	}
+
+	run memory_check
+	[ "$status" -eq 0 ]
+	container_pid=$(docker inspect --format '{{.State.Pid}}' ${output})
+	run bash -c "sudo ps -e -o pid,command | grep ${container_pid}"
+	[ "$status" -eq 0 ]
+	[[ "$output" == *"--mem=1024"* ]]
 }
