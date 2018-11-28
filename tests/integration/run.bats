@@ -180,6 +180,7 @@ function docker_node_nabla_run() {
 	}
 
 	run memory_check
+	[ "$status" -eq 0 ]
 	container_pid=$(docker inspect --format '{{.State.Pid}}' ${output})
 	run bash -c "sudo ps -e -o pid,command | grep ${container_pid}"
 	[ "$status" -eq 0 ]
