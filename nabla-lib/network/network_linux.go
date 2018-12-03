@@ -154,37 +154,35 @@ func createMacvtapInterface(netHandle *netlink.Handle, masterLink netlink.Link) 
 // right index in a network namespace from the Kata containers repository:
 // https://github.com/kata-containers/runtime/blob/593bd44f207aa7b21e561184ca1b3fb79da47eb6/virtcontainers/network.go
 //
-func CreateMacvtapInterfaceDocker(tapName *string, master string) (
-	net.IP, net.IP, net.IPMask, string, error) {
+func CreateMacvtapInterfaceDocker(master string) (
+	net.IP, net.IP, net.IPMask, string, string, error) {
 
 	netHandle, err := netlink.NewHandle()
 	if err != nil {
-		return nil, nil, nil, "", errors.Wrap(err, "Unable to create netlink handler")
+		return nil, nil, nil, "", "", errors.Wrap(err, "Unable to create netlink handler")
 	}
 
 	err = SetupTunDev()
 	if err != nil {
-		return nil, nil, nil, "", errors.Wrap(err, "Unable to setup tun dev")
+		return nil, nil, nil, "", "", errors.Wrap(err, "Unable to setup tun dev")
 	}
 
 	masterLink, err := netlink.LinkByName(master)
 	if err != nil {
-		return nil, nil, nil, "",
-			fmt.Errorf("no master interface: %v", err)
+		return nil, nil, nil, "", "", errors.Wrap(err, "no master interface: %v")
 	}
 
-	macvtapLink, name, tapNameTmp, err := createMacvtapInterface(netHandle, masterLink)
+	macvtapLink, name, newTapName, err := createMacvtapInterface(netHandle, masterLink)
 	if err != nil {
-		return nil, nil, nil, "", errors.Wrap(err, "Unable to create Macvtapint")
+		return nil, nil, nil, "", "", errors.Wrap(err, "Unable to create Macvtapint")
 	}
-	*tapName = tapNameTmp
 
 	addrs, err := netlink.AddrList(masterLink, netlink.FAMILY_V4)
 	if err != nil {
-		return nil, nil, nil, "", errors.Wrap(err, "Unable to get address list")
+		return nil, nil, nil, "", "", errors.Wrap(err, "Unable to get address list")
 	}
 	if len(addrs) == 0 {
-		return nil, nil, nil, "", fmt.Errorf("master should have an IP")
+		return nil, nil, nil, "", "", fmt.Errorf("master should have an IP")
 	}
 	masterAddr := addrs[0]
 	masterIP := addrs[0].IPNet.IP
@@ -192,11 +190,10 @@ func CreateMacvtapInterfaceDocker(tapName *string, master string) (
 
 	routes, err := netlink.RouteList(masterLink, netlink.FAMILY_V4)
 	if err != nil {
-		return nil, nil, nil, "", errors.Wrap(err, "Unable to get route list")
+		return nil, nil, nil, "", "", errors.Wrap(err, "Unable to get route list")
 	}
 	if len(routes) == 0 {
-		return nil, nil, nil, "",
-			fmt.Errorf("master should have at least one route")
+		return nil, nil, nil, "", "", fmt.Errorf("master should have at least one route")
 	}
 	// XXX: is the "gateway" always the first route?
 	gwAddr := routes[0].Gw
@@ -204,23 +201,23 @@ func CreateMacvtapInterfaceDocker(tapName *string, master string) (
 	// ip addr del $INET_STR dev master
 	err = netlink.AddrDel(masterLink, &masterAddr)
 	if err != nil {
-		return nil, nil, nil, "", errors.Wrap(err, "Unable to delete address of master")
+		return nil, nil, nil, "", "", errors.Wrap(err, "Unable to delete address of master")
 	}
 
 	err = netlink.LinkSetUp(macvtapLink)
 	if err != nil {
-		return nil, nil, nil, "", errors.Wrap(err, "Unable to set up tap link")
+		return nil, nil, nil, "", "", errors.Wrap(err, "Unable to set up tap link")
 	}
 
 	err = netlink.LinkSetUp(masterLink)
 	if err != nil {
-		return nil, nil, nil, "", errors.Wrap(err, "Unable to set up master link")
+		return nil, nil, nil, "", "", errors.Wrap(err, "Unable to set up master link")
 	}
 
 	// The HardwareAddr Attr doesn't automatically get updated
 	_macvtapLink, err := netlink.LinkByName(name)
 	if err != nil {
-		return nil, nil, nil, "", err
+		return nil, nil, nil, "", "", err
 	}
 	tapMac := _macvtapLink.Attrs().HardwareAddr.String()
 
@@ -228,27 +225,27 @@ func CreateMacvtapInterfaceDocker(tapName *string, master string) (
 		name, macvtapLink.Attrs().Index)
 	b, err := ioutil.ReadFile(d)
 	if err != nil {
-		return nil, nil, nil, "", err
+		return nil, nil, nil, "", "", err
 	}
 
 	mm := strings.Split(string(b), ":")
 	major, err := strconv.Atoi(strings.TrimSpace(mm[0]))
 	if err != nil {
-		return nil, nil, nil, "", err
+		return nil, nil, nil, "", "", err
 	}
 
 	minor, err := strconv.Atoi(strings.TrimSpace(mm[1]))
 	if err != nil {
-		return nil, nil, nil, "", err
+		return nil, nil, nil, "", "", err
 	}
 
-	err = unix.Mknod(*tapName, unix.S_IFCHR|0600,
+	err = unix.Mknod(newTapName, unix.S_IFCHR|0600,
 		int(unix.Mkdev(uint32(major), uint32(minor))))
 	if err != nil {
-		return nil, nil, nil, "", err
+		return nil, nil, nil, "", "", err
 	}
 
-	return masterIP, gwAddr, masterMask, tapMac, nil
+	return masterIP, gwAddr, masterMask, tapMac, newTapName, nil
 }
 
 func getMasterDetails(masterLink netlink.Link) (masterAddr *netlink.Addr, masterIP net.IP, masterMask net.IPMask, gwAddr net.IP, mac string, err error) {

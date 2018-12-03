@@ -18,16 +18,10 @@
 
 load helpers
 
-function setup() {
-	cd ${TOPLEVEL}/tests/integration
-}
+RUNNC_OUT="out"
 
-function nabla_run() {
-	run ${TOPLEVEL}/build/runnc-cont \
-		-nabla-run ${TOPLEVEL}/build/nabla-run "$@"
-
-	echo "nabla-run $@ (status=$status):" >&2
-	echo "$output" >&2
+function teardown() {
+	teardown_root
 }
 
 function docker_node_nabla_run() {
@@ -39,125 +33,196 @@ function docker_node_nabla_run() {
 	echo "$output" >&2
 }
 
-@test "test hello" {
-	nabla_run -unikernel test_hello.nabla
-	[[ "$output" == *"Hello, World"* ]]
-	[ "$status" -eq 0 ]
+function runnc_run() {
+	# trick: don't start with 'run', or you will get a deadlock
+	# waiting for the nabla program to be done but no one start it
+	runnc create "$1" > $RUNNC_OUT
+	run runnc start "$1"
+
+	echo "nabla-run $@ (status=$status):" >&2
+	echo "$output" >&2
+
+	# waiting for nabla log to be done
+	sleep 1
 }
 
-@test "test node-hello from a pre-built node_tests.iso" {
-	nabla_run -unikernel node.nabla -volume node_tests.iso:/hello -- /hello/app.js
-	[[ "$output" == *"hello from node"* ]]
-	[ "$status" -eq 0 ]
+@test "hello" {
+	setup_test "hello"
+	local name="test-nabla-hello"
+
+	cat config.json \
+	| jq '.process.args |= .+ ["test_hello.nabla"]' \
+	> config.json
+
+	runnc_run "$name"
+
+	run cat "$TEST_BUNDLE/$RUNNC_OUT"
+    [[ "$output" == *"Hello, World"* ]]
+
+	runnc delete --force "$name"
+	teardown_test
 }
 
-@test "test node-hello runnc" {
-	local-test
+@test "hello with arg" {
+	setup_test "hello"
+	local name="test-nabla-hello-arg"
 
-	run sudo docker run --rm --runtime=runnc nablact/nabla-node:test /hello/app.js
-	[[ "$output" == *"hello from node"* ]]
-	[ "$status" -eq 0 ]
-}
+	cat config.json \
+	| jq '.process.args |= .+ ["test_hello.nabla", "hola"]' \
+	> config.json
 
-@test "test node-env" {
-	nabla_run -unikernel node.nabla -env BLA=bla -env NABLA_ENV_TEST=blableblibloblu -env BLE=ble -volume node_tests.iso:/hello -- /hello/env.js
-	echo "$output"
-	[[ "$output" == *"env=blableblibloblu"* ]]
-	[ "$status" -eq 0 ]
-}
+	runnc_run "$name"
 
-@test "test node-cwd" {
-	nabla_run -unikernel node.nabla -cwd /hello -volume node_tests.iso:/hello -- /hello/cwd.js
-	echo "$output"
-	[[ "$output" == *"cwd=/hello"* ]]
-	[ "$status" -eq 0 ]
-}
-
-@test "test hello with arg" {
-	nabla_run -unikernel test_hello.nabla -- hola
+	run cat "$TEST_BUNDLE/$RUNNC_OUT"
 	[[ "$output" == *"Hello, World"* ]]
 	[[ "$output" == *"hola"* ]]
-	[ "$status" -eq 0 ]
+
+	runnc delete --force "$name"
+	teardown_test
 }
 
-@test "test hello with json arg" {
-	run nabla_run -unikernel test_hello.nabla -- {\"bla\":\"ble\"}
+@test "hello with json arg" {
+	setup_test "hello"
+	local name="test-nabla-hello-json-arg"
+
+	cat config.json \
+	| jq '.process.args |= .+ ["test_hello.nabla"]' \
+	| jq '.process.args |= .+ ["{\"bla\":\"ble\"}"]' \
+	> config.json
+
+	runnc_run "$name"
+
+	run cat "$TEST_BUNDLE/$RUNNC_OUT"
 	[[ "$output" == *"Hello, World"* ]]
-	[[ "$output" == *'{"bla":"ble"}'* ]]
-	[ "$status" -eq 0 ]
+	[[ "$output" == *'{\"bla\":\"ble\"}'* ]]
+
+	runnc delete --force "$name"
+	teardown_test
 }
 
-@test "test hello with escaped json arg" {
-	run nabla_run -unikernel test_hello.nabla -- '{\"bla\":\"ble\"}'
+@test "hello with escaped json arg" {
+	setup_test "hello"
+	local name="test-nabla-hello-escaped-json-arg"
+
+	cat config.json \
+	| jq '.process.args |= .+ ["test_hello.nabla"]' \
+	| jq '.process.args |= .+ ["{\\\"bla\\\":\\\"ble\\\"}"]' \
+	> config.json
+
+	runnc_run "$name"
+
+	run cat "$TEST_BUNDLE/$RUNNC_OUT"
 	[[ "$output" == *"Hello, World"* ]]
-	[[ "$output" == *"{\\\"bla\\\":\\\"ble\\\"}"* ]]
-	[ "$status" -eq 0 ]
+	[[ "$output" == *'{\\\"bla\\\":\\\"ble\\\"}'* ]]
+
+	runnc delete --force "$name"
+	teardown_test
 }
 
-@test "test hello runnc" {
+@test "hello with net setting" {
+	skip "TODO: Require proper networking for native runnc in prestart hooks"
+}
+
+@test "hello runnc" {
 	local-test
 
 	run sudo docker run --rm --runtime=runnc nablact/nabla-hello:test /test_hello.nabla
 	[[ "$output" == *"Hello, World"* ]]
-	[ "$status" -eq 0 ]
 }
 
-@test "test hello runnc with arg" {
+@test "hello runnc with arg" {
 	local-test
 
 	run sudo docker run --rm --runtime=runnc nablact/nabla-hello:test /test_hello.nabla hola
 	[[ "$output" == *"Hello, World"* ]]
 	[[ "$output" == *"hola"* ]]
-	[ "$status" -eq 0 ]
 }
 
-@test "test hello runnc with json arg" {
+@test "hello runnc with json arg" {
 	local-test
 
 	run sudo docker run --rm --runtime=runnc nablact/nabla-hello:test /test_hello.nabla {\"bla\":\"ble\"}
 	[[ "$output" == *"Hello, World"* ]]
 	[[ "$output" == *"{\\\"bla\\\":\\\"ble\\\"}"* ]]
-	[ "$status" -eq 0 ]
 }
 
-@test "test node-env runnc" {
+@test "node hello" {
+	setup_test "node"
+	local name="test-nabla-node"
+
+	cat config.json \
+	| jq '.process.args |= .+ ["node.nabla", "/hello/app.js"]' \
+	> config.json
+
+	runnc_run "$name"
+
+	run cat "$TEST_BUNDLE/$RUNNC_OUT"
+	[[ "$output" == *"hello from node"* ]]
+
+	runnc delete --force "$name"
+	teardown_test
+}
+
+@test "node env" {
+	setup_test "node"
+	local name="test-nabla-node-env"
+
+	cat config.json \
+	| jq '.process.args |= .+ ["node.nabla", "/hello/env.js"]' \
+	| jq '.process.env |= .+ ["BLA=bla", "NABLA_ENV_TEST=blableblibloblu", "BLE=ble"]' \
+	> config.json
+
+	runnc_run "$name"
+
+	run cat "$TEST_BUNDLE/$RUNNC_OUT"
+	[[ "$output" == *"env=blableblibloblu"* ]]
+
+	runnc delete --force "$name"
+	teardown_test
+}
+
+@test "node cwd" {
+	setup_test "node"
+	local name="test-nabla-node-cwd"
+
+	cat config.json \
+	| jq '.process.args |= .+ ["node.nabla", "/hello/cwd.js"]' \
+	| jq '.process.cwd |= "/hello"' \
+	> config.json
+
+	runnc_run "$name"
+
+	run cat "$TEST_BUNDLE/$RUNNC_OUT"
+	[[ "$output" == *"cwd=/hello"* ]]
+
+	runnc delete --force "$name"
+	teardown_test
+}
+
+@test "node hello runnc" {
+	local-test
+
+	run sudo docker run --rm --runtime=runnc nablact/nabla-node:test /hello/app.js
+	[[ "$output" == *"hello from node"* ]]
+}
+
+@test "node env runnc" {
 	local-test
 
 	# env.js just prints the NABLA_ENV_TEST environment variable
 	run sudo docker run --rm --runtime=runnc -e NABLA_ENV_TEST=blableblibloblu nablact/nabla-node:test /hello/env.js
-	echo "$output"
 	[[ "$output" == *"env=blableblibloblu"* ]]
-	[ "$status" -eq 0 ]
 }
 
-@test "test hello with net setting" {
-	nabla_run -ipv4 10.0.0.2 -gwv4 10.0.0.1 -unikernel test_hello.nabla
-	[[ "$output" == *"Hello, World"* ]]
-	[ "$status" -eq 0 ]
+@test "curl local" {
+    skip "TODO: Require proper networking for native runnc in prestart hooks"
 }
 
-@test "test curl local" {
+@test "curl runnc" {
 	local-test
 
 	(
-		python test-http-server.py
-	)&
-
-	sleep 3
-
-	HOSTIP=$( ip route get 1 | awk '{print $NF;exit}' )
-	nabla_run -ipv4 10.0.0.2 -gwv4 10.0.0.1 \
-			-unikernel test_curl.nabla -- "$HOSTIP"
-
-	[[ "$output" == *"XXXXXXXXXX"* ]]
-	[ "$status" -eq 0 ]
-}
-
-@test "test curl runnc" {
-	local-test
-
-	(
-		python test-http-server.py
+		python "$TESTDATA"/test-http-server.py
 	)&
 
 	sleep 3
@@ -170,7 +235,7 @@ function docker_node_nabla_run() {
 	[ "$status" -eq 0 ]
 }
 
-@test "test memory runnc" {
+@test "memory runnc" {
 	local-test
 
 	# Check that 1024m is passed correct to runnc as 1024.

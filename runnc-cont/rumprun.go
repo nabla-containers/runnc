@@ -17,7 +17,7 @@
 
 // +build linux
 
-package main
+package runnc_cont
 
 import (
 	"encoding/json"
@@ -105,7 +105,7 @@ func (ra *rumpArgs) MarshalJSON() ([]byte, error) {
 // CreateRumprunArgs returns the cmdline string for rumprun (a json)
 func CreateRumprunArgs(ip net.IP, mask net.IPMask, gw net.IP,
 	mountPoint string, envVars []string, cwd string,
-	unikernel string, cmdargs string) (string, error) {
+	unikernel string, cmdargs []string) (string, error) {
 
 	// XXX: Due to bug in: https://github.com/nabla-containers/runnc/issues/40
 	// If we detect a /32 mask, we set it to 1 as a "fix", and hope we are in
@@ -126,7 +126,7 @@ func CreateRumprunArgs(ip net.IP, mask net.IPMask, gw net.IP,
 		Gw:     gw.String(),
 	}
 
-	cmdline := []string{unikernel, cmdargs}
+	cmdline := append([]string{unikernel}, cmdargs...)
 	ra := &rumpArgs{
 		Cwd:     cwd,
 		Cmdline: strings.Join(cmdline, " "),

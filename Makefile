@@ -38,7 +38,7 @@ RELEASE_VER=v0.2
 
 RELEASE_SERVER=https://github.com/nabla-containers/nabla-base-build/releases/download/${RELEASE_VER}/
 
-build: submodule_warning godep build/runnc build/runnc-cont build/nabla-run test_images
+build: submodule_warning godep build/runnc build/nabla-run test_images
 
 container-build:
 	sudo docker build . -f Dockerfile.build -t runnc-build
@@ -54,9 +54,6 @@ godep:
 
 build/runnc: godep create.go exec.go kill.go start.go util.go util_runner.go util_tty.go delete.go  init.go runnc.go state.go util_nabla.go util_signal.go
 	GOOS=linux GOARCH=amd64 go build -o $@ .
-
-build/runnc-cont: godep runnc-cont/*
-	GOOS=linux GOARCH=amd64 go build -ldflags "-linkmode external -extldflags -static" -o $@ ./runnc-cont
 
 solo5/ukvm/ukvm-bin: FORCE
 	make -C solo5 ukvm
@@ -78,7 +75,7 @@ tests/integration/test_hello.nabla: solo5/tests/test_hello/test_hello.ukvm
 tests/integration/test_curl.nabla:
 	wget -nc ${RELEASE_SERVER}/test_curl.nabla -O $@ && chmod +x $@
 
-install: build/runnc build/runnc-cont build/nabla-run
+install: build/runnc build/nabla-run
 	sudo hack/copy_binaries.sh
 
 .PHONY: test,container-integration-test,local-integration-test,integration
