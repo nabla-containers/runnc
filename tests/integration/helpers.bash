@@ -16,10 +16,54 @@
 # TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 # PERFORMANCE OF THIS SOFTWARE.
 
-TOPLEVEL=$( dirname "${BASH_SOURCE[0]}" )/../../
+TOPLEVEL=$( dirname "${BASH_SOURCE[0]}" )
 
-function setup() {
-	cd ${TOPLEVEL}/tests/integration
+RUNNC="$TOPLEVEL"/../../build/runnc
+
+# Test data path.
+TESTDATA="$TOPLEVEL/testdata"
+
+TEST_BUNDLE="$BATS_TMPDIR/test-nabla"
+
+# Root state path.
+ROOT=$(mktemp -d "$BATS_TMPDIR/runnc.XXXXXX")
+
+# Wrapper for runnc.
+function runnc() {
+    "$RUNNC" --root "$ROOT" "$@"
+}
+
+function setup_test() {
+    local test_type=$1
+
+    run mkdir "$TEST_BUNDLE"
+    cp "$TESTDATA"/config.json "$TEST_BUNDLE"
+
+    case "$test_type" in
+        "hello")
+            cp "$TOPLEVEL"/test_hello.nabla "$TEST_BUNDLE"
+            ;;
+        "node")
+            cp -r "$TESTDATA"/hello "$TEST_BUNDLE"/hello
+            cp "$TOPLEVEL"/node.nabla "$TEST_BUNDLE"
+            ;;
+        "curl")
+            cp "$TOPLEVEL"/test_curl.nabla "$TEST_BUNDLE"
+            ;;
+        *)
+            echo "error: unknown test type: \"$test_type\""
+            exit 1
+            ;;
+    esac
+    cd "$TEST_BUNDLE"
+}
+
+function teardown_test() {
+    run rm  -r "$TEST_BUNDLE"
+}
+
+function teardown_root() {
+    run rm -r "$ROOT"
 }
 
 function local-test () {

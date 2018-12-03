@@ -1,0 +1,40 @@
+{
+  "ociVersion": "1.0.0",
+  "process": {
+    "terminal": false,
+    "user": {
+      "uid": 0,
+      "gid": 0
+    },
+    "args": [],
+    "env": [
+      "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+      "TERM=xterm"
+    ],
+    "cwd": "/"
+  },
+  "root": {
+    "path": ".",
+    "readonly": true
+  },
+  "hooks": {
+    "prestart": [
+      {
+        "path": "/sbin/ip",
+        "args": ["ip", "link", "add" , "eth0", "type", "dummy"]
+      },
+      {
+        "path": "/sbin/ip",
+        "args": ["ip", "addr", "add", "10.0.0.2/8", "dev", "eth0"]
+      },
+      {
+        "path": "/sbin/ip",
+        "args": ["ip", "link", "set", "eth0", "up"]
+      },
+      {
+        "path": "/sbin/ip",
+        "args": ["ip", "route", "add", "default", "via", "10.0.0.1"]
+      }
+    ]
+  }
+}

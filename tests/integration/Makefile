@@ -1,7 +1,7 @@
 all: test_docker_images node_tests.iso
 
 node_tests.iso:
-	genisoimage -l -r -o node_tests.iso hello
+	genisoimage -l -r -o node_tests.iso testdata/hello
 
 test_docker_images:
 	sudo docker build -f Dockerfile.hello . -t nablact/nabla-hello:test

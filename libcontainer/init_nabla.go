@@ -23,43 +23,44 @@ import (
 	"strings"
 	"syscall"
 
+	"github.com/nabla-containers/runnc/runnc-cont"
 	spec "github.com/opencontainers/runtime-spec/specs-go"
 	"github.com/vishvananda/netns"
 )
 
 var (
-	NablaBinDir       = "/opt/runnc/bin/"
-	NablaRunncContBin = NablaBinDir + "runnc-cont"
-	NablaRunBin       = NablaBinDir + "nabla-run"
+	NablaBinDir = "/opt/runnc/bin/"
+	NablaRunBin = NablaBinDir + "nabla-run"
 )
 
-func nablaRunArgs(cfg *initConfig) ([]string, error) {
+func newRunncCont(cfg *initConfig) (*runnc_cont.RunncCont, error) {
 	if len(cfg.Args) == 0 {
 		return nil, fmt.Errorf("OCI process args are empty")
 	}
 
 	if !strings.HasSuffix(cfg.Args[0], ".nabla") {
-		return nil, fmt.Errorf("Entrypoint is not a .nabla file")
+		return nil, fmt.Errorf("entrypoint is not a .nabla file")
 	}
 
-	args := []string{NablaRunncContBin,
-		"-k8s",
-		"-nabla-run", NablaRunBin,
-		"-tap", cfg.TapName,
-		"-cwd", cfg.Cwd,
-		"-volume", cfg.FsPath + ":/",
-		"-mem", strconv.FormatInt(cfg.Memory, 10),
-		"-unikernel", filepath.Join(cfg.Root, cfg.Args[0])}
-
-	for _, e := range cfg.Env {
-		args = append(args, "-env", e)
+	c := runnc_cont.Config{
+		NablaRunBin:    NablaRunBin,
+		UniKernelBin:   filepath.Join(cfg.Root, cfg.Args[0]),
+		Memory:         cfg.Memory,
+		Tap:            cfg.TapName,
+		IsInKubernetes: true,
+		IsInDocker:     false,
+		Disk:           cfg.FsPath,
+		WorkingDir:     cfg.Cwd,
+		Env:            cfg.Env,
+		NablaRunArgs:   cfg.Args[1:],
 	}
 
-	args = append(args, "--")
-	args = append(args, cfg.Args[1:]...)
+	cont, err := runnc_cont.NewRunncCont(c)
+	if err != nil {
+		return nil, err
+	}
 
-	fmt.Fprintf(os.Stderr, "Running with args: %v", args)
-	return args, nil
+	return cont, nil
 }
 
 type initConfig struct {
@@ -154,15 +155,14 @@ func initNabla() error {
 		select {}
 	}
 
-	runArgs, err := nablaRunArgs(config)
+	runncCont, err := newRunncCont(config)
 	if err != nil {
 		return newSystemErrorWithCause(err, "Unable to construct nabla run args")
 	}
 
-	if err := syscall.Exec(runArgs[0], runArgs, os.Environ()); err != nil {
+	if err := runncCont.Run(); err != nil {
 		return err
 	}
 
 	return nil
-
 }
