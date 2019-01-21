@@ -15,6 +15,13 @@
 # TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 # PERFORMANCE OF THIS SOFTWARE.
 
+ARCH=$(shell uname --m)
+ifeq ($(ARCH), aarch64)
+GOARCH="arm64"
+else ifeq ($(ARCH), x86_64)
+GOARCH="amd64"
+endif
+
 default: build
 
 SUBMOD_NEEDS_UPDATE=$(shell [ -z "`git submodule | grep -v "^ "`" ] && echo 0 || echo 1)
@@ -38,72 +45,36 @@ RELEASE_VER=v0.2
 
 RELEASE_SERVER=https://github.com/nabla-containers/nabla-base-build/releases/download/${RELEASE_VER}/
 
-build: submodule_warning godep build/runnc build/runnc-cont build/nabla-run test_images
+build: submodule_warning godep build/runnc build/runnc-cont build/nabla-run
 
 container-build:
 	sudo docker build . -f Dockerfile.build -t runnc-build
-	sudo docker run --rm -v ${PWD}:/go/src/github.com/nabla-containers/runnc -w /go/src/github.com/nabla-containers/runnc runnc-build make
+	sudo docker run --rm -v ${PWD}:/go/src/github.com/cloudkernels/runnc -w /go/src/github.com/cloudkernels/runnc runnc-build make
 
 container-install:
 	sudo docker build . -f Dockerfile.build -t runnc-build
-	sudo docker run --rm -v /opt/runnc/:/opt/runnc/ -v /usr/local/bin:/usr/local/bin -v ${PWD}:/go/src/github.com/nabla-containers/runnc -w /go/src/github.com/nabla-containers/runnc runnc-build make install
+	sudo docker run --rm -v /opt/runnc/:/opt/runnc/ -v /usr/local/bin:/usr/local/bin -v ${PWD}:/go/src/github.com/cloudkernels/runnc -w /go/src/github.com/cloudkernels/runnc runnc-build make install
 
 .PHONY: godep
 godep:
 	dep ensure
 
 build/runnc: godep create.go exec.go kill.go start.go util.go util_runner.go util_tty.go delete.go  init.go runnc.go state.go util_nabla.go util_signal.go
-	GOOS=linux GOARCH=amd64 go build -o $@ .
+	GOOS=linux GOARCH=$(GOARCH) go build -o $@ .
 
 build/runnc-cont: godep runnc-cont/*
-	GOOS=linux GOARCH=amd64 go build -ldflags "-linkmode external -extldflags -static" -o $@ ./runnc-cont
+	GOOS=linux GOARCH=$(GOARCH) go build -ldflags "-linkmode external -extldflags -static" -o $@ ./runnc-cont
 
-solo5/ukvm/ukvm-bin: FORCE
-	make -C solo5 ukvm
-
-solo5/tests/test_hello/test_hello.ukvm: FORCE
-	make -C solo5 ukvm
+solo5/tenders/spt/solo5-spt: FORCE
+	make -C solo5
 
 .PHONY: FORCE
 
-build/nabla-run: solo5/ukvm/ukvm-bin
+build/nabla-run: solo5/tenders/spt/solo5-spt
 	install -m 775 -D $< $@
-
-tests/integration/node.nabla:
-	wget -nc ${RELEASE_SERVER}/node.nabla -O $@ && chmod +x $@
-
-tests/integration/test_hello.nabla: solo5/tests/test_hello/test_hello.ukvm
-	install -m 664 -D $< $@
-
-tests/integration/test_curl.nabla:
-	wget -nc ${RELEASE_SERVER}/test_curl.nabla -O $@ && chmod +x $@
 
 install: build/runnc build/runnc-cont build/nabla-run
 	sudo hack/copy_binaries.sh
-
-.PHONY: test,container-integration-test,local-integration-test,integration
-test: integration
-
-test_images: \
-tests/integration/node.nabla \
-tests/integration/test_hello.nabla \
-tests/integration/test_curl.nabla
-
-integration: local-integration-test container-integration-test
-
-test/integration/node_tests.iso:
-	make -C tests/integration
-
-local-integration-test: test/integration/node_tests.iso
-	sudo tests/bats-core/bats -p tests/integration
-
-container-integration-test: test/integration/node_tests.iso
-	sudo docker run -it --rm \
-		-v $(CURDIR)/build:/build \
-		-v $(CURDIR)/tests:/tests \
-		--cap-add=NET_ADMIN \
-		-e INCONTAINER=1 \
-		ubuntu:16.04 /tests/bats-core/bats -p /tests/integration
 
 clean:
 	sudo rm -rf build/
