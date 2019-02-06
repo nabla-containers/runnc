@@ -20,6 +20,10 @@ load helpers
 
 RUNNC_OUT="out"
 
+function setup() {
+	setup_root
+}
+
 function teardown() {
 	teardown_root
 }
@@ -36,14 +40,14 @@ function docker_node_nabla_run() {
 function runnc_run() {
 	# trick: don't start with 'run', or you will get a deadlock
 	# waiting for the nabla program to be done but no one start it
-	runnc create "$1" > $RUNNC_OUT
+	runnc create --bundle "$TEST_BUNDLE" --pid-file "$ROOT/pid" "$1" > $RUNNC_OUT
 	run runnc start "$1"
 
 	echo "nabla-run $@ (status=$status):" >&2
 	echo "$output" >&2
 
-	# waiting for nabla log to be done
-	sleep 1
+	# waiting for container process to be done
+	tail --pid=$(cat $ROOT/pid) -f /dev/null
 }
 
 @test "hello" {
@@ -52,12 +56,13 @@ function runnc_run() {
 
 	cat config.json \
 	| jq '.process.args |= .+ ["test_hello.nabla"]' \
-	> config.json
+	> config.json.new
+	mv config.json.new config.json
 
 	runnc_run "$name"
 
 	run cat "$TEST_BUNDLE/$RUNNC_OUT"
-    [[ "$output" == *"Hello, World"* ]]
+	[[ "$output" == *"Hello, World"* ]]
 
 	runnc delete --force "$name"
 	teardown_test
@@ -69,7 +74,8 @@ function runnc_run() {
 
 	cat config.json \
 	| jq '.process.args |= .+ ["test_hello.nabla", "hola"]' \
-	> config.json
+	> config.json.new
+	mv config.json.new config.json
 
 	runnc_run "$name"
 
@@ -88,7 +94,8 @@ function runnc_run() {
 	cat config.json \
 	| jq '.process.args |= .+ ["test_hello.nabla"]' \
 	| jq '.process.args |= .+ ["{\"bla\":\"ble\"}"]' \
-	> config.json
+	> config.json.new
+	mv config.json.new config.json
 
 	runnc_run "$name"
 
@@ -107,7 +114,8 @@ function runnc_run() {
 	cat config.json \
 	| jq '.process.args |= .+ ["test_hello.nabla"]' \
 	| jq '.process.args |= .+ ["{\\\"bla\\\":\\\"ble\\\"}"]' \
-	> config.json
+	> config.json.new
+	mv config.json.new config.json
 
 	runnc_run "$name"
 
@@ -152,7 +160,8 @@ function runnc_run() {
 
 	cat config.json \
 	| jq '.process.args |= .+ ["node.nabla", "/hello/app.js"]' \
-	> config.json
+	> config.json.new
+	mv config.json.new config.json
 
 	runnc_run "$name"
 
@@ -170,7 +179,8 @@ function runnc_run() {
 	cat config.json \
 	| jq '.process.args |= .+ ["node.nabla", "/hello/env.js"]' \
 	| jq '.process.env |= .+ ["BLA=bla", "NABLA_ENV_TEST=blableblibloblu", "BLE=ble"]' \
-	> config.json
+	> config.json.new
+	mv config.json.new config.json
 
 	runnc_run "$name"
 
@@ -188,7 +198,8 @@ function runnc_run() {
 	cat config.json \
 	| jq '.process.args |= .+ ["node.nabla", "/hello/cwd.js"]' \
 	| jq '.process.cwd |= "/hello"' \
-	> config.json
+	> config.json.new
+	mv config.json.new config.json
 
 	runnc_run "$name"
 
@@ -215,7 +226,7 @@ function runnc_run() {
 }
 
 @test "curl local" {
-    skip "TODO: Require proper networking for native runnc in prestart hooks"
+	skip "TODO: Require proper networking for native runnc in prestart hooks"
 }
 
 @test "curl runnc" {

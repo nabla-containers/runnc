@@ -26,7 +26,7 @@ TESTDATA="$TOPLEVEL/testdata"
 TEST_BUNDLE="$BATS_TMPDIR/test-nabla"
 
 # Root state path.
-ROOT=$(mktemp -d "$BATS_TMPDIR/runnc.XXXXXX")
+ROOT="$BATS_TMPDIR/runnc.root"
 
 # Wrapper for runnc.
 function runnc() {
@@ -62,6 +62,9 @@ function teardown_test() {
     run rm  -r "$TEST_BUNDLE"
 }
 
+function setup_root() {
+    run mkdir -p "$ROOT"
+}
 function teardown_root() {
     run rm -r "$ROOT"
 }
