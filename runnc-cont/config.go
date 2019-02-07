@@ -27,7 +27,7 @@ type Config struct {
 	IsInKubernetes bool
 
 	// Disk is the path to disk
-	Disk string
+	Disk []string
 
 	// WorkingDir current working directory.
 	WorkingDir string

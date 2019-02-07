@@ -79,6 +79,11 @@ func NewRunncCont(cfg Config) (*RunncCont, error) {
 	if err != nil {
 		return nil, fmt.Errorf("not a valid IP address: %s, err: %v", netstr, err)
 	}
+
+	if len(cfg.Disk) < 1 {
+		return nil, fmt.Errorf("No disk provided")
+	}
+
 	gw := net.ParseIP(cfg.GateWay)
 
 	return &RunncCont{
@@ -92,7 +97,7 @@ func NewRunncCont(cfg Config) (*RunncCont, error) {
 		Memory:         cfg.Memory,
 		IsInDocker:     cfg.IsInDocker,
 		IsInKubernetes: cfg.IsInKubernetes,
-		Disk:           cfg.Disk,
+		Disk:           cfg.Disk[0],
 		WorkingDir:     cfg.WorkingDir,
 		Env:            cfg.Env,
 	}, nil
