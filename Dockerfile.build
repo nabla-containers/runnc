@@ -4,5 +4,4 @@ RUN apt update
 RUN apt install -y genisoimage
 RUN apt install -y libseccomp-dev
 RUN apt install -y sudo
-
-
+RUN apt install -y jq
