@@ -54,10 +54,7 @@ function runnc_run() {
 	setup_test "hello"
 	local name="test-nabla-hello"
 
-	cat config.json \
-	| jq '.process.args |= .+ ["test_hello.nabla"]' \
-	> config.json.new
-	mv config.json.new config.json
+	config_mod '.process.args |= .+ ["test_hello.nabla"]'
 
 	runnc_run "$name"
 
@@ -72,10 +69,7 @@ function runnc_run() {
 	setup_test "hello"
 	local name="test-nabla-hello-arg"
 
-	cat config.json \
-	| jq '.process.args |= .+ ["test_hello.nabla", "hola"]' \
-	> config.json.new
-	mv config.json.new config.json
+	config_mod '.process.args |= .+ ["test_hello.nabla", "hola"]'
 
 	runnc_run "$name"
 
@@ -91,11 +85,8 @@ function runnc_run() {
 	setup_test "hello"
 	local name="test-nabla-hello-json-arg"
 
-	cat config.json \
-	| jq '.process.args |= .+ ["test_hello.nabla"]' \
-	| jq '.process.args |= .+ ["{\"bla\":\"ble\"}"]' \
-	> config.json.new
-	mv config.json.new config.json
+	config_mod '.process.args |= .+ ["test_hello.nabla"]'
+	config_mod '.process.args |= .+ ["{\"bla\":\"ble\"}"]'
 
 	runnc_run "$name"
 
@@ -111,11 +102,8 @@ function runnc_run() {
 	setup_test "hello"
 	local name="test-nabla-hello-escaped-json-arg"
 
-	cat config.json \
-	| jq '.process.args |= .+ ["test_hello.nabla"]' \
-	| jq '.process.args |= .+ ["{\\\"bla\\\":\\\"ble\\\"}"]' \
-	> config.json.new
-	mv config.json.new config.json
+	config_mod '.process.args |= .+ ["test_hello.nabla"]'
+	config_mod '.process.args |= .+ ["{\\\"bla\\\":\\\"ble\\\"}"]'
 
 	runnc_run "$name"
 
@@ -158,10 +146,7 @@ function runnc_run() {
 	setup_test "node"
 	local name="test-nabla-node"
 
-	cat config.json \
-	| jq '.process.args |= .+ ["node.nabla", "/hello/app.js"]' \
-	> config.json.new
-	mv config.json.new config.json
+	config_mod '.process.args |= .+ ["node.nabla", "/hello/app.js"]'
 
 	runnc_run "$name"
 
@@ -176,11 +161,8 @@ function runnc_run() {
 	setup_test "node"
 	local name="test-nabla-node-env"
 
-	cat config.json \
-	| jq '.process.args |= .+ ["node.nabla", "/hello/env.js"]' \
-	| jq '.process.env |= .+ ["BLA=bla", "NABLA_ENV_TEST=blableblibloblu", "BLE=ble"]' \
-	> config.json.new
-	mv config.json.new config.json
+	config_mod '.process.args |= .+ ["node.nabla", "/hello/env.js"]'
+	config_mod '.process.env |= .+ ["BLA=bla", "NABLA_ENV_TEST=blableblibloblu", "BLE=ble"]'
 
 	runnc_run "$name"
 
@@ -195,11 +177,8 @@ function runnc_run() {
 	setup_test "node"
 	local name="test-nabla-node-cwd"
 
-	cat config.json \
-	| jq '.process.args |= .+ ["node.nabla", "/hello/cwd.js"]' \
-	| jq '.process.cwd |= "/hello"' \
-	> config.json.new
-	mv config.json.new config.json
+	config_mod '.process.args |= .+ ["node.nabla", "/hello/cwd.js"]'
+	config_mod '.process.cwd |= "/hello"'
 
 	runnc_run "$name"
 

@@ -58,6 +58,11 @@ function setup_test() {
     cd "$TEST_BUNDLE"
 }
 
+function config_mod () {
+    cat config.json | jq "$@" > config.json.new
+    mv config.json.new config.json
+}
+
 function teardown_test() {
     run rm  -r "$TEST_BUNDLE"
 }
