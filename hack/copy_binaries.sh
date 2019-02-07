@@ -23,7 +23,7 @@ BIN_PATH=/usr/local/bin/
 # to be consumed directly by the user.
 BIN_PATH2=/opt/runnc/bin/
 
-COPY_BINS=("build/runnc" "build/runnc-cont" "build/nabla-run")
+COPY_BINS=("build/runnc" "build/nabla-run")
 
 mkdir -p ${BIN_PATH2}
 
