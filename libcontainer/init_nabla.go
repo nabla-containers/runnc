@@ -49,7 +49,7 @@ func newRunncCont(cfg *initConfig) (*runnc_cont.RunncCont, error) {
 		Tap:            cfg.TapName,
 		IsInKubernetes: true,
 		IsInDocker:     false,
-		Disk:           cfg.FsPath,
+		Disk:           []string{cfg.FsPath},
 		WorkingDir:     cfg.Cwd,
 		Env:            cfg.Env,
 		NablaRunArgs:   cfg.Args[1:],
