@@ -86,7 +86,7 @@ tests/integration/node.nabla \
 tests/integration/test_hello.nabla \
 tests/integration/test_curl.nabla
 
-integration: local-integration-test container-integration-test
+integration: local-integration-test
 
 test/integration/node_tests.iso:
 	make -C tests/integration
@@ -94,13 +94,13 @@ test/integration/node_tests.iso:
 local-integration-test: test/integration/node_tests.iso
 	sudo tests/bats-core/bats -p tests/integration
 
-container-integration-test: test/integration/node_tests.iso
-	sudo docker run -it --rm \
-		-v $(CURDIR)/build:/build \
-		-v $(CURDIR)/tests:/tests \
-		--cap-add=NET_ADMIN \
-		-e INCONTAINER=1 \
-		ubuntu:16.04 /tests/bats-core/bats -p /tests/integration
+#container-integration-test: test/integration/node_tests.iso
+#	sudo docker run -it --rm \
+#		-v $(CURDIR)/build:/build \
+#		-v $(CURDIR)/tests:/tests \
+#		--cap-add=NET_ADMIN \
+#		-e INCONTAINER=1 \
+#		ubuntu:16.04 /tests/bats-core/bats -p /tests/integration
 
 clean:
 	sudo rm -rf build/
