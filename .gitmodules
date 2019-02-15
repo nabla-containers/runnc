@@ -1,4 +1,4 @@
 [submodule "solo5"]
 	path = solo5
-	url = https://github.com/nabla-containers/solo5.git
-	branch = ukvm-linux-seccomp
+	url = https://github.com/solo5/solo5.git
+	branch = master
