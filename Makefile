@@ -55,21 +55,21 @@ godep:
 build/runnc: godep create.go exec.go kill.go start.go util.go util_runner.go util_tty.go delete.go  init.go runnc.go state.go util_nabla.go util_signal.go
 	GOOS=linux GOARCH=amd64 go build -o $@ .
 
-solo5/ukvm/ukvm-bin: FORCE
-	make -C solo5 ukvm
+solo5/tenders/spt/solo5-spt: FORCE
+	make -C solo5
 
-solo5/tests/test_hello/test_hello.ukvm: FORCE
-	make -C solo5 ukvm
+solo5/tests/test_hello/test_hello.spt: FORCE
+	make -C solo5
 
 .PHONY: FORCE
 
-build/nabla-run: solo5/ukvm/ukvm-bin
+build/nabla-run: solo5/tenders/spt/solo5-spt
 	install -m 775 -D $< $@
 
 tests/integration/node.nabla:
 	wget -nc ${RELEASE_SERVER}/node.nabla -O $@ && chmod +x $@
 
-tests/integration/test_hello.nabla: solo5/tests/test_hello/test_hello.ukvm
+tests/integration/test_hello.nabla: solo5/tests/test_hello/test_hello.spt
 	install -m 664 -D $< $@
 
 tests/integration/test_curl.nabla:
