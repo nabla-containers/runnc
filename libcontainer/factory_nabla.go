@@ -19,11 +19,12 @@ package libcontainer
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/nabla-containers/runnc/libcontainer/configs"
 	"os"
 	"path/filepath"
 	"regexp"
 	"syscall"
+
+	"github.com/nabla-containers/runnc/libcontainer/configs"
 
 	"github.com/nabla-containers/runnc/nabla-lib/network"
 	"github.com/nabla-containers/runnc/nabla-lib/storage"
@@ -215,7 +216,7 @@ func (l *NablaFactory) validateID(id string) error {
 		return fmt.Errorf("invalid id format: %v", id)
 	}
 	if len(id) > maxIdLen {
-		return fmt.Errorf("invalid id format: %v", id)
+		return fmt.Errorf("id length: %v, greater than max length: %v", len(id), maxIdLen)
 	}
 	return nil
 }
