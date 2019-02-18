@@ -16,11 +16,13 @@ package main
 
 import (
 	"fmt"
-	"github.com/nabla-containers/runnc/libcontainer"
-	"github.com/opencontainers/runtime-spec/specs-go"
+	"io/ioutil"
 	"os"
 	"strconv"
 	"syscall"
+
+	"github.com/nabla-containers/runnc/libcontainer"
+	"github.com/opencontainers/runtime-spec/specs-go"
 
 	"path/filepath"
 )
@@ -83,6 +85,13 @@ func (r *runner) run(config *specs.Process) (int, error) {
 			return -1, err
 		}
 	}
+	if process.OOMScoreAdj != nil {
+		if err := adjustOomScore(process); err != nil {
+			r.terminate(process)
+			r.destroy()
+			return -1, err
+		}
+	}
 	if r.detach || r.create {
 		return 0, nil
 	}
@@ -117,6 +126,7 @@ func newProcess(p specs.Process) (*libcontainer.Process, error) {
 		Label:           p.SelinuxLabel,
 		NoNewPrivileges: &p.NoNewPrivileges,
 		AppArmorProfile: p.ApparmorProfile,
+		OOMScoreAdj:     p.OOMScoreAdj,
 	}
 	for _, gid := range p.User.AdditionalGids {
 		lp.AdditionalGroups = append(lp.AdditionalGroups, strconv.FormatUint(uint64(gid), 10))
@@ -167,4 +177,17 @@ func createPidFile(path string, process *libcontainer.Process) error {
 		return err
 	}
 	return os.Rename(tmpName, path)
+}
+
+func adjustOomScore(process *libcontainer.Process) error {
+	pid, err := process.Pid()
+	if err != nil {
+		return err
+	}
+	f := fmt.Sprintf("/proc/%v/oom_score_adj", pid)
+	err = ioutil.WriteFile(f, []byte(strconv.Itoa(*process.OOMScoreAdj)), 0644)
+	if err != nil {
+		return err
+	}
+	return nil
 }

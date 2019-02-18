@@ -81,6 +81,9 @@ type Process struct {
 	//Rlimits []configs.Rlimit
 
 	ops processOperations
+
+	// OOMScoreAdj sets the value of the processes oom_score_adj.
+	OOMScoreAdj *int
 }
 
 // Wait waits for the process to exit.
