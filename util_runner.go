@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path"
 	"strconv"
 	"syscall"
 
@@ -184,8 +185,9 @@ func adjustOomScore(process *libcontainer.Process) error {
 	if err != nil {
 		return err
 	}
-	f := fmt.Sprintf("/proc/%v/oom_score_adj", pid)
-	err = ioutil.WriteFile(f, []byte(strconv.Itoa(*process.OOMScoreAdj)), 0644)
+	oomScoreAdjPath := path.Join("/proc/", strconv.Itoa(pid), "oom_score_adj")
+	value := strconv.Itoa(*process.OOMScoreAdj)
+	err = ioutil.WriteFile(oomScoreAdjPath, []byte(value), 0644)
 	if err != nil {
 		return err
 	}
