@@ -34,7 +34,7 @@ submodule_warning:
 endif
 
 # Synced release version to download from
-RELEASE_VER=v0.2
+RELEASE_VER=v0.3
 
 RELEASE_SERVER=https://github.com/nabla-containers/nabla-base-build/releases/download/${RELEASE_VER}/
 
