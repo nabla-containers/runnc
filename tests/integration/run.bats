@@ -31,7 +31,7 @@ function teardown() {
 function docker_node_nabla_run() {
 	local-test
 
-	run sudo docker run --rm --runtime=runnc nablact/nabla-node:test
+	run sudo docker run --rm --runtime=runnc nablact/nabla-node:test /node.nabla
 
 	echo "nabla-run $@ (status=$status):" >&2
 	echo "$output" >&2
@@ -192,7 +192,7 @@ function runnc_run() {
 @test "node hello runnc" {
 	local-test
 
-	run sudo docker run --rm --runtime=runnc nablact/nabla-node:test /hello/app.js
+	run sudo docker run --rm --runtime=runnc nablact/nabla-node:test /node.nabla /hello/app.js
 	[[ "$output" == *"hello from node"* ]]
 }
 
@@ -200,7 +200,7 @@ function runnc_run() {
 	local-test
 
 	# env.js just prints the NABLA_ENV_TEST environment variable
-	run sudo docker run --rm --runtime=runnc -e NABLA_ENV_TEST=blableblibloblu nablact/nabla-node:test /hello/env.js
+	run sudo docker run --rm --runtime=runnc -e NABLA_ENV_TEST=blableblibloblu nablact/nabla-node:test /node.nabla /hello/env.js
 	[[ "$output" == *"env=blableblibloblu"* ]]
 }
 
@@ -231,7 +231,7 @@ function runnc_run() {
 	# Check that 1024m is passed correct to runnc as 1024.
 	# Redirecting stderr to dev/null because there is a kernel warning
 	memory_check() {
-	  sudo docker run -d --rm --runtime=runnc -m 1024m nablact/nabla-node:test /hello/app.js 2>/dev/null
+	  sudo docker run -d --rm --runtime=runnc -m 1024m nablact/nabla-node:test /node.nabla /hello/app.js 2>/dev/null
 	}
 
 	run memory_check
