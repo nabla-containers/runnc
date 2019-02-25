@@ -78,7 +78,7 @@ tests/integration/test_curl.nabla:
 install: build/runnc build/nabla-run
 	sudo hack/copy_binaries.sh
 
-.PHONY: test,container-integration-test,local-integration-test,integration
+.PHONY: test,container-integration-test,local-integration-test,integration,integration-make
 test: integration
 
 test_images: \
@@ -88,10 +88,10 @@ tests/integration/test_curl.nabla
 
 integration: local-integration-test
 
-test/integration/node_tests.iso:
+integration-make:
 	make -C tests/integration
 
-local-integration-test: test/integration/node_tests.iso
+local-integration-test: integration-make
 	sudo tests/bats-core/bats -p tests/integration
 
 #container-integration-test: test/integration/node_tests.iso
