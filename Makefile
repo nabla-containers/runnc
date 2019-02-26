@@ -15,6 +15,13 @@
 # TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 # PERFORMANCE OF THIS SOFTWARE.
 
+ARCH=$(shell uname --m)
+ifeq ($(ARCH), aarch64)
+	GOARCH="arm64"
+else ifeq ($(ARCH), x86_64)
+	GOARCH="amd64"
+endif
+
 default: build
 
 SUBMOD_NEEDS_UPDATE=$(shell [ -z "`git submodule | grep -v "^ "`" ] && echo 0 || echo 1)
@@ -58,7 +65,7 @@ godep:
 	dep ensure
 
 build/runnc: godep create.go exec.go kill.go start.go util.go util_runner.go util_tty.go delete.go  init.go runnc.go state.go util_nabla.go util_signal.go
-	GOOS=linux GOARCH=amd64 go build -o $@ .
+	GOOS=linux GOARCH=${GOARCH} go build -o $@ .
 
 solo5/tenders/spt/solo5-spt: FORCE
 	make -C solo5
@@ -72,13 +79,13 @@ build/nabla-run: solo5/tenders/spt/solo5-spt
 	install -m 775 -D $< $@
 
 tests/integration/node.nabla:
-	wget -nc ${RELEASE_SERVER}/node.nabla -O $@ && chmod +x $@
+	wget -nc ${RELEASE_SERVER}/node-${ARCH}.nabla -O $@ && chmod +x $@
 
 tests/integration/test_hello.nabla: solo5/tests/test_hello/test_hello.spt
 	install -m 664 -D $< $@
 
 tests/integration/test_curl.nabla:
-	wget -nc ${RELEASE_SERVER}/test_curl.nabla -O $@ && chmod +x $@
+	wget -nc ${RELEASE_SERVER}/test_curl-${ARCH}.nabla -O $@ && chmod +x $@
 
 install: build/runnc build/nabla-run
 	sudo hack/update_binaries.sh
