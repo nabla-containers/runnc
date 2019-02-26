@@ -1,3 +1,4 @@
-FROM nablact/nabla-node-base
+FROM scratch
 
+COPY node.nabla /node.nabla
 COPY testdata/hello /hello

@@ -34,7 +34,7 @@ submodule_warning:
 endif
 
 # Synced release version to download from
-RELEASE_VER=v0.2
+RELEASE_VER=v0.3
 
 RELEASE_SERVER=https://github.com/nabla-containers/nabla-base-build/releases/download/${RELEASE_VER}/
 
@@ -55,21 +55,21 @@ godep:
 build/runnc: godep create.go exec.go kill.go start.go util.go util_runner.go util_tty.go delete.go  init.go runnc.go state.go util_nabla.go util_signal.go
 	GOOS=linux GOARCH=amd64 go build -o $@ .
 
-solo5/ukvm/ukvm-bin: FORCE
-	make -C solo5 ukvm
+solo5/tenders/spt/solo5-spt: FORCE
+	make -C solo5
 
-solo5/tests/test_hello/test_hello.ukvm: FORCE
-	make -C solo5 ukvm
+solo5/tests/test_hello/test_hello.spt: FORCE
+	make -C solo5
 
 .PHONY: FORCE
 
-build/nabla-run: solo5/ukvm/ukvm-bin
+build/nabla-run: solo5/tenders/spt/solo5-spt
 	install -m 775 -D $< $@
 
 tests/integration/node.nabla:
 	wget -nc ${RELEASE_SERVER}/node.nabla -O $@ && chmod +x $@
 
-tests/integration/test_hello.nabla: solo5/tests/test_hello/test_hello.ukvm
+tests/integration/test_hello.nabla: solo5/tests/test_hello/test_hello.spt
 	install -m 664 -D $< $@
 
 tests/integration/test_curl.nabla:
@@ -78,7 +78,7 @@ tests/integration/test_curl.nabla:
 install: build/runnc build/nabla-run
 	sudo hack/copy_binaries.sh
 
-.PHONY: test,container-integration-test,local-integration-test,integration
+.PHONY: test,container-integration-test,local-integration-test,integration,integration-make
 test: integration
 
 test_images: \
@@ -88,10 +88,10 @@ tests/integration/test_curl.nabla
 
 integration: local-integration-test
 
-test/integration/node_tests.iso:
+integration-make:
 	make -C tests/integration
 
-local-integration-test: test/integration/node_tests.iso
+local-integration-test: integration-make
 	sudo tests/bats-core/bats -p tests/integration
 
 #container-integration-test: test/integration/node_tests.iso

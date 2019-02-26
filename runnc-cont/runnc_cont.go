@@ -178,6 +178,7 @@ func (r *RunncCont) Run() error {
 	var args []string
 	if mac != "" {
 		args = []string{r.NablaRunBin,
+			"--x-exec-heap",
 			"--mem=" + strconv.FormatInt(r.Memory, 10),
 			"--net-mac=" + mac,
 			"--net=" + r.Tap,
@@ -186,6 +187,7 @@ func (r *RunncCont) Run() error {
 			unikernelArgs}
 	} else {
 		args = []string{r.NablaRunBin,
+			"--x-exec-heap",
 			"--mem=" + strconv.FormatInt(r.Memory, 10),
 			"--net=" + r.Tap,
 			"--disk=" + disk,
