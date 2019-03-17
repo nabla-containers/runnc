@@ -214,6 +214,7 @@ func (c *nablaContainer) start(p *Process) error {
 		NetnsPath:  c.config.NetnsPath,
 		Hooks:      c.config.Hooks,
 		Memory:     c.config.Memory,
+		Mounts:     c.config.Mounts,
 	}
 
 	enc := json.NewEncoder(parentPipe)

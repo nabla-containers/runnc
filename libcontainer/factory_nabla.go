@@ -26,6 +26,7 @@ import (
 
 	"github.com/nabla-containers/runnc/libcontainer/configs"
 
+	"github.com/nabla-containers/runnc/utils"
 	"github.com/nabla-containers/runnc/nabla-lib/network"
 	"github.com/nabla-containers/runnc/nabla-lib/storage"
 
@@ -86,6 +87,18 @@ func applyPauseHack(config *configs.Config, containerRoot string) (*configs.Conf
 func createRootfsISO(config *configs.Config, containerRoot string) (string, error) {
 	rootfsPath := config.Rootfs
 	targetISOPath := filepath.Join(containerRoot, "rootfs.iso")
+	for _, mount := range config.Mounts {
+		if (mount.Destination == "/etc/resolv.conf") ||
+			(mount.Destination == "/etc/hosts") ||
+			(mount.Destination == "/etc/hostname") {
+			var dest = filepath.Join(rootfsPath, mount.Destination)
+			var source = mount.Source
+			var err = utils.Copy(dest, source)
+			if err != nil {
+				return "", errors.Wrap(err, "Unable to copy " + source + " to " + dest)
+			}
+		}
+	}
 	_, err := storage.CreateIso(rootfsPath, &targetISOPath)
 	if err != nil {
 		return "", errors.Wrap(err, "Error creating iso from rootfs")

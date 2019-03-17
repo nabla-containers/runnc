@@ -52,6 +52,7 @@ func ParseSpec(s *specs.Spec) (*Config, error) {
 		Labels:    labels,
 		Hooks:     s.Hooks,
 		Memory:    memory,
+		Mounts:    s.Mounts,
 	}
 
 	return &cfg, nil
