@@ -48,6 +48,11 @@ container-install:
 	sudo docker build . -f Dockerfile.build -t runnc-build
 	sudo docker run --rm -v /opt/runnc/:/opt/runnc/ -v /usr/local/bin:/usr/local/bin -v ${PWD}:/go/src/github.com/nabla-containers/runnc -w /go/src/github.com/nabla-containers/runnc runnc-build make install
 
+container-uninstall:
+	sudo docker rmi -f runnc-build
+	make clean
+	sudo hack/update_binaries.sh delete
+
 .PHONY: godep
 godep:
 	dep ensure
@@ -76,7 +81,7 @@ tests/integration/test_curl.nabla:
 	wget -nc ${RELEASE_SERVER}/test_curl.nabla -O $@ && chmod +x $@
 
 install: build/runnc build/nabla-run
-	sudo hack/copy_binaries.sh
+	sudo hack/update_binaries.sh
 
 .PHONY: test,container-integration-test,local-integration-test,integration,integration-make
 test: integration
