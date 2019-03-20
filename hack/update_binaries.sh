@@ -17,18 +17,28 @@
 # TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 # PERFORMANCE OF THIS SOFTWARE.
 
-LIBRARY_PATH=/opt/runnc/lib/
-TARGET_BIN=build/nabla-run
+BIN_PATH=/usr/local/bin/
 
-mkdir -p ${LIBRARY_PATH}
+# We add binaries like runnc and nabla-run to /opt/X since they are not
+# to be consumed directly by the user.
+BIN_PATH2=/opt/runnc/bin/
 
-for i in $(ldd ${TARGET_BIN}); do 
-	if [[ ${i} == /* ]]; then 
-		echo Copying $i to ${LIBRARY_PATH}
-        cp $i ${LIBRARY_PATH}/
+COPY_BINS=("runnc" "nabla-run")
 
-        if [[ $? -ne 0 ]] ; then
-            exit 1
-        fi
-	fi
-done
+if [[ $1 == "delete" ]]
+then
+    rm -rf ${BIN_PATH2}
+
+    for i in ${COPY_BINS[@]}; do
+        echo "Deleting " $i
+        rm -f ${BIN_PATH}/$i
+    done
+else
+    mkdir -p ${BIN_PATH2}
+
+    for i in ${COPY_BINS[@]}; do
+        echo "Copying " $i
+        cp build/$i ${BIN_PATH}/
+        cp build/$i ${BIN_PATH2}/
+    done
+fi
