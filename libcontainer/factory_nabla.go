@@ -91,10 +91,9 @@ func createRootfsISO(config *configs.Config, containerRoot string) (string, erro
 		if (mount.Destination == "/etc/resolv.conf") ||
 			(mount.Destination == "/etc/hosts") ||
 			(mount.Destination == "/etc/hostname") {
-			var dest = filepath.Join(rootfsPath, mount.Destination)
-			var source = mount.Source
-			var err = utils.Copy(dest, source)
-			if err != nil {
+			dest := filepath.Join(rootfsPath, mount.Destination)
+			source := mount.Source
+			if err := utils.Copy(dest, source); err != nil {
 				return "", errors.Wrap(err, "Unable to copy " + source + " to " + dest)
 			}
 		}
