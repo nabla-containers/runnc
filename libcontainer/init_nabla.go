@@ -53,6 +53,7 @@ func newRunncCont(cfg *initConfig) (*runnc_cont.RunncCont, error) {
 		WorkingDir:     cfg.Cwd,
 		Env:            cfg.Env,
 		NablaRunArgs:   cfg.Args[1:],
+		Mounts:         cfg.Mounts,
 	}
 
 	cont, err := runnc_cont.NewRunncCont(c)
@@ -75,6 +76,7 @@ type initConfig struct {
 	NetnsPath  string      `json:"netnspath"`
 	Hooks      *spec.Hooks `json:"hooks"`
 	Memory     int64       `json:"mem"`
+	Mounts     []spec.Mount `json:"Mounts"`
 }
 
 func initNabla() error {

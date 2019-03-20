@@ -24,6 +24,10 @@ type Config struct {
 
 	// Memory is passed from docker cli to runtime.
 	Memory int64 `json:"memory,omitempty"`
+
+	// Mounts specify source and destination paths that will be copied
+	// inside the container's rootfs.
+	Mounts []spec.Mount `json:"mounts,omitempty"`
 }
 
 // HostUID returns the UID to run the nabla container as. Default is root.

@@ -27,6 +27,7 @@ import (
 	"syscall"
 
 	"github.com/nabla-containers/runnc/nabla-lib/network"
+	spec "github.com/opencontainers/runtime-spec/specs-go"
 	"github.com/nabla-containers/runnc/nabla-lib/storage"
 )
 
@@ -63,6 +64,10 @@ type RunncCont struct {
 
 	// Env is a list of environment variables.
 	Env []string
+
+	// Mounts specify source and destination paths that will be copied
+	// inside the container's rootfs.
+	Mounts []spec.Mount
 }
 
 // NewRunncCont returns a brand new runnc-cont
@@ -100,6 +105,7 @@ func NewRunncCont(cfg Config) (*RunncCont, error) {
 		Disk:           cfg.Disk[0],
 		WorkingDir:     cfg.WorkingDir,
 		Env:            cfg.Env,
+		Mounts:         cfg.Mounts,
 	}, nil
 }
 

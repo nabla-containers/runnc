@@ -1,5 +1,9 @@
 package runnc_cont
 
+import (
+	spec "github.com/opencontainers/runtime-spec/specs-go"
+)
+
 // Config configuration to create a runnc-cont
 type Config struct {
 	// NablaRunBin is the path to 'nabla-run' binary.
@@ -34,4 +38,8 @@ type Config struct {
 
 	// Env is a list of environment variables.
 	Env []string
+
+	// Mounts specify source and destination paths that will be copied
+	// inside the container's rootfs.
+	Mounts []spec.Mount
 }
