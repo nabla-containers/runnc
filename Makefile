@@ -45,7 +45,7 @@ RELEASE_VER=v0.3
 
 RELEASE_SERVER=https://github.com/nabla-containers/nabla-base-build/releases/download/${RELEASE_VER}/
 
-build: submodule_warning godep build/runnc build/nabla-run test_images
+build: submodule_warning deps build/runnc build/nabla-run test_images
 
 container-build:
 	sudo docker build . -f Dockerfile.build -t runnc-build
@@ -60,12 +60,17 @@ container-uninstall:
 	make clean
 	sudo hack/update_binaries.sh delete
 
-.PHONY: godep
-godep:
-	dep ensure
+deps:
+	go build -v ./...
 
 build/runnc: godep runnc.go
 	GOOS=linux GOARCH=${GOARCH} go build -o $@ .
+
+upgrade:
+	go get -u
+
+clean-deps:
+	go mod tidy
 
 solo5/tenders/spt/solo5-spt: FORCE
 	make -C solo5
