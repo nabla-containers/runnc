@@ -186,7 +186,7 @@ func adjustOomScore(process *libcontainer.Process) error {
 		return err
 	}
 	oomScoreAdjPath := path.Join("/proc/", strconv.Itoa(pid), "oom_score_adj")
-	if *process.OOMScoreAdj == nil {
+	if process.OOMScoreAdj == nil {
 		return fmt.Errorf("OOMScoreAdj value is nil")
 	}
 	value := strconv.Itoa(*process.OOMScoreAdj)
