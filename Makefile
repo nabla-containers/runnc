@@ -87,7 +87,7 @@ else
 endif
 
 ifeq ($(GO111MODULE),on)
-build/runnc: runnc.go
+build/runnc: tidy runnc.go
 GOOS=linux GOARCH=${GOARCH} $(GO_BIN) build -o $@ .
 else
 build/runnc: runnc.go

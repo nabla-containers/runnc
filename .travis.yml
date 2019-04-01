@@ -12,6 +12,11 @@ go:
   - tip
 
 matrix:
+  include:
+    - go: 1.11.x
+      env: GOMODULE111=on
+    - go: 1.11.x
+      env: GOMODULE111=off
   allow_failures:
     - go: tip
 
@@ -26,12 +31,12 @@ before_install:
   - sudo apt-get install -y libseccomp-dev genisoimage jq
   - go get -u golang.org/x/lint/golint
   - go get -u github.com/vbatts/git-validation
-  - go get -u github.com/golang/dep/cmd/dep
+  - sh -c "if [ '$GO111MODULE' != 'on']; then go get -u github.com/golang/dep/cmd/dep; fi"
   - env | grep TRAVIS_
 
 script:
   - git-validation -run DCO,short-subject -v
-  - env GO111MODULE=on make build/runnc build/nabla-run
+  - make build/runnc build/nabla-run
   - git submodule update --init --recursive
   - make shellcheck
   - env GO111MODULE=on make build
