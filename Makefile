@@ -14,6 +14,7 @@
 # OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
 # TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 # PERFORMANCE OF THIS SOFTWARE.
+GO_BIN ?= go
 
 ARCH=$(shell uname --m)
 ifeq ($(ARCH), aarch64)
@@ -45,7 +46,11 @@ RELEASE_VER=v0.3
 
 RELEASE_SERVER=https://github.com/nabla-containers/nabla-base-build/releases/download/${RELEASE_VER}/
 
-build: submodule_warning deps build/runnc build/nabla-run test_images
+ifeq ($(GO111MODULE),on)
+build: submodule_warning experimental-deps build/runnc build/nabla-run test_images
+else
+build: submodule_warning godep build/runnc build/nabla-run test_images
+endif
 
 container-build:
 	sudo docker build . -f Dockerfile.build -t runnc-build
@@ -60,17 +65,34 @@ container-uninstall:
 	make clean
 	sudo hack/update_binaries.sh delete
 
-deps:
-	go build -v ./...
-
-build/runnc: godep runnc.go
-	GOOS=linux GOARCH=${GOARCH} go build -o $@ .
+.PHONY: godep
+godep:
+	dep ensure
 
 upgrade:
 	go get -u
 
-clean-deps:
-	go mod tidy
+experimental-deps:
+	$(GO_BIN) build -v ./...
+	make tidy
+
+update:
+	$(GO_BIN) get -u
+
+tidy:
+ifeq ($(GO111MODULE),on)
+	$(GO_BIN) mod tidy
+else
+	echo skipping go mod tidy
+endif
+
+ifeq ($(GO111MODULE),on)
+build/runnc: runnc.go
+GOOS=linux GOARCH=${GOARCH} $(GO_BIN) build -o $@ .
+else
+build/runnc: runnc.go
+GOOS=linux GOARCH=${GOARCH} $(GO_BIN) build -o $@ .
+endif
 
 solo5/tenders/spt/solo5-spt: FORCE
 	make -C solo5
