@@ -71,10 +71,6 @@ godep:
 	dep ensure
 endif
 
-#experimental-deps:
-#	$(GO_BIN) build -v ./...
-#	make tidy
-
 update:
 	$(GO_BIN) get -u
 
