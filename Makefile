@@ -86,13 +86,15 @@ else
 	echo skipping go mod tidy
 endif
 
+.PHONY: build/deps
 ifeq ($(GO111MODULE),on)
-build/runnc: tidy runnc.go
-GOOS=linux GOARCH=${GOARCH} $(GO_BIN) build -o $@ .
+build/deps: tidy
 else
-build/runnc: runnc.go
-GOOS=linux GOARCH=${GOARCH} $(GO_BIN) build -o $@ .
+build/deps: godep
 endif
+
+build/runnc: build/deps create.go exec.go kill.go start.go util.go util_runner.go util_tty.go delete.go init.go runnc.go state.go util_nabla.go util_signal.go
+	GOOS=linux GOARCH=${GOARCH} $(GO_BIN) build -o $@ .
 
 solo5/tenders/spt/solo5-spt: FORCE
 	make -C solo5
