@@ -30,7 +30,7 @@ before_install:
   - sudo apt-get install -y libseccomp-dev genisoimage jq
   - go get -u golang.org/x/lint/golint
   - go get -u github.com/vbatts/git-validation
-  - sh -c "echo \"${GO111MODULE}\"; if [[ \"${GO111MODULE}\" != 'on']]; then go get -u github.com/golang/dep/cmd/dep; fi"
+  - sh -c "echo \"${GO111MODULE}\"; if [ \"${GO111MODULE}\" != 'on' ]; then go get -u github.com/golang/dep/cmd/dep; fi"
   - env | grep TRAVIS_
 
 script:
