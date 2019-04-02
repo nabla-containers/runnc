@@ -46,11 +46,7 @@ RELEASE_VER=v0.3
 
 RELEASE_SERVER=https://github.com/nabla-containers/nabla-base-build/releases/download/${RELEASE_VER}/
 
-ifeq ($(GO111MODULE),on)
-build: submodule_warning experimental-deps build/runnc build/nabla-run test_images
-else
 build: submodule_warning godep build/runnc build/nabla-run test_images
-endif
 
 container-build:
 	sudo docker build . -f Dockerfile.build -t runnc-build
@@ -66,15 +62,18 @@ container-uninstall:
 	sudo hack/update_binaries.sh delete
 
 .PHONY: godep
+ifeq ($(GO111MODULE),on)
 godep:
 	dep ensure
-
-upgrade:
-	go get -u
-
-experimental-deps:
+else
+godep:
 	$(GO_BIN) build -v ./...
 	make tidy
+endif
+
+#experimental-deps:
+#	$(GO_BIN) build -v ./...
+#	make tidy
 
 update:
 	$(GO_BIN) get -u
@@ -86,14 +85,7 @@ else
 	echo skipping go mod tidy
 endif
 
-.PHONY: build/deps
-ifeq ($(GO111MODULE),on)
-build/deps: tidy
-else
-build/deps: godep
-endif
-
-build/runnc: build/deps create.go exec.go kill.go start.go util.go util_runner.go util_tty.go delete.go init.go runnc.go state.go util_nabla.go util_signal.go
+build/runnc: godep create.go exec.go kill.go start.go util.go util_runner.go util_tty.go delete.go init.go runnc.go state.go util_nabla.go util_signal.go
 	GOOS=linux GOARCH=${GOARCH} $(GO_BIN) build -o $@ .
 
 solo5/tenders/spt/solo5-spt: FORCE
