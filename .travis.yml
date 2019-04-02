@@ -10,11 +10,10 @@ language: go
 go:
   - 1.11.x
   - tip
-  - "1.11.1"
 
 matrix:
   include:
-    - go: "1.11.1"
+    - go: "1.12"
       env: GO111MODULE=on
   allow_failures:
     - go: tip
