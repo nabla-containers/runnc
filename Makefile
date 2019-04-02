@@ -64,11 +64,11 @@ container-uninstall:
 .PHONY: godep
 ifeq ($(GO111MODULE),on)
 godep:
-	dep ensure
-else
-godep:
 	$(GO_BIN) build -v ./...
 	make tidy
+else
+godep:
+	dep ensure
 endif
 
 #experimental-deps:
