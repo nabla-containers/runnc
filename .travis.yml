@@ -12,13 +12,10 @@ go:
   - tip
 
 matrix:
-  include:
-    - go: 1.11.x
-      env: GOMODULE111=on
-    - go: 1.11.x
-      env: GOMODULE111=off
   allow_failures:
     - go: tip
+    - go: 1.11.1
+      env: GOMODULE111=on
 
 go_import_path: github.com/nabla-containers/runnc
 
