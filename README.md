@@ -3,7 +3,7 @@
 
 # Runnc
 
-`runnc` is the nabla-container runtime which interfaces with the container OCI runtime spec to create a nabla-container runtime. The runtime currently re-uses functionality from `runc` for some setup steps, but will eventually be self-sufficient in providing nabla-container equivalent setups. 
+`runnc` is the nabla-container runtime which interfaces with the container OCI runtime spec to create a nabla-container runtime. The runtime currently re-uses functionality from `runc` for some setup steps, but will eventually be self-sufficient in providing nabla-container equivalent setups.
 
 There is initial aarch64 support. For more information please check the [README.aarch64](README.aarch64.md) file
 
@@ -79,7 +79,7 @@ systemctl restart docker
 3. Run with runtime:
 
 ```
-sudo docker run --rm --runtime=runnc nablact/nabla-node-base:latest
+sudo docker run --rm --runtime=runnc nablact/nabla-node-base:v0.3
 ```
 
 ## Limitations
