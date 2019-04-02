@@ -1,5 +1,7 @@
 module github.com/nabla-containers/runnc
 
+go 1.12
+
 require (
 	github.com/docker/docker v1.5.0
 	github.com/konsorten/go-windows-terminal-sequences v1.0.1 // indirect
