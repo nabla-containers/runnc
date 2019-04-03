@@ -38,7 +38,7 @@ function docker_node_nabla_run() {
 }
 
 function runnc_run() {
-	BS=${2:-blocking}
+	daemon=${2:-nodaemon}
 	# trick: don't start with 'run', or you will get a deadlock
 	# waiting for the nabla program to be done but no one start it
 	runnc create --bundle "$TEST_BUNDLE" --pid-file "$ROOT/pid" "$1" > $RUNNC_OUT
@@ -48,21 +48,9 @@ function runnc_run() {
 	echo "$output" >&2
 
 	# waiting for container process to be done
-	if [[ ${BS} == 'nonblocking' ]]; then
-		continue
-	else
+	if [[ ${daemon} == 'nodaemon' ]]; then
 		tail --pid=$(cat $ROOT/pid) -f /dev/null
 	fi
-}
-
-function runnc_run_nonblock() {
-	# trick: don't start with 'run', or you will get a deadlock
-	# waiting for the nabla program to be done but no one start it
-	runnc create --bundle "$TEST_BUNDLE" --pid-file "$ROOT/pid" "$1" > $RUNNC_OUT
-	run runnc start "$1"
-	echo "nabla-run $@ (status=$status):" >&2
-	echo "$output" >&2
-
 }
 
 @test "hello" {
@@ -262,9 +250,9 @@ function runnc_run_nonblock() {
 	local name="test-nabla-oom-adjust"
 
 	config_mod '.process.args |= .+ ["node.nabla", "/hello/app.js"]'
-	config_mod '.process.OOMScoreAdj |= .+ 104'
+	config_mod '.process.oomScoreAdj |= .+ 105'
 
-	runnc_run "$name" "nonblocking"
+	runnc_run "$name" "daemon"
 
 	run bash -c "cat /proc/$(cat ${ROOT}/pid)/oom_score_adj"
 	[[ "$output" == *"104"* ]]

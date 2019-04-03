@@ -15,15 +15,14 @@
 package main
 
 import (
+	"github.com/nabla-containers/runnc/libcontainer"
+	"github.com/opencontainers/runtime-spec/specs-go"
+
 	"fmt"
 	"io/ioutil"
 	"os"
-	"path"
 	"strconv"
 	"syscall"
-
-	"github.com/nabla-containers/runnc/libcontainer"
-	"github.com/opencontainers/runtime-spec/specs-go"
 
 	"path/filepath"
 )
@@ -185,7 +184,7 @@ func adjustOomScore(process *libcontainer.Process) error {
 	if err != nil {
 		return err
 	}
-	oomScoreAdjPath := path.Join("/proc/", strconv.Itoa(pid), "oom_score_adj")
+	oomScoreAdjPath := filepath.Join("/proc/", strconv.Itoa(pid), "oom_score_adj")
 	if process.OOMScoreAdj == nil {
 		return fmt.Errorf("OOMScoreAdj value is nil")
 	}
