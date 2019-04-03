@@ -38,6 +38,7 @@ function docker_node_nabla_run() {
 }
 
 function runnc_run() {
+	daemon=${2:-nodaemon}
 	# trick: don't start with 'run', or you will get a deadlock
 	# waiting for the nabla program to be done but no one start it
 	runnc create --bundle "$TEST_BUNDLE" --pid-file "$ROOT/pid" "$1" > $RUNNC_OUT
@@ -47,7 +48,9 @@ function runnc_run() {
 	echo "$output" >&2
 
 	# waiting for container process to be done
-	tail --pid=$(cat $ROOT/pid) -f /dev/null
+	if [[ ${daemon} == 'nodaemon' ]]; then
+		tail --pid=$(cat $ROOT/pid) -f /dev/null
+	fi
 }
 
 @test "hello" {
@@ -240,4 +243,20 @@ function runnc_run() {
 	run bash -c "sudo ps -e -o pid,command | grep ${container_pid}"
 	[ "$status" -eq 0 ]
 	[[ "$output" == *"--mem=1024"* ]]
+}
+
+@test "oom_adjust" {
+	setup_test "node"
+	local name="test-nabla-oom-adjust"
+
+	config_mod '.process.args |= .+ ["node.nabla", "/hello/app.js"]'
+	config_mod '.process.oomScoreAdj |= .+ 104'
+
+	runnc_run "$name" "daemon"
+
+	run bash -c "cat /proc/$(cat ${ROOT}/pid)/oom_score_adj"
+	[[ "$output" == *"104"* ]]
+
+	runnc delete --force "$name"
+	teardown_test
 }
