@@ -250,7 +250,7 @@ function runnc_run() {
 	local name="test-nabla-oom-adjust"
 
 	config_mod '.process.args |= .+ ["node.nabla", "/hello/app.js"]'
-	config_mod '.process.oomScoreAdj |= .+ 105'
+	config_mod '.process.oomScoreAdj |= .+ 104'
 
 	runnc_run "$name" "daemon"
 
