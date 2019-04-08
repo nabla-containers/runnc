@@ -1,25 +1,20 @@
 package llif
 
-type NetworkCreateInput struct {
+type NetworkGenericInput struct {
+	// The state of LL handlers
+	FSState      *LLState
+	NetworkState *LLState
+	ExecState    *LLState
 }
 
-// NetworkCreateOutput will be passed on to ExecCreateFunc
-type NetworkCreateOutput struct {
-	FsOpt map[string]string
+type NetworkCreateInput struct {
+	NetworkGenericInput
 }
 
 type NetworkRunInput struct {
-}
-
-// NetworkRunOutput will be passed on to ExecRunFunc
-type NetworkRunOutput struct {
-	FsOpt map[string]string
+	NetworkGenericInput
 }
 
 type NetworkDestroyInput struct {
-	ExecOutput ExecDestroyOutput
-}
-
-type NetworkDestroyOutput struct {
-	FsOpt map[string]string
+	NetworkGenericInput
 }

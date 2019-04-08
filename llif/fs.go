@@ -1,25 +1,31 @@
 package llif
 
-type FSCreateInput struct {
+import (
+	"github.com/nabla-containers/runnc/libcontainer/configs"
+)
+
+type FSGenericInput struct {
+	// ContainerRoot signifies the root of the container's existence on the
+	// host
+	ContainerRoot string
+
+	// Config contains the configuration of the container
+	Config *configs.Config
+
+	// The state of LL handlers
+	FSState      *LLState
+	NetworkState *LLState
+	ExecState    *LLState
 }
 
-// FSCreateOutput will be passed on to ExecCreateFunc
-type FSCreateOutput struct {
-	FsOpt map[string]string
+type FSCreateInput struct {
+	FSGenericInput
 }
 
 type FSRunInput struct {
-}
-
-// FSRunOutput will be passed on to ExecRunFunc
-type FSRunOutput struct {
-	FsOpt map[string]string
+	FSGenericInput
 }
 
 type FSDestroyInput struct {
-	ExecOutput ExecDestroyOutput
-}
-
-type FSDestroyOutput struct {
-	FsOpt map[string]string
+	FSGenericInput
 }

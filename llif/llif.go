@@ -27,19 +27,34 @@ type RunllcHandler interface {
 }
 
 type FSHandler interface {
-	FSCreateFunc(*FSCreateInput) (FSCreateOutput, error)
-	FSRunFunc(*FSRunInput) (FSRunOutput, error)
-	FSDestroyFunc(*FSDestroyInput) (FSDestroyOutput, error)
+	FSCreateFunc(*FSCreateInput) (*LLState, error)
+	FSRunFunc(*FSRunInput) (*LLState, error)
+	FSDestroyFunc(*FSDestroyInput) (*LLState, error)
 }
 
 type NetworkHandler interface {
-	NetworkCreateFunc(*NetworkCreateInput) (NetworkCreateOutput, error)
-	NetworkRunFunc(*NetworkRunInput) (NetworkRunOutput, error)
-	NetworkDestroyFunc(*NetworkDestroyInput) (NetworkDestroyOutput, error)
+	NetworkCreateFunc(*NetworkCreateInput) (*LLState, error)
+	NetworkRunFunc(*NetworkRunInput) (*LLState, error)
+	NetworkDestroyFunc(*NetworkDestroyInput) (*LLState, error)
 }
 
 type ExecHandler interface {
-	ExecCreateFunc(*ExecCreateInput) (ExecCreateOutput, error)
-	ExecRunFunc(*ExecRunInput) (ExecRunOutput, error)
-	ExecDestroyFunc(*ExecDestroyInput) (ExecDestroyOutput, error)
+	ExecCreateFunc(*ExecCreateInput) (*LLState, error)
+	ExecRunFunc(*ExecRunInput) (*LLState, error)
+	ExecDestroyFunc(*ExecDestroyInput) (*LLState, error)
+}
+
+type LLState struct {
+	// Options is the map of parameters that will be stored in the config and
+	// passed along across different operations. Entries in this map set
+	// in the output of the Create phase will be present in the input of the
+	// Run phase.
+	Options map[string]string
+
+	// InMemoryObjects is the map of objects that can be shared with other handlers
+	// within the same operation (i.e. in-memory data structures). The entries
+	// from the output of the Create phase will not be accessible to the
+	// Run phase. However, they will be accessible by the Exec handler of the
+	// same phase.
+	InMemoryObjects map[string]interface{}
 }
