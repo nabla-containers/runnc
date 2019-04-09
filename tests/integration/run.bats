@@ -140,7 +140,7 @@ function runnc_run() {
 @test "hello runnc with json arg" {
 	local-test
 
-	run sudo docker run --rm --runtime=runnc nablact/nabla-hello:test /test_hello.nabla '{\"bla\":\"ble\"}'
+	run sudo docker run --rm --runtime=runnc nablact/nabla-hello:test /test_hello.nabla "{\"bla\":\"ble\"}"
 	[[ "$output" == *"Hello, World"* ]]
 	[[ "$output" == *"{\\\"bla\\\":\\\"ble\\\"}"* ]]
 }
