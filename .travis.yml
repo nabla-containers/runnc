@@ -22,6 +22,7 @@ services:
   - docker
 
 before_install:
+  - docker pull koalaman/shellcheck:latest
   - sudo apt-get -qq update
   - sudo apt-get install -y libseccomp-dev genisoimage jq xz-utils
   - wget -qO- "https://storage.googleapis.com/shellcheck/shellcheck-latest.linux.x86_64.tar.xz" | tar -xJv
@@ -33,7 +34,7 @@ before_install:
 
 script:
   - git-validation -run DCO,short-subject -v
-  - shellcheck tests/integration/run.bats
+  - docker run -v "$PWD:/mnt" koalaman/shellcheck tests/integrations/*.bats
   - make build/runnc build/nabla-run
   - git submodule update --init --recursive
   - make build
