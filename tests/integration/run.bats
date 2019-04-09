@@ -33,7 +33,7 @@ function docker_node_nabla_run() {
 
 	run sudo docker run --rm --runtime=runnc nablact/nabla-node:test /node.nabla
 
-	echo "nabla-run $@ (status=$status):" >&2
+	echo "nabla-run $* (status=$status):" >&2
 	echo "$output" >&2
 }
 
@@ -44,12 +44,12 @@ function runnc_run() {
 	runnc create --bundle "$TEST_BUNDLE" --pid-file "$ROOT/pid" "$1" > $RUNNC_OUT
 	run runnc start "$1"
 
-	echo "nabla-run $@ (status=$status):" >&2
+	echo "nabla-run $* (status=$status):" >&2
 	echo "$output" >&2
 
 	# waiting for container process to be done
 	if [[ ${daemon} == 'nodaemon' ]]; then
-		tail --pid=$(cat $ROOT/pid) -f /dev/null
+		tail --pid="$(cat "$ROOT"/pid)" -f /dev/null
 	fi
 }
 
@@ -140,7 +140,7 @@ function runnc_run() {
 @test "hello runnc with json arg" {
 	local-test
 
-	run sudo docker run --rm --runtime=runnc nablact/nabla-hello:test /test_hello.nabla {\"bla\":\"ble\"}
+	run sudo docker run --rm --runtime=runnc nablact/nabla-hello:test /test_hello.nabla '{\"bla\":\"ble\"}'
 	[[ "$output" == *"Hello, World"* ]]
 	[[ "$output" == *"{\\\"bla\\\":\\\"ble\\\"}"* ]]
 }
@@ -239,7 +239,7 @@ function runnc_run() {
 
 	run memory_check
 	[ "$status" -eq 0 ]
-	container_pid=$(docker inspect --format '{{.State.Pid}}' ${output})
+	container_pid=$(docker inspect --format '{{.State.Pid}}' "${output}")
 	run bash -c "sudo ps -e -o pid,command | grep ${container_pid}"
 	[ "$status" -eq 0 ]
 	[[ "$output" == *"--mem=1024"* ]]
@@ -252,11 +252,11 @@ function runnc_run() {
 	config_mod '.process.args |= .+ ["node.nabla", "/hello/app.js"]'
 	config_mod '.process.oomScoreAdj |= .+ 104'
 
-	runnc_run "$name" "daemon"
+	runnc_run "${name}" "daemon"
 
-	run bash -c "cat /proc/$(cat ${ROOT}/pid)/oom_score_adj"
+	run bash -c "cat /proc/$(cat "${ROOT}"/pid)/oom_score_adj"
 	[[ "$output" == *"104"* ]]
 
-	runnc delete --force "$name"
+	runnc delete --force "${name}"
 	teardown_test
 }
