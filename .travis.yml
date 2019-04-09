@@ -25,7 +25,7 @@ before_install:
   - sudo apt-get -qq update
   - sudo apt-get install -y libseccomp-dev genisoimage jq xz-utils
   - wget -qO- "https://storage.googleapis.com/shellcheck/shellcheck-latest.linux.x86_64.tar.xz" | tar -xJv
-  - cp shellcheck-latest/shellcheck /usr/bin/
+  - sudo cp shellcheck-latest/shellcheck /usr/bin/
   - go get -u golang.org/x/lint/golint
   - go get -u github.com/vbatts/git-validation
   - go get -u github.com/golang/dep/cmd/dep
