@@ -20,10 +20,10 @@ package llif
 //
 // Integration: Destroy (this is the backward order from the previous two)
 // Order: ExecDestroyFunc, NetworkDestroyFunc, FSDestroyFunc
-type RunllcHandler interface {
-	FSH FSHandler
+type RunllcHandler struct {
+	FSH      FSHandler
 	NetworkH NetworkHandler
-	ExecH ExecHandler
+	ExecH    ExecHandler
 }
 
 type FSHandler interface {
