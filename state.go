@@ -31,8 +31,11 @@ Where "<container-id>" is your name for the instance of the container.`,
 	Description: `The state command outputs current state information for the
 instance of a container.`,
 	Action: func(context *cli.Context) error {
+		// TODO(runllc): Inject LLC
+		llc := MyLLC
+
 		// TODO: implement
-		container, err := getContainer(context)
+		container, err := getContainer(context, llc)
 		if err != nil {
 			fatal(err)
 		}

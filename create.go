@@ -71,7 +71,10 @@ to specify command(s) that get run when the container is started.
 			fatal(err)
 		}
 
-		status, err := startContainer(context, spec, true)
+		// TODO(runllc): Inject LLC
+		llc := MyLLC
+
+		status, err := startContainer(context, llc, spec, true)
 		if err != nil {
 			fatal(err)
 		}

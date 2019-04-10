@@ -82,8 +82,10 @@ signal to the init process of the "ubuntu01" container:
 		},
 	},
 	Action: func(context *cli.Context) error {
+		// TODO(runllc): Inject LLC
+		llc := MyLLC
 
-		container, err := getContainer(context)
+		container, err := getContainer(context, llc)
 		if err != nil {
 			return err
 		}

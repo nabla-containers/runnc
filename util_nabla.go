@@ -23,6 +23,7 @@ import (
 
 	"github.com/nabla-containers/runnc/libcontainer"
 	"github.com/nabla-containers/runnc/libcontainer/configs"
+	ll "github.com/nabla-containers/runnc/llif"
 	"github.com/opencontainers/runtime-spec/specs-go"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
@@ -34,25 +35,25 @@ var (
 
 // getContainer returns the specified container instance by loading it from state
 // with the default factory.
-func getContainer(context *cli.Context) (libcontainer.Container, error) {
+func getContainer(context *cli.Context, llcHandler ll.RunllcHandler) (libcontainer.Container, error) {
 	id := context.Args().First()
 	if id == "" {
 		return nil, errEmptyID
 	}
-	factory, err := loadFactory(context)
+	factory, err := loadFactory(context, llcHandler)
 	if err != nil {
 		return nil, err
 	}
 	return factory.Load(id)
 }
 
-func startContainer(context *cli.Context, spec *specs.Spec, create bool) (int, error) {
+func startContainer(context *cli.Context, llcHandler ll.RunllcHandler, spec *specs.Spec, create bool) (int, error) {
 	id := context.Args().First()
 	if id == "" {
 		return -1, errEmptyID
 	}
 
-	container, err := createContainer(context, id, spec)
+	container, err := createContainer(context, llcHandler, id, spec)
 	if err != nil {
 		return -1, err
 	}
@@ -75,7 +76,7 @@ func startContainer(context *cli.Context, spec *specs.Spec, create bool) (int, e
 	return r.run(spec.Process)
 }
 
-func createContainer(context *cli.Context, id string, spec *specs.Spec) (libcontainer.Container, error) {
+func createContainer(context *cli.Context, llcHandler ll.RunllcHandler, id string, spec *specs.Spec) (libcontainer.Container, error) {
 
 	config, err := configs.ParseSpec(spec)
 	if err != nil {
@@ -91,7 +92,7 @@ func createContainer(context *cli.Context, id string, spec *specs.Spec) (libcont
 		return nil, err
 	}
 
-	factory, err := loadFactory(context)
+	factory, err := loadFactory(context, llcHandler)
 	if err != nil {
 		return nil, err
 	}
@@ -100,13 +101,13 @@ func createContainer(context *cli.Context, id string, spec *specs.Spec) (libcont
 }
 
 // loadFactory returns the configured factory instance for execing containers.
-func loadFactory(context *cli.Context) (libcontainer.Factory, error) {
+func loadFactory(context *cli.Context, llcHandler ll.RunllcHandler) (libcontainer.Factory, error) {
 	root := context.GlobalString("root")
 	abs, err := filepath.Abs(root)
 	if err != nil {
 		return nil, err
 	}
-	return libcontainer.New(abs)
+	return libcontainer.New(abs, llcHandler)
 }
 
 func dupStdio(process *libcontainer.Process, rootuid, rootgid int) error {

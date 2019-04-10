@@ -31,7 +31,10 @@ are starting. The name you provide for the container instance must be unique on
 your host.`,
 	Description: `The start command executes the user defined process in a created container.`,
 	Action: func(context *cli.Context) error {
-		container, err := getContainer(context)
+		// TODO(runllc): Inject LLC
+		llc := MyLLC
+
+		container, err := getContainer(context, llc)
 		if err != nil {
 			return err
 		}

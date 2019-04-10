@@ -45,9 +45,11 @@ status of "ubuntu01" as "stopped" the following will delete resources held for
 		},
 	},
 	Action: func(context *cli.Context) error {
+		// TODO(runllc): Inject LLC
+		llc := MyLLC
 
 		id := context.Args().First()
-		container, err := getContainer(context)
+		container, err := getContainer(context, llc)
 		if err != nil {
 			if lerr, ok := err.(libcontainer.Error); ok && lerr.Code() == libcontainer.ContainerNotExists {
 				// if there was an aborted start or something of the sort then the container's       directory could exist but
