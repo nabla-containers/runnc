@@ -28,6 +28,7 @@ import (
 	"time"
 
 	"github.com/nabla-containers/runnc/libcontainer/configs"
+	ll "github.com/nabla-containers/runnc/llif"
 	"github.com/nabla-containers/runnc/nabla-lib/network"
 	"github.com/opencontainers/runc/libcontainer/system"
 	"github.com/opencontainers/runc/libcontainer/utils"
@@ -56,13 +57,14 @@ type Container interface {
 }
 
 type nablaContainer struct {
-	id      string
-	root    string
-	fsPath  string
-	config  *configs.Config
-	m       sync.Mutex
-	state   *State
-	created time.Time
+	id         string
+	root       string
+	fsPath     string
+	config     *configs.Config
+	m          sync.Mutex
+	state      *State
+	created    time.Time
+	llcHandler ll.RunllcHandler
 }
 
 func (c *nablaContainer) Config() configs.Config {
@@ -215,6 +217,7 @@ func (c *nablaContainer) start(p *Process) error {
 		Hooks:      c.config.Hooks,
 		Memory:     c.config.Memory,
 		Mounts:     c.config.Mounts,
+		Config:     c.config,
 	}
 
 	enc := json.NewEncoder(parentPipe)
@@ -266,7 +269,15 @@ func (c *nablaContainer) exec() error {
 func (c *nablaContainer) destroy() error {
 	c.state.InitProcessPid = 0
 	c.state.Status = Stopped
-	if err := os.RemoveAll(c.root); err != nil {
+
+	// TODO(runllc): Add LLStates in here
+	fsInput := &ll.FSDestroyInput{}
+	fsInput.ContainerRoot = c.root
+	fsInput.Config = c.config
+
+	// TODO(runllc): Propagate and store LLstates
+	_, err := c.llcHandler.FSH.FSDestroyFunc(fsInput)
+	if err != nil {
 		return err
 	}
 

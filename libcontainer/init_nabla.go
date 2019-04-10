@@ -23,6 +23,8 @@ import (
 	"strings"
 	"syscall"
 
+	"github.com/nabla-containers/runnc/libcontainer/configs"
+	ll "github.com/nabla-containers/runnc/llif"
 	"github.com/nabla-containers/runnc/runnc-cont"
 	spec "github.com/opencontainers/runtime-spec/specs-go"
 	"github.com/vishvananda/netns"
@@ -65,21 +67,22 @@ func newRunncCont(cfg *initConfig) (*runnc_cont.RunncCont, error) {
 }
 
 type initConfig struct {
-	Id         string      `json:"id"`
-	BundlePath string      `json:"bundlepath"`
-	Root       string      `json:"root"`
-	Args       []string    `json:"args"`
-	FsPath     string      `json:"fspath"`
-	Cwd        string      `json:"cwd"`
-	Env        []string    `json:"env"`
-	TapName    string      `json:"tap"`
-	NetnsPath  string      `json:"netnspath"`
-	Hooks      *spec.Hooks `json:"hooks"`
-	Memory     int64       `json:"mem"`
-	Mounts     []spec.Mount `json:"Mounts"`
+	Id         string          `json:"id"`
+	BundlePath string          `json:"bundlepath"`
+	Root       string          `json:"root"`
+	Args       []string        `json:"args"`
+	FsPath     string          `json:"fspath"`
+	Cwd        string          `json:"cwd"`
+	Env        []string        `json:"env"`
+	TapName    string          `json:"tap"`
+	NetnsPath  string          `json:"netnspath"`
+	Hooks      *spec.Hooks     `json:"hooks"`
+	Memory     int64           `json:"mem"`
+	Mounts     []spec.Mount    `json:"Mounts"`
+	Config     *configs.Config `json:"config"`
 }
 
-func initNabla() error {
+func initNabla(llcHandler ll.RunllcHandler) error {
 	var (
 		pipefd, rootfd int
 		envInitPipe    = os.Getenv("_LIBCONTAINER_INITPIPE")
@@ -108,6 +111,18 @@ func initNabla() error {
 	// clear the current process's environment to clean any libcontainer
 	// specific env vars.
 	os.Clearenv()
+
+	// LLC FS Handle
+	// TODO(runllc): Add LLStates in here
+	fsInput := &ll.FSRunInput{}
+	fsInput.ContainerRoot = config.Root
+	fsInput.Config = config.Config
+
+	// TODO(runllc): Propagate and store LLstates
+	_, err = llcHandler.FSH.FSRunFunc(fsInput)
+	if err != nil {
+		return fmt.Errorf("Error running llc FS handler: %v", err)
+	}
 
 	// Go into network namespace for temporary hack for CNI plugin using veth pairs
 	// K8s case
