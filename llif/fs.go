@@ -5,6 +5,9 @@ import (
 )
 
 type FSGenericInput struct {
+	// ContainerId is the id of the container
+	ContainerId string
+
 	// ContainerRoot signifies the root of the container's existence on the
 	// host
 	ContainerRoot string
