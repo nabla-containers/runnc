@@ -2,7 +2,7 @@ package main
 
 import (
 	ll "github.com/nabla-containers/runnc/llif"
-	llfs "github.com/nabla-containers/runnc/llif/fs"
+	llfs "github.com/nabla-containers/runnc/llmodules/fs"
 )
 
 var MyLLC = ll.RunllcHandler{
