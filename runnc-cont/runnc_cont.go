@@ -27,8 +27,8 @@ import (
 	"syscall"
 
 	"github.com/nabla-containers/runnc/nabla-lib/network"
-	spec "github.com/opencontainers/runtime-spec/specs-go"
 	"github.com/nabla-containers/runnc/nabla-lib/storage"
+	spec "github.com/opencontainers/runtime-spec/specs-go"
 )
 
 type RunncCont struct {
@@ -45,16 +45,11 @@ type RunncCont struct {
 
 	IPAddress net.IP
 	IPMask    net.IPMask
-	GateWay   net.IP
+	Gateway   net.IP
+	Mac       string
 
 	// Memory max memory size in MBs.
 	Memory int64
-
-	// IsInDocker means running in a Docker container or not.
-	IsInDocker bool
-
-	// IsInKubernetes means running in a Kubernetes cluster or not.
-	IsInKubernetes bool
 
 	// Disk is the path to disk
 	Disk string
@@ -72,40 +67,108 @@ type RunncCont struct {
 
 // NewRunncCont returns a brand new runnc-cont
 func NewRunncCont(cfg Config) (*RunncCont, error) {
-	if len(cfg.IPAddress) == 0 {
-		cfg.IPAddress = "10.0.0.2"
-	}
-	if cfg.IPMask == 0 {
-		cfg.IPMask = 24
-	}
-
-	netstr := fmt.Sprintf("%s/%d", cfg.IPAddress, cfg.IPMask)
-	ip, ipNet, err := net.ParseCIDR(netstr)
-	if err != nil {
-		return nil, fmt.Errorf("not a valid IP address: %s, err: %v", netstr, err)
-	}
-
 	if len(cfg.Disk) < 1 {
 		return nil, fmt.Errorf("No disk provided")
 	}
 
-	gw := net.ParseIP(cfg.GateWay)
+	var (
+		ipAddress net.IP
+		ipMask    net.IPMask
+		gateway   net.IP
+		tapName   string
+		mac       string
+		err       error
+	)
+
+	// If network details are specified, use them, if not do usual network plumbing
+	if len(cfg.IPAddress) > 0 && len(cfg.Gateway) > 0 && len(tapName) > 0 {
+		netstr := fmt.Sprintf("%s/%d", cfg.IPAddress, cfg.IPMask)
+		ip, ipNet, err := net.ParseCIDR(netstr)
+		if err != nil {
+			return nil, fmt.Errorf("not a valid IP address: %s, err: %v", netstr, err)
+		}
+
+		ipAddress = ip
+		ipMask = ipNet.Mask
+
+		gateway = net.ParseIP(cfg.Gateway)
+		if gateway == nil {
+			return nil, fmt.Errorf("not a valid gateway address: %s", cfg.Gateway)
+		}
+
+		tapName = cfg.Tap
+
+		if len(cfg.Mac) > 0 {
+			if _, err := net.ParseMAC(cfg.Mac); err != nil {
+				return nil, fmt.Errorf("not a valid mac addr: %s, err :%v", cfg.Mac, err)
+			}
+			mac = cfg.Mac
+		}
+	} else {
+		// If network not provided
+		// (This section will be removed and put in network module in runllc)
+		if cfg.IsInDocker {
+			// The tap device will get the IP assigned to the Docker
+			// container veth pair.
+			ipAddress, gateway, ipMask, mac, tapName, err = network.CreateMacvtapInterfaceDocker("eth0")
+			if err != nil {
+				return nil, fmt.Errorf("could not create %s: %v", tapName, err)
+			}
+		} else if cfg.IsInKubernetes {
+			// The tap device will get the IP assigned to the k8s nabla
+			// container veth pair.
+			// XXX: This is a workaround due to an error with MacvTap, error was :
+			// Could not create /dev/tap8863: open /sys/devices/virtual/net/macvtap8863/tap8863/dev: no such file or directory
+			ipAddress, gateway, ipMask, mac, err = network.CreateTapInterfaceDocker(cfg.Tap, "eth0")
+			if err != nil {
+				return nil, fmt.Errorf("could not create %s: %v\n", cfg.Tap, err)
+			}
+		} else {
+			// Defaults
+			if len(cfg.IPAddress) == 0 {
+				cfg.IPAddress = "10.0.0.2"
+			}
+			if cfg.IPMask == 0 {
+				cfg.IPMask = 24
+			}
+
+			netstr := fmt.Sprintf("%s/%d", cfg.IPAddress, cfg.IPMask)
+			ip, ipNet, err := net.ParseCIDR(netstr)
+			if err != nil {
+				return nil, fmt.Errorf("not a valid IP address: %s, err: %v", netstr, err)
+			}
+
+			ipAddress = ip
+			ipMask = ipNet.Mask
+
+			gateway = net.ParseIP(cfg.Gateway)
+			if gateway == nil {
+				return nil, fmt.Errorf("not a valid gateway address: %s", cfg.Gateway)
+			}
+
+			err = network.CreateTapInterface(cfg.Tap, &ipAddress, &ipMask)
+			if err != nil {
+				// Ignore networking related errors (i.e., like if the TAP
+				// already exists).
+				fmt.Fprintf(os.Stderr, "Could not create %s: %v\n", cfg.Tap, err)
+			}
+		}
+	}
 
 	return &RunncCont{
-		NablaRunBin:    cfg.NablaRunBin,
-		NablaRunArgs:   cfg.NablaRunArgs,
-		UniKernelBin:   cfg.UniKernelBin,
-		Tap:            cfg.Tap,
-		IPAddress:      ip,
-		IPMask:         ipNet.Mask,
-		GateWay:        gw,
-		Memory:         cfg.Memory,
-		IsInDocker:     cfg.IsInDocker,
-		IsInKubernetes: cfg.IsInKubernetes,
-		Disk:           cfg.Disk[0],
-		WorkingDir:     cfg.WorkingDir,
-		Env:            cfg.Env,
-		Mounts:         cfg.Mounts,
+		NablaRunBin:  cfg.NablaRunBin,
+		NablaRunArgs: cfg.NablaRunArgs,
+		UniKernelBin: cfg.UniKernelBin,
+		Tap:          cfg.Tap,
+		IPAddress:    ipAddress,
+		IPMask:       ipMask,
+		Gateway:      gateway,
+		Mac:          mac,
+		Memory:       cfg.Memory,
+		Disk:         cfg.Disk[0],
+		WorkingDir:   cfg.WorkingDir,
+		Env:          cfg.Env,
+		Mounts:       cfg.Mounts,
 	}, nil
 }
 
@@ -140,31 +203,6 @@ func (r *RunncCont) Run() error {
 		return fmt.Errorf("could not setup the disk: %v", err)
 	}
 
-	if r.IsInDocker {
-		// The tap device will get the IP assigned to the Docker
-		// container veth pair.
-		r.IPAddress, r.GateWay, r.IPMask, mac, r.Tap, err = network.CreateMacvtapInterfaceDocker("eth0")
-		if err != nil {
-			return fmt.Errorf("could not create %s: %v", r.Tap, err)
-		}
-	} else if r.IsInKubernetes {
-		// The tap device will get the IP assigned to the k8s nabla
-		// container veth pair.
-		// XXX: This is a workaround due to an error with MacvTap, error was :
-		// Could not create /dev/tap8863: open /sys/devices/virtual/net/macvtap8863/tap8863/dev: no such file or directory
-		r.IPAddress, r.GateWay, r.IPMask, mac, err = network.CreateTapInterfaceDocker(r.Tap, "eth0")
-		if err != nil {
-			return fmt.Errorf("could not create %s: %v\n", r.Tap, err)
-		}
-	} else {
-		err = network.CreateTapInterface(r.Tap, &r.GateWay, &r.IPMask)
-		if err != nil {
-			// Ignore networking related errors (i.e., like if the TAP
-			// already exists).
-			fmt.Fprintf(os.Stderr, "Could not create %s: %v\n", r.Tap, err)
-		}
-	}
-
 	_, err = os.Stat(r.UniKernelBin)
 	if err != nil {
 		// If the unikernel path doesn't exist, look in $PATH
@@ -175,7 +213,7 @@ func (r *RunncCont) Run() error {
 		r.UniKernelBin = unikernel
 	}
 
-	unikernelArgs, err := CreateRumprunArgs(r.IPAddress, r.IPMask, r.GateWay, "/",
+	unikernelArgs, err := CreateRumprunArgs(r.IPAddress, r.IPMask, r.Gateway, "/",
 		r.Env, r.WorkingDir, r.UniKernelBin, r.NablaRunArgs)
 	if err != nil {
 		return fmt.Errorf("could not create the unikernel cmdline: %v\n", err)

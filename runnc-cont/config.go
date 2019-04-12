@@ -19,7 +19,8 @@ type Config struct {
 
 	IPAddress string
 	IPMask    int
-	GateWay   string
+	Gateway   string
+	Mac       string
 
 	// Memory max memory size in MBs.
 	Memory int64
