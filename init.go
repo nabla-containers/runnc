@@ -42,7 +42,8 @@ var initCommand = cli.Command{
 		if err := factory.StartInitialization(); err != nil {
 			// as the error is sent back to the parent there is no need to log
 			// or write it to stderr because the parent process will handle this
-			fmt.Printf("ERR: %v", err)
+			fmt.Fprintf(os.Stderr, "ERR: %v", err)
+			fmt.Fprintf(os.Stdout, "ERR: %v", err)
 			os.Exit(1)
 		}
 		panic("libcontainer: container init failed to exec")
