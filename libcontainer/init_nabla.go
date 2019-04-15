@@ -49,10 +49,6 @@ func newRunncCont(cfg *initConfig, networkMap map[string]string) (*runnc_cont.Ru
 		return nil, fmt.Errorf("Unablae to parse IPMask: %v", cidr)
 	}
 
-	for k, p := range networkMap {
-		fmt.Fprintf(os.Stderr, "%v:%v\n", k, p)
-	}
-
 	c := runnc_cont.Config{
 		NablaRunBin:  NablaRunBin,
 		UniKernelBin: filepath.Join(cfg.Root, cfg.Args[0]),
