@@ -167,7 +167,7 @@ func (l *NablaFactory) Create(id string, config *configs.Config) (Container, err
 	_, err = l.LLCHandler.NetworkH.NetworkCreateFunc(networkhInput)
 	if err != nil {
 		// TODO(runllc): Handle error case for FS Handler - run FSDestroyFunc
-		return nil, fmt.Errorf("Unable to create tap interface: %v", err)
+		return nil, fmt.Errorf("Error running NetworkCreateFunc: %v", err)
 	}
 
 	c := &nablaContainer{

@@ -56,8 +56,9 @@ type Container interface {
 }
 
 type nablaContainer struct {
-	id         string
-	root       string
+	id   string
+	root string
+	// TODO(runllc) remove these for passing infor
 	fsPath     string
 	config     *configs.Config
 	m          sync.Mutex
@@ -211,7 +212,6 @@ func (c *nablaContainer) start(p *Process) error {
 		FsPath:     c.fsPath,
 		Cwd:        c.config.Cwd,
 		Env:        c.config.Env,
-		TapName:    nablaTapName(c.id),
 		NetnsPath:  c.config.NetnsPath,
 		Hooks:      c.config.Hooks,
 		Memory:     c.config.Memory,

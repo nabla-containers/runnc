@@ -1,6 +1,7 @@
 package network
 
 import (
+	"fmt"
 	"syscall"
 
 	ll "github.com/nabla-containers/runnc/llif"
@@ -29,7 +30,30 @@ func (h *TapBrNetworkHandler) NetworkCreateFunc(i *ll.NetworkCreateInput) (*ll.L
 }
 
 func (h *TapBrNetworkHandler) NetworkRunFunc(i *ll.NetworkRunInput) (*ll.LLState, error) {
-	return nil, nil
+	// The tap device will get the IP assigned to the k8s nabla
+	// container veth pair.
+	// XXX: This is a workaround due to an error with MacvTap, error was :
+	// Could not create /dev/tap8863: open /sys/devices/virtual/net/macvtap8863/tap8863/dev: no such file or directory
+	ipAddress, gateway, ipMask, mac, err := network.CreateTapInterfaceDocker(nablaTapName(i.ContainerId), "eth0")
+	if err != nil {
+		return nil, errors.Wrap(err, "Unable to configure network runtime")
+	}
+	cidr, totalBits := ipMask.Size()
+	if totalBits != 32 {
+		return nil, errors.New("Unexpected IP address number of bits")
+	}
+
+	ret := &ll.LLState{
+		Options: map[string]string{
+			"IPAddress": ipAddress.String(),
+			"Gateway":   gateway.String(),
+			"IPMask":    fmt.Sprintf("%d", cidr),
+			"Mac":       mac,
+			"TapName":   nablaTapName(i.ContainerId),
+		},
+	}
+
+	return ret, nil
 }
 
 func (h *TapBrNetworkHandler) NetworkDestroyFunc(i *ll.NetworkDestroyInput) (*ll.LLState, error) {

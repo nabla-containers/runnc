@@ -35,7 +35,7 @@ var (
 	NablaRunBin = NablaBinDir + "nabla-run"
 )
 
-func newRunncCont(cfg *initConfig) (*runnc_cont.RunncCont, error) {
+func newRunncCont(cfg *initConfig, networkMap map[string]string) (*runnc_cont.RunncCont, error) {
 	if len(cfg.Args) == 0 {
 		return nil, fmt.Errorf("OCI process args are empty")
 	}
@@ -44,18 +44,29 @@ func newRunncCont(cfg *initConfig) (*runnc_cont.RunncCont, error) {
 		return nil, fmt.Errorf("entrypoint is not a .nabla file")
 	}
 
+	cidr, err := strconv.Atoi(networkMap["IPMask"])
+	if err != nil {
+		return nil, fmt.Errorf("Unablae to parse IPMask: %v", cidr)
+	}
+
+	for k, p := range networkMap {
+		fmt.Fprintf(os.Stderr, "%v:%v\n", k, p)
+	}
+
 	c := runnc_cont.Config{
-		NablaRunBin:    NablaRunBin,
-		UniKernelBin:   filepath.Join(cfg.Root, cfg.Args[0]),
-		Memory:         cfg.Memory,
-		Tap:            cfg.TapName,
-		IsInKubernetes: true,
-		IsInDocker:     false,
-		Disk:           []string{cfg.FsPath},
-		WorkingDir:     cfg.Cwd,
-		Env:            cfg.Env,
-		NablaRunArgs:   cfg.Args[1:],
-		Mounts:         cfg.Mounts,
+		NablaRunBin:  NablaRunBin,
+		UniKernelBin: filepath.Join(cfg.Root, cfg.Args[0]),
+		Memory:       cfg.Memory,
+		Tap:          networkMap["TapName"],
+		Disk:         []string{cfg.FsPath},
+		WorkingDir:   cfg.Cwd,
+		Env:          cfg.Env,
+		NablaRunArgs: cfg.Args[1:],
+		Mounts:       cfg.Mounts,
+		IPAddress:    networkMap["IPAddress"],
+		Mac:          networkMap["Mac"],
+		Gateway:      networkMap["Gateway"],
+		IPMask:       cidr,
 	}
 
 	cont, err := runnc_cont.NewRunncCont(c)
@@ -117,6 +128,7 @@ func initNabla(llcHandler ll.RunllcHandler) error {
 	fsInput := &ll.FSRunInput{}
 	fsInput.ContainerRoot = config.Root
 	fsInput.Config = config.Config
+	fsInput.ContainerId = config.Id
 
 	// TODO(runllc): Propagate and store LLstates
 	_, err = llcHandler.FSH.FSRunFunc(fsInput)
@@ -155,6 +167,19 @@ func initNabla(llcHandler ll.RunllcHandler) error {
 		}
 	}
 
+	// TODO(runllc) add llstates for network
+	networkInput := &ll.NetworkRunInput{}
+	networkInput.ContainerRoot = config.Root
+	networkInput.Config = config.Config
+	networkInput.ContainerId = config.Id
+
+	// TODO(runllc): Propagate and store LLstates
+	networkLLState, err := llcHandler.NetworkH.NetworkRunFunc(networkInput)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error running llc Network handler: %v", err)
+		return fmt.Errorf("Error running llc Network handler: %v", err)
+	}
+
 	// wait for the fifo to be opened on the other side before
 	// exec'ing the users process.
 	fd, err := syscall.Openat(rootfd, execFifoFilename, os.O_WRONLY|syscall.O_CLOEXEC, 0)
@@ -172,7 +197,7 @@ func initNabla(llcHandler ll.RunllcHandler) error {
 		select {}
 	}
 
-	runncCont, err := newRunncCont(config)
+	runncCont, err := newRunncCont(config, networkLLState.Options)
 	if err != nil {
 		return newSystemErrorWithCause(err, "Unable to construct nabla run args")
 	}
