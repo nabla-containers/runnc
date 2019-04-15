@@ -29,7 +29,6 @@ import (
 
 	"github.com/nabla-containers/runnc/libcontainer/configs"
 	ll "github.com/nabla-containers/runnc/llif"
-	"github.com/nabla-containers/runnc/nabla-lib/network"
 	"github.com/opencontainers/runc/libcontainer/system"
 	"github.com/opencontainers/runc/libcontainer/utils"
 	"github.com/pkg/errors"
@@ -274,6 +273,7 @@ func (c *nablaContainer) destroy() error {
 	fsInput := &ll.FSDestroyInput{}
 	fsInput.ContainerRoot = c.root
 	fsInput.Config = c.config
+	fsInput.ContainerId = c.id
 
 	// TODO(runllc): Propagate and store LLstates
 	_, err := c.llcHandler.FSH.FSDestroyFunc(fsInput)
@@ -281,7 +281,15 @@ func (c *nablaContainer) destroy() error {
 		return err
 	}
 
-	if err := network.RemoveTapDevice(nablaTapName(c.id)); err != nil {
+	// TODO(runllc): Add LLStates in here
+	networkInput := &ll.NetworkDestroyInput{}
+	networkInput.ContainerRoot = c.root
+	networkInput.Config = c.config
+	networkInput.ContainerId = c.id
+
+	// TODO(runllc): Propagate and store LLstates
+	_, err = c.llcHandler.NetworkH.NetworkDestroyFunc(networkInput)
+	if err != nil {
 		return err
 	}
 

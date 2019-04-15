@@ -26,7 +26,6 @@ import (
 
 	"github.com/nabla-containers/runnc/libcontainer/configs"
 	ll "github.com/nabla-containers/runnc/llif"
-	"github.com/nabla-containers/runnc/nabla-lib/network"
 
 	"github.com/pkg/errors"
 )
@@ -147,6 +146,7 @@ func (l *NablaFactory) Create(id string, config *configs.Config) (Container, err
 		fshInput := &ll.FSCreateInput{}
 		fshInput.ContainerRoot = containerRoot
 		fshInput.Config = config
+		fshInput.ContainerId = id
 
 		// TODO(runllc): Save llstate in container state
 		fsLLState, err := l.LLCHandler.FSH.FSCreateFunc(fshInput)
@@ -158,11 +158,15 @@ func (l *NablaFactory) Create(id string, config *configs.Config) (Container, err
 		fsPath = fsLLState.Options["FsPath"]
 	}
 
-	err = network.CreateTapInterface(nablaTapName(id), nil, nil)
+	networkhInput := &ll.NetworkCreateInput{}
+	networkhInput.ContainerRoot = containerRoot
+	networkhInput.Config = config
+	networkhInput.ContainerId = id
+
+	// TODO(runllc): Save llstate in container state
+	_, err = l.LLCHandler.NetworkH.NetworkCreateFunc(networkhInput)
 	if err != nil {
-		if fsPath != "" {
-			os.Remove(fsPath)
-		}
+		// TODO(runllc): Handle error case for FS Handler - run FSDestroyFunc
 		return nil, fmt.Errorf("Unable to create tap interface: %v", err)
 	}
 
