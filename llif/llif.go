@@ -40,7 +40,8 @@ type NetworkHandler interface {
 
 type ExecHandler interface {
 	ExecCreateFunc(*ExecCreateInput) (*LLState, error)
-	ExecRunFunc(*ExecRunInput) (*LLState, error)
+	// ExecRunFunc should not return unless it runs into an error
+	ExecRunFunc(*ExecRunInput) error
 	ExecDestroyFunc(*ExecDestroyInput) (*LLState, error)
 }
 
