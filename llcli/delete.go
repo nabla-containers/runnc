@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+package llcli
 
 import (
 	"fmt"
@@ -22,13 +22,15 @@ import (
 	"time"
 
 	"github.com/nabla-containers/runnc/libcontainer"
+	ll "github.com/nabla-containers/runnc/llif"
 	"github.com/urfave/cli"
 )
 
-var deleteCommand = cli.Command{
-	Name:  "delete",
-	Usage: "delete any resources held by the container often used with detached container",
-	ArgsUsage: `<container-id>
+func newDeleteCmd(llcHandler ll.RunllcHandler) cli.Command {
+	return cli.Command{
+		Name:  "delete",
+		Usage: "delete any resources held by the container often used with detached container",
+		ArgsUsage: `<container-id>
 
 Where "<container-id>" is the name for the instance of the container.
 
@@ -38,47 +40,45 @@ status of "ubuntu01" as "stopped" the following will delete resources held for
 "ubuntu01" removing "ubuntu01" from the runnc list of containers:
 
        # runnc delete ubuntu01`,
-	Flags: []cli.Flag{
-		cli.BoolFlag{
-			Name:  "force, f",
-			Usage: "Forcibly deletes the container if it is still running (uses SIGKILL)",
+		Flags: []cli.Flag{
+			cli.BoolFlag{
+				Name:  "force, f",
+				Usage: "Forcibly deletes the container if it is still running (uses SIGKILL)",
+			},
 		},
-	},
-	Action: func(context *cli.Context) error {
-		// TODO(runllc): Inject LLC
-		llc := MyLLC
-
-		id := context.Args().First()
-		container, err := getContainer(context, llc)
-		if err != nil {
-			if lerr, ok := err.(libcontainer.Error); ok && lerr.Code() == libcontainer.ContainerNotExists {
-				// if there was an aborted start or something of the sort then the container's       directory could exist but
-				// libcontainer does not see it because the state.json file inside that directory    was never created.
-				path := filepath.Join(context.GlobalString("root"), id)
-				if e := os.RemoveAll(path); e != nil {
-					//	fmt.Fprintf(os.Stderr, "remove %s: %v\n", path, e)
+		Action: func(context *cli.Context) error {
+			id := context.Args().First()
+			container, err := getContainer(context, llcHandler)
+			if err != nil {
+				if lerr, ok := err.(libcontainer.Error); ok && lerr.Code() == libcontainer.ContainerNotExists {
+					// if there was an aborted start or something of the sort then the container's       directory could exist but
+					// libcontainer does not see it because the state.json file inside that directory    was never created.
+					path := filepath.Join(context.GlobalString("root"), id)
+					if e := os.RemoveAll(path); e != nil {
+						//	fmt.Fprintf(os.Stderr, "remove %s: %v\n", path, e)
+					}
 				}
+				return err
 			}
-			return err
-		}
-		s, err := container.Status()
-		if err != nil {
-			return err
-		}
-		switch s {
-		case libcontainer.Stopped:
-			destroy(container)
-		case libcontainer.Created:
-			return killContainer(container)
-		default:
-			if context.Bool("force") {
+			s, err := container.Status()
+			if err != nil {
+				return err
+			}
+			switch s {
+			case libcontainer.Stopped:
+				destroy(container)
+			case libcontainer.Created:
 				return killContainer(container)
+			default:
+				if context.Bool("force") {
+					return killContainer(container)
+				}
+				return fmt.Errorf("cannot delete container %s that is not stopped: %s\n", id, s)
 			}
-			return fmt.Errorf("cannot delete container %s that is not stopped: %s\n", id, s)
-		}
 
-		return nil
-	},
+			return nil
+		},
+	}
 }
 
 func killContainer(container libcontainer.Container) error {

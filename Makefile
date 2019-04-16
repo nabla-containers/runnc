@@ -64,7 +64,7 @@ container-uninstall:
 godep:
 	dep ensure
 
-build/runnc: godep create.go exec.go kill.go start.go util.go util_runner.go util_tty.go delete.go  init.go runnc.go state.go util_nabla.go util_signal.go myllc.go
+build/runnc: godep runnc.go
 	GOOS=linux GOARCH=${GOARCH} go build -o $@ .
 
 solo5/tenders/spt/solo5-spt: FORCE

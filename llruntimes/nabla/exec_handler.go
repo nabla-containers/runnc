@@ -17,18 +17,18 @@ var (
 	NablaRunBin = NablaBinDir + "nabla-run"
 )
 
-type NablaExecHandler struct{}
+type nablaExecHandler struct{}
 
 func NewNablaExecHandler() (ll.ExecHandler, error) {
-	return &NablaExecHandler{}, nil
+	return &nablaExecHandler{}, nil
 }
 
-func (h *NablaExecHandler) ExecCreateFunc(i *ll.ExecCreateInput) (*ll.LLState, error) {
+func (h *nablaExecHandler) ExecCreateFunc(i *ll.ExecCreateInput) (*ll.LLState, error) {
 	ret := &ll.LLState{}
 	return ret, nil
 }
 
-func (h *NablaExecHandler) ExecRunFunc(i *ll.ExecRunInput) error {
+func (h *nablaExecHandler) ExecRunFunc(i *ll.ExecRunInput) error {
 	networkOptions := i.NetworkState.Options
 	fsOptions := i.FsState.Options
 	config := i.Config
@@ -43,7 +43,7 @@ func (h *NablaExecHandler) ExecRunFunc(i *ll.ExecRunInput) error {
 	return runncCont.Run()
 }
 
-func (h *NablaExecHandler) ExecDestroyFunc(i *ll.ExecDestroyInput) (*ll.LLState, error) {
+func (h *nablaExecHandler) ExecDestroyFunc(i *ll.ExecDestroyInput) (*ll.LLState, error) {
 	ret := &ll.LLState{}
 	return ret, nil
 }

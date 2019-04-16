@@ -14,7 +14,7 @@
 
 // +build linux
 
-package main
+package llcli
 
 import (
 	"fmt"
@@ -22,6 +22,7 @@ import (
 	"runtime"
 
 	"github.com/nabla-containers/runnc/libcontainer"
+	ll "github.com/nabla-containers/runnc/llif"
 	"github.com/urfave/cli"
 )
 
@@ -32,20 +33,20 @@ func init() {
 	}
 }
 
-var initCommand = cli.Command{
-	Name:  "init",
-	Usage: `initialize the namespaces and launch the process (do not call it outside of runc)`,
-	Action: func(context *cli.Context) error {
-		// TODO(runllc): Inject LLC
-		llc := MyLLC
-		factory, _ := libcontainer.New("", llc)
-		if err := factory.StartInitialization(); err != nil {
-			// as the error is sent back to the parent there is no need to log
-			// or write it to stderr because the parent process will handle this
-			fmt.Fprintf(os.Stderr, "ERR: %v", err)
-			fmt.Fprintf(os.Stdout, "ERR: %v", err)
-			os.Exit(1)
-		}
-		panic("libcontainer: container init failed to exec")
-	},
+func newInitCmd(llcHandler ll.RunllcHandler) cli.Command {
+	return cli.Command{
+		Name:  "init",
+		Usage: `initialize the namespaces and launch the process (do not call it outside of runc)`,
+		Action: func(context *cli.Context) error {
+			factory, _ := libcontainer.New("", llcHandler)
+			if err := factory.StartInitialization(); err != nil {
+				// as the error is sent back to the parent there is no need to log
+				// or write it to stderr because the parent process will handle this
+				fmt.Fprintf(os.Stderr, "ERR: %v", err)
+				fmt.Fprintf(os.Stdout, "ERR: %v", err)
+				os.Exit(1)
+			}
+			panic("libcontainer: container init failed to exec")
+		},
+	}
 }

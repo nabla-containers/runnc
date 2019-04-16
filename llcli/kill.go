@@ -14,7 +14,7 @@
 
 // +build linux
 
-package main
+package llcli
 
 import (
 	"fmt"
@@ -22,6 +22,8 @@ import (
 	"strconv"
 	"strings"
 	"syscall"
+
+	ll "github.com/nabla-containers/runnc/llif"
 )
 
 var signalMap = map[string]syscall.Signal{
@@ -62,10 +64,11 @@ var signalMap = map[string]syscall.Signal{
 	"XFSZ":   syscall.SIGXFSZ,
 }
 
-var killCommand = cli.Command{
-	Name:  "kill",
-	Usage: "kill sends the specified signal (default: SIGTERM) to the container's init process",
-	ArgsUsage: `<container-id> [signal]
+func newKillCmd(llcHandler ll.RunllcHandler) cli.Command {
+	return cli.Command{
+		Name:  "kill",
+		Usage: "kill sends the specified signal (default: SIGTERM) to the container's init process",
+		ArgsUsage: `<container-id> [signal]
 
 Where "<container-id>" is the name for the instance of the container and
 "[signal]" is the signal to be sent to the init process.
@@ -75,38 +78,36 @@ For example, if the container id is "ubuntu01" the following will send a "KILL"
 signal to the init process of the "ubuntu01" container:
 	 
        # runnc kill ubuntu01 KILL`,
-	Flags: []cli.Flag{
-		cli.BoolFlag{
-			Name:  "all, a",
-			Usage: "send the specified signal to all processes inside the container",
+		Flags: []cli.Flag{
+			cli.BoolFlag{
+				Name:  "all, a",
+				Usage: "send the specified signal to all processes inside the container",
+			},
 		},
-	},
-	Action: func(context *cli.Context) error {
-		// TODO(runllc): Inject LLC
-		llc := MyLLC
+		Action: func(context *cli.Context) error {
+			container, err := getContainer(context, llcHandler)
+			if err != nil {
+				return err
+			}
 
-		container, err := getContainer(context, llc)
-		if err != nil {
-			return err
-		}
+			sigstr := context.Args().Get(1)
+			if sigstr == "" {
+				sigstr = "SIGTERM"
+			}
 
-		sigstr := context.Args().Get(1)
-		if sigstr == "" {
-			sigstr = "SIGTERM"
-		}
+			signal, err := parseSignal(sigstr)
+			if err != nil {
+				return err
+			}
 
-		signal, err := parseSignal(sigstr)
-		if err != nil {
-			return err
-		}
-
-		// We ignore the all flag since we are using an older version of
-		// runc libcontainer libraries and we only have a single process
-		if err := container.Signal(signal, context.Bool("all")); err != nil {
-			return err
-		}
-		return nil
-	},
+			// We ignore the all flag since we are using an older version of
+			// runc libcontainer libraries and we only have a single process
+			if err := container.Signal(signal, context.Bool("all")); err != nil {
+				return err
+			}
+			return nil
+		},
+	}
 }
 
 func parseSignal(rawSignal string) (syscall.Signal, error) {

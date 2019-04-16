@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+package llcli
 
 import (
 	"encoding/json"
@@ -20,57 +20,57 @@ import (
 	"github.com/urfave/cli"
 	"os"
 	"time"
+
+	ll "github.com/nabla-containers/runnc/llif"
 )
 
-var stateCommand = cli.Command{
-	Name:  "state",
-	Usage: "output the state of a container",
-	ArgsUsage: `<container-id>
+func newStateCmd(llcHandler ll.RunllcHandler) cli.Command {
+	return cli.Command{
+		Name:  "state",
+		Usage: "output the state of a container",
+		ArgsUsage: `<container-id>
 
 Where "<container-id>" is your name for the instance of the container.`,
-	Description: `The state command outputs current state information for the
+		Description: `The state command outputs current state information for the
 instance of a container.`,
-	Action: func(context *cli.Context) error {
-		// TODO(runllc): Inject LLC
-		llc := MyLLC
+		Action: func(context *cli.Context) error {
+			container, err := getContainer(context, llcHandler)
+			if err != nil {
+				fatal(err)
+			}
 
-		// TODO: implement
-		container, err := getContainer(context, llc)
-		if err != nil {
-			fatal(err)
-		}
+			state, err := container.State()
+			if err != nil {
+				fatal(err)
+			}
 
-		state, err := container.State()
-		if err != nil {
-			fatal(err)
-		}
+			status, err := container.Status()
+			if err != nil {
+				fatal(err)
+			}
 
-		status, err := container.Status()
-		if err != nil {
-			fatal(err)
-		}
+			//bundle, annotations := utils.Annotations(state.Config.Labels)
+			cs := containerState{
+				Version:        state.BaseState.Config.Version,
+				ID:             state.BaseState.ID,
+				InitProcessPid: state.BaseState.InitProcessPid,
+				Status:         status.String(),
+				Bundle:         utils.SearchLabels(state.Config.Labels, "bundle"),
+				Rootfs:         state.BaseState.Config.Rootfs,
+				Created:        state.BaseState.Created,
+			}
+			data, err := json.MarshalIndent(cs, "", "  ")
+			if err != nil {
+				fatal(err)
+			}
+			os.Stdout.Write(data)
 
-		//bundle, annotations := utils.Annotations(state.Config.Labels)
-		cs := containerState{
-			Version:        state.BaseState.Config.Version,
-			ID:             state.BaseState.ID,
-			InitProcessPid: state.BaseState.InitProcessPid,
-			Status:         status.String(),
-			Bundle:         utils.SearchLabels(state.Config.Labels, "bundle"),
-			Rootfs:         state.BaseState.Config.Rootfs,
-			Created:        state.BaseState.Created,
-		}
-		data, err := json.MarshalIndent(cs, "", "  ")
-		if err != nil {
-			fatal(err)
-		}
-		os.Stdout.Write(data)
+			// DEBUG
+			//os.Stderr.Write(data)
 
-		// DEBUG
-		//os.Stderr.Write(data)
-
-		return nil
-	},
+			return nil
+		},
+	}
 }
 
 // containerState represents the platform agnostic pieces relating to a

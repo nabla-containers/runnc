@@ -9,13 +9,13 @@ import (
 	"github.com/pkg/errors"
 )
 
-type TapBrNetworkHandler struct{}
+type tapBrNetworkHandler struct{}
 
 func NewTapBrNetworkHandler() (ll.NetworkHandler, error) {
-	return &TapBrNetworkHandler{}, nil
+	return &tapBrNetworkHandler{}, nil
 }
 
-func (h *TapBrNetworkHandler) NetworkCreateFunc(i *ll.NetworkCreateInput) (*ll.LLState, error) {
+func (h *tapBrNetworkHandler) NetworkCreateFunc(i *ll.NetworkCreateInput) (*ll.LLState, error) {
 	tapName := nablaTapName(i.ContainerId)
 	if err := network.CreateTapInterface(tapName, nil, nil); err != nil {
 		return nil, errors.Wrap(err, "Unable to create tap in NetworkCreate")
@@ -29,7 +29,7 @@ func (h *TapBrNetworkHandler) NetworkCreateFunc(i *ll.NetworkCreateInput) (*ll.L
 	return ret, nil
 }
 
-func (h *TapBrNetworkHandler) NetworkRunFunc(i *ll.NetworkRunInput) (*ll.LLState, error) {
+func (h *tapBrNetworkHandler) NetworkRunFunc(i *ll.NetworkRunInput) (*ll.LLState, error) {
 	tapName, ok := i.NetworkState.Options["TapName"]
 	if !ok {
 		return nil, errors.New("Unable to get tap name")
@@ -61,7 +61,7 @@ func (h *TapBrNetworkHandler) NetworkRunFunc(i *ll.NetworkRunInput) (*ll.LLState
 	return ret, nil
 }
 
-func (h *TapBrNetworkHandler) NetworkDestroyFunc(i *ll.NetworkDestroyInput) (*ll.LLState, error) {
+func (h *tapBrNetworkHandler) NetworkDestroyFunc(i *ll.NetworkDestroyInput) (*ll.LLState, error) {
 	tapName, ok := i.NetworkState.Options["TapName"]
 	if !ok {
 		return nil, errors.New("Unable to get tap name")
