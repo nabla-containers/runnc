@@ -26,6 +26,8 @@ import (
 	"github.com/urfave/cli"
 )
 
+type stringSubFunc func(string) string
+
 // fatal prints the error's details if it is a libcontainer specific error type
 // then exits the program with an exit status of 1.
 func fatal(err error) {
@@ -33,6 +35,19 @@ func fatal(err error) {
 	logrus.Error(err)
 	fmt.Fprintln(os.Stderr, err)
 	os.Exit(1)
+}
+
+func createSubst(params map[string]string) stringSubFunc {
+	return func(inputStr string) string {
+		return stprintf(inputStr, params)
+	}
+}
+
+func stprintf(format string, params map[string]string) string {
+	for key, val := range params {
+		format = strings.Replace(format, "{{"+key+"}}", fmt.Sprintf("%s", val), -1)
+	}
+	return format
 }
 
 // setupSpec performs inital setup based on the cli.Context for the container
@@ -57,7 +72,7 @@ func setupSpec(context *cli.Context) (*specs.Spec, error) {
 		setupSdNotify(spec, notifySocket)
 	}
 	if os.Geteuid() != 0 {
-		return nil, fmt.Errorf("runnc should be run as root")
+		return nil, fmt.Errorf("runtime should be run as root")
 	}
 	return spec, nil
 }

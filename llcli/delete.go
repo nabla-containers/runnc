@@ -26,20 +26,20 @@ import (
 	"github.com/urfave/cli"
 )
 
-func newDeleteCmd(llcHandler ll.RunllcHandler) cli.Command {
+func newDeleteCmd(llcHandler ll.RunllcHandler, sf stringSubFunc) cli.Command {
 	return cli.Command{
 		Name:  "delete",
 		Usage: "delete any resources held by the container often used with detached container",
-		ArgsUsage: `<container-id>
+		ArgsUsage: sf(`<container-id>
 
 Where "<container-id>" is the name for the instance of the container.
 
 EXAMPLE:
-For example, if the container id is "ubuntu01" and runnc list currently shows the
+For example, if the container id is "ubuntu01" and {{name}} list currently shows the
 status of "ubuntu01" as "stopped" the following will delete resources held for
-"ubuntu01" removing "ubuntu01" from the runnc list of containers:
+"ubuntu01" removing "ubuntu01" from the {{name}} list of containers:
 
-       # runnc delete ubuntu01`,
+       # {{name}} delete ubuntu01`),
 		Flags: []cli.Flag{
 			cli.BoolFlag{
 				Name:  "force, f",

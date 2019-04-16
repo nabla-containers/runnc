@@ -21,22 +21,22 @@ import (
 	"github.com/urfave/cli"
 )
 
-func newCreateCmd(llcHandler ll.RunllcHandler) cli.Command {
+func newCreateCmd(llcHandler ll.RunllcHandler, sf stringSubFunc) cli.Command {
 	return cli.Command{
 		Name:  "create",
 		Usage: "create a container",
-		ArgsUsage: `<container-id>
+		ArgsUsage: sf(`<container-id>
 
 Where "<container-id>" is your name for the instance of the container that you
 are starting. The name you provide for the container instance must be unique on
-your host.`,
-		Description: `The create command creates an instance of a container for a bundle. The bundle
+your host.`),
+		Description: sf(`The create command creates an instance of a container for a bundle. The bundle
 is a directory with a specification file named "` + specConfig + `" and a root
 filesystem.
 
 The specification file includes an args parameter. The args parameter is used
 to specify command(s) that get run when the container is started.
-`,
+`),
 		Flags: []cli.Flag{
 			cli.StringFlag{
 				Name:  "bundle, b",

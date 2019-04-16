@@ -26,7 +26,7 @@ import (
 	"github.com/nabla-containers/runnc/libcontainer"
 )
 
-// setup standard pipes so that the TTY of the calling runnc process
+// setup standard pipes so that the TTY of the calling runllc process
 // is not inherited by the container.
 func createStdioPipes(p *libcontainer.Process, rootuid, rootgid int) (*tty, error) {
 	i, err := p.InitializeIO(rootuid, rootgid)

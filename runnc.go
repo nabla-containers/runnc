@@ -28,5 +28,7 @@ func main() {
 		ExecH:    execH,
 	}
 
-	llcli.Runllc(nablaLLCHandler)
+	// We run the OCI runtime called "runnc", with root dir "/run/runnc"
+	// with the low level handlers chosen above.
+	llcli.Runllc("runnc", "/run/runnc", nablaLLCHandler)
 }

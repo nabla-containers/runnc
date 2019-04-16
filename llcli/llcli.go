@@ -38,7 +38,7 @@ const (
 	specConfig = "config.json"
 	usage      = `Nabla Containers runtime
 
-runnc is a command line client for running applications packaged according to
+{{name}} is a command line client for running applications packaged according to
 the Open Container Initiative (OCI) format.
 
 Containers are configured using bundles. A bundle for a container is a directory
@@ -47,7 +47,7 @@ The root filesystem contains the contents of the container.
 
 To start a new instance of a container:
 
-    # runnc run [ -b bundle ] <container-id>
+    # {{name}} run [ -b bundle ] <container-id>
 
 Where "<container-id>" is your name for the instance of the container that you
 are starting. The name you provide for the container instance must be unique on
@@ -55,10 +55,18 @@ your host. Providing the bundle directory using "-b" is optional. The default
 value for "bundle" is the current directory.`
 )
 
-func Runllc(llcHandler ll.RunllcHandler) {
+// Runllc takes in a set of low level handlers (llcHandler), the name of the
+// runtime (i.e. "runnc"), and the container root to use and runs the CLI
+// of an OCI container runtime.
+func Runllc(runtimeName string, runtimeRoot string, llcHandler ll.RunllcHandler) {
 	app := cli.NewApp()
-	app.Name = "runnc"
-	app.Usage = usage
+	app.Name = runtimeName
+
+	strFn := createSubst(map[string]string{
+		"name": app.Name,
+	})
+
+	app.Usage = strFn(usage)
 
 	var v []string
 	if version != "" {
@@ -70,7 +78,7 @@ func Runllc(llcHandler ll.RunllcHandler) {
 	v = append(v, fmt.Sprintf("spec: %s", specs.Version))
 	app.Version = strings.Join(v, "\n")
 
-	root := "/run/runnc"
+	root := runtimeRoot
 
 	app.Flags = []cli.Flag{
 		cli.BoolFlag{
@@ -95,12 +103,12 @@ func Runllc(llcHandler ll.RunllcHandler) {
 	}
 	app.Commands = []cli.Command{
 		// Implement essentials first (for basic docker run to work)
-		newCreateCmd(llcHandler),
-		newDeleteCmd(llcHandler),
-		newStateCmd(llcHandler),
-		newStartCmd(llcHandler),
-		newKillCmd(llcHandler),
-		newInitCmd(llcHandler),
+		newCreateCmd(llcHandler, strFn),
+		newDeleteCmd(llcHandler, strFn),
+		newStateCmd(llcHandler, strFn),
+		newStartCmd(llcHandler, strFn),
+		newKillCmd(llcHandler, strFn),
+		newInitCmd(llcHandler, strFn),
 		//		checkpointCommand,
 		//		eventsCommand,
 		//		execCommand,

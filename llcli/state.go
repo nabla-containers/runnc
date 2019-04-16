@@ -24,15 +24,15 @@ import (
 	ll "github.com/nabla-containers/runnc/llif"
 )
 
-func newStateCmd(llcHandler ll.RunllcHandler) cli.Command {
+func newStateCmd(llcHandler ll.RunllcHandler, sf stringSubFunc) cli.Command {
 	return cli.Command{
 		Name:  "state",
 		Usage: "output the state of a container",
-		ArgsUsage: `<container-id>
+		ArgsUsage: sf(`<container-id>
 
-Where "<container-id>" is your name for the instance of the container.`,
-		Description: `The state command outputs current state information for the
-instance of a container.`,
+Where "<container-id>" is your name for the instance of the container.`),
+		Description: sf(`The state command outputs current state information for the
+instance of a container.`),
 		Action: func(context *cli.Context) error {
 			container, err := getContainer(context, llcHandler)
 			if err != nil {
