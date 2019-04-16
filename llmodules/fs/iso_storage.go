@@ -11,13 +11,13 @@ import (
 	"github.com/pkg/errors"
 )
 
-type ISOFSHandler struct{}
+type ISOFsHandler struct{}
 
-func NewISOFSHandler() (ll.FSHandler, error) {
-	return &ISOFSHandler{}, nil
+func NewISOFsHandler() (ll.FsHandler, error) {
+	return &ISOFsHandler{}, nil
 }
 
-func (h *ISOFSHandler) FSCreateFunc(i *ll.FSCreateInput) (*ll.LLState, error) {
+func (h *ISOFsHandler) FsCreateFunc(i *ll.FsCreateInput) (*ll.LLState, error) {
 	fsPath, err := createRootfsISO(i.Config, i.ContainerRoot)
 	if err != nil {
 		return nil, errors.Wrap(err, "Unable to create rootfs ISO")
@@ -31,15 +31,15 @@ func (h *ISOFSHandler) FSCreateFunc(i *ll.FSCreateInput) (*ll.LLState, error) {
 	return ret, nil
 }
 
-func (h *ISOFSHandler) FSRunFunc(i *ll.FSRunInput) (*ll.LLState, error) {
-	return i.FSState, nil
+func (h *ISOFsHandler) FsRunFunc(i *ll.FsRunInput) (*ll.LLState, error) {
+	return i.FsState, nil
 }
 
-func (h *ISOFSHandler) FSDestroyFunc(i *ll.FSDestroyInput) (*ll.LLState, error) {
+func (h *ISOFsHandler) FsDestroyFunc(i *ll.FsDestroyInput) (*ll.LLState, error) {
 	if err := os.RemoveAll(i.ContainerRoot); err != nil {
 		return nil, err
 	}
-	return i.FSState, nil
+	return i.FsState, nil
 }
 
 func createRootfsISO(config *configs.Config, containerRoot string) (string, error) {

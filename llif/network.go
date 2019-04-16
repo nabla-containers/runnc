@@ -16,7 +16,7 @@ type NetworkGenericInput struct {
 	Config *configs.Config
 
 	// The state of LL handlers
-	FSState      *LLState
+	FsState      *LLState
 	NetworkState *LLState
 	ExecState    *LLState
 }

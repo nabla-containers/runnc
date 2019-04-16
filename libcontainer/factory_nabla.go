@@ -143,17 +143,17 @@ func (l *NablaFactory) Create(id string, config *configs.Config) (Container, err
 			return nil, err
 		}
 	} else {
-		fshInput := &ll.FSCreateInput{}
+		fshInput := &ll.FsCreateInput{}
 		fshInput.ContainerRoot = containerRoot
 		fshInput.Config = config
 		fshInput.ContainerId = id
-		fshInput.FSState = &ll.LLState{}
+		fshInput.FsState = &ll.LLState{}
 		fshInput.NetworkState = &ll.LLState{}
 		fshInput.ExecState = &ll.LLState{}
 
-		fsState, err = l.LLCHandler.FSH.FSCreateFunc(fshInput)
+		fsState, err = l.LLCHandler.FsH.FsCreateFunc(fshInput)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("Error running FsCreateFunc: %v", err)
 		}
 	}
 
@@ -161,18 +161,30 @@ func (l *NablaFactory) Create(id string, config *configs.Config) (Container, err
 	networkhInput.ContainerRoot = containerRoot
 	networkhInput.Config = config
 	networkhInput.ContainerId = id
-	networkhInput.FSState = fsState
+	networkhInput.FsState = fsState
 	networkhInput.NetworkState = &ll.LLState{}
 	networkhInput.ExecState = &ll.LLState{}
 
 	networkState, err := l.LLCHandler.NetworkH.NetworkCreateFunc(networkhInput)
 	if err != nil {
-		// TODO(runllc): Handle error case for FS Handler - run FSDestroyFunc
+		// TODO(runllc): Handle error case for Fs Handler - run FsDestroyFunc
 		return nil, fmt.Errorf("Error running NetworkCreateFunc: %v", err)
 	}
 
-	// TODO(runllc) Handle
-	var execState *ll.LLState
+	exechInput := &ll.ExecCreateInput{}
+	exechInput.ContainerRoot = containerRoot
+	exechInput.Config = config
+	exechInput.ContainerId = id
+	exechInput.FsState = fsState
+	exechInput.NetworkState = networkState
+	exechInput.ExecState = &ll.LLState{}
+
+	execState, err := l.LLCHandler.ExecH.ExecCreateFunc(exechInput)
+	if err != nil {
+		// TODO(runllc): Handle error case for Fs Handler - run FsDestroyFunc
+		// TODO(runllc): Handle error case for Net Handler - run NetDestroyFunc
+		return nil, fmt.Errorf("Error running ExecCreateFunc: %v", err)
+	}
 
 	if networkState == nil {
 		networkState = &ll.LLState{}

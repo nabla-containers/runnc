@@ -273,15 +273,28 @@ func (c *nablaContainer) destroy() error {
 	c.state.InitProcessPid = 0
 	c.state.Status = Stopped
 
-	fsInput := &ll.FSDestroyInput{}
+	execInput := &ll.ExecCreateInput{}
+	execInput.ContainerRoot = c.root
+	execInput.Config = c.config
+	execInput.ContainerId = c.id
+	execInput.FsState = &c.state.FsState
+	execInput.NetworkState = &c.state.NetworkState
+	execInput.ExecState = &c.state.ExecState
+
+	execState, err := c.llcHandler.ExecH.ExecCreateFunc(execInput)
+	if err != nil {
+		return err
+	}
+
+	fsInput := &ll.FsDestroyInput{}
 	fsInput.ContainerRoot = c.root
 	fsInput.Config = c.config
 	fsInput.ContainerId = c.id
-	fsInput.FSState = &c.state.FsState
+	fsInput.FsState = &c.state.FsState
 	fsInput.NetworkState = &c.state.NetworkState
-	fsInput.ExecState = &c.state.ExecState
+	fsInput.ExecState = execState
 
-	fsState, err := c.llcHandler.FSH.FSDestroyFunc(fsInput)
+	fsState, err := c.llcHandler.FsH.FsDestroyFunc(fsInput)
 	if err != nil {
 		return err
 	}
@@ -295,9 +308,9 @@ func (c *nablaContainer) destroy() error {
 	networkInput.ContainerRoot = c.root
 	networkInput.Config = c.config
 	networkInput.ContainerId = c.id
-	networkInput.FSState = fsState
+	networkInput.FsState = fsState
 	networkInput.NetworkState = &c.state.NetworkState
-	networkInput.ExecState = &c.state.ExecState
+	networkInput.ExecState = execState
 
 	networkState, err := c.llcHandler.NetworkH.NetworkDestroyFunc(networkInput)
 	if err != nil {

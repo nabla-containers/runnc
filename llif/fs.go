@@ -4,8 +4,7 @@ import (
 	"github.com/nabla-containers/runnc/libcontainer/configs"
 )
 
-// TODO(runllc): Rename all FS to Fs
-type FSGenericInput struct {
+type FsGenericInput struct {
 	// ContainerId is the id of the container
 	ContainerId string
 
@@ -17,19 +16,19 @@ type FSGenericInput struct {
 	Config *configs.Config
 
 	// The state of LL handlers
-	FSState      *LLState
+	FsState      *LLState
 	NetworkState *LLState
 	ExecState    *LLState
 }
 
-type FSCreateInput struct {
-	FSGenericInput
+type FsCreateInput struct {
+	FsGenericInput
 }
 
-type FSRunInput struct {
-	FSGenericInput
+type FsRunInput struct {
+	FsGenericInput
 }
 
-type FSDestroyInput struct {
-	FSGenericInput
+type FsDestroyInput struct {
+	FsGenericInput
 }
