@@ -134,9 +134,9 @@ func (l *NablaFactory) Create(id string, config *configs.Config) (Container, err
 		return nil, err
 	}
 
+	var fsState *ll.LLState
 	// If it is a pause container for kubernetes, set config so that init
 	// will just pause instead of executing a nabla
-	fsPath := ""
 	if isPauseContainer(config) {
 		config, err = applyPauseHack(config, containerRoot)
 		if err != nil {
@@ -147,33 +147,46 @@ func (l *NablaFactory) Create(id string, config *configs.Config) (Container, err
 		fshInput.ContainerRoot = containerRoot
 		fshInput.Config = config
 		fshInput.ContainerId = id
+		fshInput.FSState = &ll.LLState{}
+		fshInput.NetworkState = &ll.LLState{}
+		fshInput.ExecState = &ll.LLState{}
 
-		// TODO(runllc): Save llstate in container state
-		fsLLState, err := l.LLCHandler.FSH.FSCreateFunc(fshInput)
+		fsState, err = l.LLCHandler.FSH.FSCreateFunc(fshInput)
 		if err != nil {
 			return nil, err
 		}
-
-		// TODO(runllc): Remove this hardcode of fspath when execHandler is in
-		fsPath = fsLLState.Options["FsPath"]
 	}
 
 	networkhInput := &ll.NetworkCreateInput{}
 	networkhInput.ContainerRoot = containerRoot
 	networkhInput.Config = config
 	networkhInput.ContainerId = id
+	networkhInput.FSState = fsState
+	networkhInput.NetworkState = &ll.LLState{}
+	networkhInput.ExecState = &ll.LLState{}
 
-	// TODO(runllc): Save llstate in container state
-	_, err = l.LLCHandler.NetworkH.NetworkCreateFunc(networkhInput)
+	networkState, err := l.LLCHandler.NetworkH.NetworkCreateFunc(networkhInput)
 	if err != nil {
 		// TODO(runllc): Handle error case for FS Handler - run FSDestroyFunc
 		return nil, fmt.Errorf("Error running NetworkCreateFunc: %v", err)
 	}
 
+	// TODO(runllc) Handle
+	var execState *ll.LLState
+
+	if networkState == nil {
+		networkState = &ll.LLState{}
+	}
+	if fsState == nil {
+		fsState = &ll.LLState{}
+	}
+	if execState == nil {
+		execState = &ll.LLState{}
+	}
+
 	c := &nablaContainer{
 		id:         id,
 		root:       containerRoot,
-		fsPath:     fsPath,
 		config:     config,
 		llcHandler: l.LLCHandler,
 		state: &State{
@@ -181,7 +194,10 @@ func (l *NablaFactory) Create(id string, config *configs.Config) (Container, err
 				ID:     id,
 				Config: *config,
 			},
-			Status: Stopped,
+			FsState:      *fsState,
+			NetworkState: *networkState,
+			ExecState:    *execState,
+			Status:       Stopped,
 		},
 	}
 	return c, nil

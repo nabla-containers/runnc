@@ -41,6 +41,7 @@ type NetworkHandler interface {
 type ExecHandler interface {
 	ExecCreateFunc(*ExecCreateInput) (*LLState, error)
 	// ExecRunFunc should not return unless it runs into an error
+	// TODO(runllc): Change this to possibly return state
 	ExecRunFunc(*ExecRunInput) error
 	ExecDestroyFunc(*ExecDestroyInput) (*LLState, error)
 }
@@ -50,12 +51,14 @@ type LLState struct {
 	// passed along across different operations. Entries in this map set
 	// in the output of the Create phase will be present in the input of the
 	// Run phase.
-	Options map[string]string
+	// TODO(runllc): Need to figure out how to save state in Exec phase or is
+	// there a need to?
+	Options map[string]string `json:"options"`
 
 	// InMemoryObjects is the map of objects that can be shared with other handlers
 	// within the same operation (i.e. in-memory data structures). The entries
 	// from the output of the Create phase will not be accessible to the
 	// Run phase. However, they will be accessible by the Exec handler of the
 	// same phase.
-	InMemoryObjects map[string]interface{}
+	InMemoryObjects map[string]interface{} `json:"-"`
 }

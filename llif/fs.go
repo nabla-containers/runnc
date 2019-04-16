@@ -4,6 +4,7 @@ import (
 	"github.com/nabla-containers/runnc/libcontainer/configs"
 )
 
+// TODO(runllc): Rename all FS to Fs
 type FSGenericInput struct {
 	// ContainerId is the id of the container
 	ContainerId string

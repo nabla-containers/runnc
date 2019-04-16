@@ -35,7 +35,7 @@ var (
 	NablaRunBin = NablaBinDir + "nabla-run"
 )
 
-func newRunncCont(cfg *initConfig, networkMap map[string]string) (*runnc_cont.RunncCont, error) {
+func newRunncCont(cfg *initConfig, networkMap map[string]string, fsMap map[string]string) (*runnc_cont.RunncCont, error) {
 	if len(cfg.Args) == 0 {
 		return nil, fmt.Errorf("OCI process args are empty")
 	}
@@ -54,7 +54,7 @@ func newRunncCont(cfg *initConfig, networkMap map[string]string) (*runnc_cont.Ru
 		UniKernelBin: filepath.Join(cfg.Root, cfg.Args[0]),
 		Memory:       cfg.Memory,
 		Tap:          networkMap["TapName"],
-		Disk:         []string{cfg.FsPath},
+		Disk:         []string{fsMap["FsPath"]},
 		WorkingDir:   cfg.Cwd,
 		Env:          cfg.Env,
 		NablaRunArgs: cfg.Args[1:],
@@ -78,7 +78,6 @@ type initConfig struct {
 	BundlePath string          `json:"bundlepath"`
 	Root       string          `json:"root"`
 	Args       []string        `json:"args"`
-	FsPath     string          `json:"fspath"`
 	Cwd        string          `json:"cwd"`
 	Env        []string        `json:"env"`
 	TapName    string          `json:"tap"`
@@ -87,6 +86,10 @@ type initConfig struct {
 	Memory     int64           `json:"mem"`
 	Mounts     []spec.Mount    `json:"Mounts"`
 	Config     *configs.Config `json:"config"`
+
+	FsState      ll.LLState `json:"fsstate"`
+	NetworkState ll.LLState `json:"netstate"`
+	ExecState    ll.LLState `json:execstate"`
 }
 
 func initNabla(llcHandler ll.RunllcHandler) error {
@@ -125,9 +128,12 @@ func initNabla(llcHandler ll.RunllcHandler) error {
 	fsInput.ContainerRoot = config.Root
 	fsInput.Config = config.Config
 	fsInput.ContainerId = config.Id
+	fsInput.FSState = &config.FsState
+	fsInput.NetworkState = &config.NetworkState
+	fsInput.ExecState = &config.ExecState
 
 	// TODO(runllc): Propagate and store LLstates
-	_, err = llcHandler.FSH.FSRunFunc(fsInput)
+	fsState, err := llcHandler.FSH.FSRunFunc(fsInput)
 	if err != nil {
 		return fmt.Errorf("Error running llc FS handler: %v", err)
 	}
@@ -168,9 +174,12 @@ func initNabla(llcHandler ll.RunllcHandler) error {
 	networkInput.ContainerRoot = config.Root
 	networkInput.Config = config.Config
 	networkInput.ContainerId = config.Id
+	networkInput.FSState = fsState
+	networkInput.NetworkState = &config.NetworkState
+	networkInput.ExecState = &config.ExecState
 
 	// TODO(runllc): Propagate and store LLstates
-	networkLLState, err := llcHandler.NetworkH.NetworkRunFunc(networkInput)
+	networkState, err := llcHandler.NetworkH.NetworkRunFunc(networkInput)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error running llc Network handler: %v", err)
 		return fmt.Errorf("Error running llc Network handler: %v", err)
@@ -193,7 +202,7 @@ func initNabla(llcHandler ll.RunllcHandler) error {
 		select {}
 	}
 
-	runncCont, err := newRunncCont(config, networkLLState.Options)
+	runncCont, err := newRunncCont(config, networkState.Options, fsState.Options)
 	if err != nil {
 		return newSystemErrorWithCause(err, "Unable to construct nabla run args")
 	}

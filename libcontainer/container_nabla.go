@@ -40,6 +40,10 @@ const stdioFdCount = 3
 type State struct {
 	BaseState
 
+	FsState      ll.LLState `json:"fsstate"`
+	NetworkState ll.LLState `json:"netstate"`
+	ExecState    ll.LLState `json:"execstate"`
+
 	// Platform specific fields below here
 	Status Status `json:"status"`
 }
@@ -56,10 +60,8 @@ type Container interface {
 }
 
 type nablaContainer struct {
-	id   string
-	root string
-	// TODO(runllc) remove these for passing infor
-	fsPath     string
+	id         string
+	root       string
 	config     *configs.Config
 	m          sync.Mutex
 	state      *State
@@ -205,18 +207,20 @@ func (c *nablaContainer) start(p *Process) error {
 
 	defer parentPipe.Close()
 	config := initConfig{
-		Id:         c.id,
-		BundlePath: c.root,
-		Root:       c.config.Rootfs,
-		Args:       c.config.Args,
-		FsPath:     c.fsPath,
-		Cwd:        c.config.Cwd,
-		Env:        c.config.Env,
-		NetnsPath:  c.config.NetnsPath,
-		Hooks:      c.config.Hooks,
-		Memory:     c.config.Memory,
-		Mounts:     c.config.Mounts,
-		Config:     c.config,
+		Id:           c.id,
+		BundlePath:   c.root,
+		Root:         c.config.Rootfs,
+		Args:         c.config.Args,
+		Cwd:          c.config.Cwd,
+		Env:          c.config.Env,
+		NetnsPath:    c.config.NetnsPath,
+		Hooks:        c.config.Hooks,
+		Memory:       c.config.Memory,
+		Mounts:       c.config.Mounts,
+		Config:       c.config,
+		FsState:      c.state.FsState,
+		NetworkState: c.state.NetworkState,
+		ExecState:    c.state.ExecState,
 	}
 
 	enc := json.NewEncoder(parentPipe)
@@ -269,28 +273,41 @@ func (c *nablaContainer) destroy() error {
 	c.state.InitProcessPid = 0
 	c.state.Status = Stopped
 
-	// TODO(runllc): Add LLStates in here
 	fsInput := &ll.FSDestroyInput{}
 	fsInput.ContainerRoot = c.root
 	fsInput.Config = c.config
 	fsInput.ContainerId = c.id
+	fsInput.FSState = &c.state.FsState
+	fsInput.NetworkState = &c.state.NetworkState
+	fsInput.ExecState = &c.state.ExecState
 
-	// TODO(runllc): Propagate and store LLstates
-	_, err := c.llcHandler.FSH.FSDestroyFunc(fsInput)
+	fsState, err := c.llcHandler.FSH.FSDestroyFunc(fsInput)
 	if err != nil {
 		return err
 	}
+	if fsState != nil {
+		c.state.FsState = *fsState
+	} else {
+		c.state.FsState = ll.LLState{}
+	}
 
-	// TODO(runllc): Add LLStates in here
 	networkInput := &ll.NetworkDestroyInput{}
 	networkInput.ContainerRoot = c.root
 	networkInput.Config = c.config
 	networkInput.ContainerId = c.id
+	networkInput.FSState = fsState
+	networkInput.NetworkState = &c.state.NetworkState
+	networkInput.ExecState = &c.state.ExecState
 
-	// TODO(runllc): Propagate and store LLstates
-	_, err = c.llcHandler.NetworkH.NetworkDestroyFunc(networkInput)
+	networkState, err := c.llcHandler.NetworkH.NetworkDestroyFunc(networkInput)
 	if err != nil {
 		return err
+	}
+
+	if networkState != nil {
+		c.state.NetworkState = *networkState
+	} else {
+		c.state.NetworkState = ll.LLState{}
 	}
 
 	return nil

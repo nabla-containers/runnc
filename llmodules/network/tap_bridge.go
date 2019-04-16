@@ -30,6 +30,11 @@ func (h *TapBrNetworkHandler) NetworkCreateFunc(i *ll.NetworkCreateInput) (*ll.L
 }
 
 func (h *TapBrNetworkHandler) NetworkRunFunc(i *ll.NetworkRunInput) (*ll.LLState, error) {
+	tapName, ok := i.NetworkState.Options["TapName"]
+	if !ok {
+		return nil, errors.New("Unable to get tap name")
+	}
+
 	// The tap device will get the IP assigned to the k8s nabla
 	// container veth pair.
 	// XXX: This is a workaround due to an error with MacvTap, error was :
@@ -49,7 +54,7 @@ func (h *TapBrNetworkHandler) NetworkRunFunc(i *ll.NetworkRunInput) (*ll.LLState
 			"Gateway":   gateway.String(),
 			"IPMask":    fmt.Sprintf("%d", cidr),
 			"Mac":       mac,
-			"TapName":   nablaTapName(i.ContainerId),
+			"TapName":   tapName,
 		},
 	}
 
@@ -57,8 +62,10 @@ func (h *TapBrNetworkHandler) NetworkRunFunc(i *ll.NetworkRunInput) (*ll.LLState
 }
 
 func (h *TapBrNetworkHandler) NetworkDestroyFunc(i *ll.NetworkDestroyInput) (*ll.LLState, error) {
-	// TODO(runllc): Use options passed instead to test message passing
-	tapName := nablaTapName(i.ContainerId)
+	tapName, ok := i.NetworkState.Options["TapName"]
+	if !ok {
+		return nil, errors.New("Unable to get tap name")
+	}
 	if err := network.RemoveTapDevice(tapName); err != nil {
 		return nil, err
 	}
