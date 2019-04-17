@@ -33,6 +33,7 @@ before_install:
 
 script:
   - git-validation -run DCO,short-subject -v
+  - shellcheck --version
   - shellcheck tests/integration/*.bats
   - make build/runnc build/nabla-run
   - git submodule update --init --recursive
