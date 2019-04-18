@@ -8,7 +8,7 @@ import (
 
 type noopFsHandler struct{}
 
-func NewnoopFsHandler() (ll.FsHandler, error) {
+func NewNoopFsHandler() (ll.FsHandler, error) {
 	return &noopFsHandler{}, nil
 }
 

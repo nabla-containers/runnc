@@ -6,7 +6,7 @@ import (
 
 type noopNetworkHandler struct{}
 
-func NewnoopNetworkHandler() (ll.NetworkHandler, error) {
+func NewNoopNetworkHandler() (ll.NetworkHandler, error) {
 	return &noopNetworkHandler{}, nil
 }
 
