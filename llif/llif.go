@@ -1,6 +1,6 @@
 package llif
 
-// RuncllcHandler is the interface that is needed to be implemented in order
+// RunllcHandler is the interface that is needed to be implemented in order
 // to create a Low Level OCI runtime with Runllc.
 //
 // There are 3 extensible components and 3 integration points.
