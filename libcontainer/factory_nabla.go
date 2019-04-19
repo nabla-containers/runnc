@@ -26,9 +26,9 @@ import (
 
 	"github.com/nabla-containers/runnc/libcontainer/configs"
 
-	"github.com/nabla-containers/runnc/utils"
 	"github.com/nabla-containers/runnc/nabla-lib/network"
 	"github.com/nabla-containers/runnc/nabla-lib/storage"
+	"github.com/nabla-containers/runnc/utils"
 
 	"github.com/pkg/errors"
 )
@@ -87,6 +87,9 @@ func applyPauseHack(config *configs.Config, containerRoot string) (*configs.Conf
 func createRootfsISO(config *configs.Config, containerRoot string) (string, error) {
 	rootfsPath := config.Rootfs
 	targetISOPath := filepath.Join(containerRoot, "rootfs.iso")
+	if err := os.MkdirAll(filepath.Join(rootfsPath, "/etc"), 0755); err != nil {
+		return "", errors.Wrap(err, "Unable to create "+filepath.Join(rootfsPath, "/etc"))
+	}
 	for _, mount := range config.Mounts {
 		if (mount.Destination == "/etc/resolv.conf") ||
 			(mount.Destination == "/etc/hosts") ||
@@ -94,7 +97,7 @@ func createRootfsISO(config *configs.Config, containerRoot string) (string, erro
 			dest := filepath.Join(rootfsPath, mount.Destination)
 			source := mount.Source
 			if err := utils.Copy(dest, source); err != nil {
-				return "", errors.Wrap(err, "Unable to copy " + source + " to " + dest)
+				return "", errors.Wrap(err, "Unable to copy "+source+" to "+dest)
 			}
 		}
 	}
