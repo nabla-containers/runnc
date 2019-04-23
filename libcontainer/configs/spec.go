@@ -5,6 +5,7 @@ import (
 
 	"github.com/opencontainers/runtime-spec/specs-go"
 	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
 )
 
 func ParseSpec(s *specs.Spec) (*Config, error) {
@@ -38,8 +39,12 @@ func ParseSpec(s *specs.Spec) (*Config, error) {
 	// Docker passes it as bytes, nabla-run expects MB.
 	if s.Linux != nil && s.Linux.Resources != nil && s.Linux.Resources.Memory != nil && s.Linux.Resources.Memory.Limit != nil {
 		memory = (*s.Linux.Resources.Memory.Limit) / (1 << 20)
-	} else {
+	}
+
+	// Set a floor for container memory
+	if memory < ContainerMemoryMinimum {
 		memory = ContainerMemoryMinimum
+		log.Warning("Memory was less than ContainerMemoryMinimum setting to 512mb")
 	}
 
 	cfg := Config{
