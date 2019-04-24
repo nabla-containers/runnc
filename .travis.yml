@@ -23,7 +23,7 @@ services:
 
 before_install:
   - sudo apt-get -qq update
-  - sudo apt-get install -y libseccomp-dev genisoimage jq xz-utils
+  - sudo apt-get install -y libseccomp-dev genisoimage jq
   - go get -u golang.org/x/lint/golint
   - go get -u github.com/vbatts/git-validation
   - go get -u github.com/golang/dep/cmd/dep
