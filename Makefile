@@ -123,6 +123,7 @@ clean:
 	sudo make -C solo5 clean
 
 SHELLCHECK=docker run --rm -v "$(CURDIR)":/v -w /v koalaman/shellcheck
+
 .PHONY: shellcheck
 shellcheck:
-	$(SHELLCHECK) tests/integration/*.bats
+	$(SHELLCHECK) tests/integration/*.bats tests/integration/*.bash

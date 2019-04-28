@@ -55,10 +55,11 @@ function setup_test() {
             exit 1
             ;;
     esac
-    cd "$TEST_BUNDLE"
+    cd "$TEST_BUNDLE" || exit
 }
 
 function config_mod () {
+    # shellcheck disable=SC2002
     cat config.json | jq "$@" > config.json.new
     mv config.json.new config.json
 }
@@ -75,13 +76,13 @@ function teardown_root() {
 }
 
 function local-test () {
-     if [ ! -z ${INCONTAINER} ]; then
+     if [ -n "${INCONTAINER}" ]; then
          skip "Test cannot be run in container"
      fi
 }
 
 function container-test () {
-     if [ -z ${INCONTAINER} ]; then
+     if [ -z "${INCONTAINER}" ]; then
          skip "Test must be run in container"
      fi
 }

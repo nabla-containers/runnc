@@ -14,7 +14,6 @@ There is initial aarch64 support. For more information please check the [README.
 3. Install genisoimage on host `sudo apt install genisoimage`
 4. Install jq on host `sudo apt install jq`
 5. Ensure that docker is installed (docker-ce recent versions, i.e. v15 onwards)
-6. When adding shell tests `tests/integrations/run.bats` execute `make shellcheck` to lint the file
 
 Docker major versions tested with:
 
@@ -54,7 +53,7 @@ make install
 
 ## Configure Docker to use new Runtime
 
-0. Install genisoimage and libseccomp on host
+1. Install genisoimage and libseccomp on host
 ```
 sudo apt install genisoimage
 sudo apt install libseccomp-dev
