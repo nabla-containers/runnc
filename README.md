@@ -53,7 +53,7 @@ make install
 
 ## Configure Docker to use new Runtime
 
-1. Install genisoimage and libseccomp on host
+0. Install genisoimage and libseccomp on host
 ```
 sudo apt install genisoimage
 sudo apt install libseccomp-dev
