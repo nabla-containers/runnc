@@ -121,3 +121,9 @@ clean:
 		tests/integration/test_curl.nabla \
 		tests/integration/node_tests.iso
 	sudo make -C solo5 clean
+
+SHELLCHECK=docker run --rm -v "$(CURDIR)":/v -w /v koalaman/shellcheck
+
+.PHONY: shellcheck
+shellcheck:
+	$(SHELLCHECK) tests/integration/*.bats tests/integration/*.bash
