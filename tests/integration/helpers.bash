@@ -59,8 +59,7 @@ function setup_test() {
 }
 
 function config_mod () {
-    # shellcheck disable=SC2002
-    cat config.json | jq "$@" > config.json.new
+    jq "$@" > config.json.new < config.json
     mv config.json.new config.json
 }
 
