@@ -45,6 +45,9 @@ func (h *iSOFsHandler) FsDestroyFunc(i *ll.FsDestroyInput) (*ll.LLState, error) 
 func createRootfsISO(config *configs.Config, containerRoot string) (string, error) {
 	rootfsPath := config.Rootfs
 	targetISOPath := filepath.Join(containerRoot, "rootfs.iso")
+	if err := os.MkdirAll(filepath.Join(rootfsPath, "/etc"), 0755); err != nil {
+		return "", errors.Wrap(err, "Unable to create "+filepath.Join(rootfsPath, "/etc"))
+	}
 	for _, mount := range config.Mounts {
 		if (mount.Destination == "/etc/resolv.conf") ||
 			(mount.Destination == "/etc/hosts") ||
