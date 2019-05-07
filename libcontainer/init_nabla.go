@@ -77,13 +77,16 @@ func initNabla(llcHandler ll.RunllcHandler) error {
 	os.Clearenv()
 
 	// LLC Fs Handle
-	fsInput := &ll.FsRunInput{}
-	fsInput.ContainerRoot = config.Root
-	fsInput.Config = config.Config
-	fsInput.ContainerId = config.Id
-	fsInput.FsState = &config.FsState
-	fsInput.NetworkState = &config.NetworkState
-	fsInput.ExecState = &config.ExecState
+	fsInput := &ll.FsRunInput{
+		ll.FsGenericInput{
+			ContainerRoot: config.Root,
+			Config:        config.Config,
+			ContainerId:   config.Id,
+			FsState:       &config.FsState,
+			NetworkState:  &config.NetworkState,
+			ExecState:     &config.ExecState,
+		},
+	}
 
 	// TODO(runllc): Propagate and store LLstates
 	fsState, err := llcHandler.FsH.FsRunFunc(fsInput)
@@ -122,13 +125,16 @@ func initNabla(llcHandler ll.RunllcHandler) error {
 		}
 	}
 
-	networkInput := &ll.NetworkRunInput{}
-	networkInput.ContainerRoot = config.Root
-	networkInput.Config = config.Config
-	networkInput.ContainerId = config.Id
-	networkInput.FsState = fsState
-	networkInput.NetworkState = &config.NetworkState
-	networkInput.ExecState = &config.ExecState
+	networkInput := &ll.NetworkRunInput{
+		ll.NetworkGenericInput{
+			ContainerRoot: config.Root,
+			Config:        config.Config,
+			ContainerId:   config.Id,
+			FsState:       fsState,
+			NetworkState:  &config.NetworkState,
+			ExecState:     &config.ExecState,
+		},
+	}
 
 	// TODO(runllc): Propagate and store LLstates
 	networkState, err := llcHandler.NetworkH.NetworkRunFunc(networkInput)
@@ -155,13 +161,16 @@ func initNabla(llcHandler ll.RunllcHandler) error {
 	}
 
 	// LLC Exec Handle
-	execInput := &ll.ExecRunInput{}
-	execInput.ContainerRoot = config.Root
-	execInput.Config = config.Config
-	execInput.ContainerId = config.Id
-	execInput.FsState = fsState
-	execInput.NetworkState = networkState
-	execInput.ExecState = &config.ExecState
+	execInput := &ll.ExecRunInput{
+		ll.ExecGenericInput{
+			ContainerRoot: config.Root,
+			Config:        config.Config,
+			ContainerId:   config.Id,
+			FsState:       fsState,
+			NetworkState:  networkState,
+			ExecState:     &config.ExecState,
+		},
+	}
 
 	// Should not return if successful
 	return llcHandler.ExecH.ExecRunFunc(execInput)

@@ -273,26 +273,37 @@ func (c *nablaContainer) destroy() error {
 	c.state.InitProcessPid = 0
 	c.state.Status = Stopped
 
-	execInput := &ll.ExecCreateInput{}
-	execInput.ContainerRoot = c.root
-	execInput.Config = c.config
-	execInput.ContainerId = c.id
-	execInput.FsState = &c.state.FsState
-	execInput.NetworkState = &c.state.NetworkState
-	execInput.ExecState = &c.state.ExecState
+	execInput := &ll.ExecDestroyInput{
+		ll.ExecGenericInput{
+			ContainerRoot: c.root,
+			Config:        c.config,
+			ContainerId:   c.id,
+			FsState:       &c.state.FsState,
+			NetworkState:  &c.state.NetworkState,
+			ExecState:     &c.state.ExecState,
+		},
+	}
 
-	execState, err := c.llcHandler.ExecH.ExecCreateFunc(execInput)
+	execState, err := c.llcHandler.ExecH.ExecDestroyFunc(execInput)
 	if err != nil {
 		return err
 	}
+	if execState != nil {
+		c.state.ExecState = *execState
+	} else {
+		c.state.ExecState = ll.LLState{}
+	}
 
-	fsInput := &ll.FsDestroyInput{}
-	fsInput.ContainerRoot = c.root
-	fsInput.Config = c.config
-	fsInput.ContainerId = c.id
-	fsInput.FsState = &c.state.FsState
-	fsInput.NetworkState = &c.state.NetworkState
-	fsInput.ExecState = execState
+	fsInput := &ll.FsDestroyInput{
+		ll.FsGenericInput{
+			ContainerRoot: c.root,
+			Config:        c.config,
+			ContainerId:   c.id,
+			FsState:       &c.state.FsState,
+			NetworkState:  &c.state.NetworkState,
+			ExecState:     execState,
+		},
+	}
 
 	fsState, err := c.llcHandler.FsH.FsDestroyFunc(fsInput)
 	if err != nil {
@@ -304,13 +315,16 @@ func (c *nablaContainer) destroy() error {
 		c.state.FsState = ll.LLState{}
 	}
 
-	networkInput := &ll.NetworkDestroyInput{}
-	networkInput.ContainerRoot = c.root
-	networkInput.Config = c.config
-	networkInput.ContainerId = c.id
-	networkInput.FsState = fsState
-	networkInput.NetworkState = &c.state.NetworkState
-	networkInput.ExecState = execState
+	networkInput := &ll.NetworkDestroyInput{
+		ll.NetworkGenericInput{
+			ContainerRoot: c.root,
+			Config:        c.config,
+			ContainerId:   c.id,
+			FsState:       fsState,
+			NetworkState:  &c.state.NetworkState,
+			ExecState:     execState,
+		},
+	}
 
 	networkState, err := c.llcHandler.NetworkH.NetworkDestroyFunc(networkInput)
 	if err != nil {

@@ -143,43 +143,52 @@ func (l *NablaFactory) Create(id string, config *configs.Config) (Container, err
 			return nil, err
 		}
 	} else {
-		fshInput := &ll.FsCreateInput{}
-		fshInput.ContainerRoot = containerRoot
-		fshInput.Config = config
-		fshInput.ContainerId = id
-		fshInput.FsState = &ll.LLState{}
-		fshInput.NetworkState = &ll.LLState{}
-		fshInput.ExecState = &ll.LLState{}
+		fsInput := &ll.FsCreateInput{
+			ll.FsGenericInput{
+				ContainerRoot: containerRoot,
+				Config:        config,
+				ContainerId:   id,
+				FsState:       &ll.LLState{},
+				NetworkState:  &ll.LLState{},
+				ExecState:     &ll.LLState{},
+			},
+		}
 
-		fsState, err = l.LLCHandler.FsH.FsCreateFunc(fshInput)
+		fsState, err = l.LLCHandler.FsH.FsCreateFunc(fsInput)
 		if err != nil {
 			return nil, fmt.Errorf("Error running FsCreateFunc: %v", err)
 		}
 	}
 
-	networkhInput := &ll.NetworkCreateInput{}
-	networkhInput.ContainerRoot = containerRoot
-	networkhInput.Config = config
-	networkhInput.ContainerId = id
-	networkhInput.FsState = fsState
-	networkhInput.NetworkState = &ll.LLState{}
-	networkhInput.ExecState = &ll.LLState{}
+	networkInput := &ll.NetworkCreateInput{
+		ll.NetworkGenericInput{
+			ContainerRoot: containerRoot,
+			Config:        config,
+			ContainerId:   id,
+			FsState:       fsState,
+			NetworkState:  &ll.LLState{},
+			ExecState:     &ll.LLState{},
+		},
+	}
 
-	networkState, err := l.LLCHandler.NetworkH.NetworkCreateFunc(networkhInput)
+	networkState, err := l.LLCHandler.NetworkH.NetworkCreateFunc(networkInput)
 	if err != nil {
 		// TODO(runllc): Handle error case for Fs Handler - run FsDestroyFunc
 		return nil, fmt.Errorf("Error running NetworkCreateFunc: %v", err)
 	}
 
-	exechInput := &ll.ExecCreateInput{}
-	exechInput.ContainerRoot = containerRoot
-	exechInput.Config = config
-	exechInput.ContainerId = id
-	exechInput.FsState = fsState
-	exechInput.NetworkState = networkState
-	exechInput.ExecState = &ll.LLState{}
+	execInput := &ll.ExecCreateInput{
+		ll.ExecGenericInput{
+			ContainerRoot: containerRoot,
+			Config:        config,
+			ContainerId:   id,
+			FsState:       fsState,
+			NetworkState:  networkState,
+			ExecState:     &ll.LLState{},
+		},
+	}
 
-	execState, err := l.LLCHandler.ExecH.ExecCreateFunc(exechInput)
+	execState, err := l.LLCHandler.ExecH.ExecCreateFunc(execInput)
 	if err != nil {
 		// TODO(runllc): Handle error case for Fs Handler - run FsDestroyFunc
 		// TODO(runllc): Handle error case for Net Handler - run NetDestroyFunc
