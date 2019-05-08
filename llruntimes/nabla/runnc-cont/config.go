@@ -25,12 +25,6 @@ type Config struct {
 	// Memory max memory size in MBs.
 	Memory int64
 
-	// IsInDocker means running in a Docker container or not.
-	IsInDocker bool
-
-	// IsInKubernetes means running in a Kubernetes cluster or not.
-	IsInKubernetes bool
-
 	// Disk is the path to disk
 	Disk []string
 

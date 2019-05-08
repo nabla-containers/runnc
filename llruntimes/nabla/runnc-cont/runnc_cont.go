@@ -26,7 +26,6 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/nabla-containers/runnc/nabla-lib/network"
 	"github.com/nabla-containers/runnc/nabla-lib/storage"
 	spec "github.com/opencontainers/runtime-spec/specs-go"
 )
@@ -71,88 +70,29 @@ func NewRunncCont(cfg Config) (*RunncCont, error) {
 		return nil, fmt.Errorf("No disk provided")
 	}
 
-	var (
-		ipAddress net.IP
-		ipMask    net.IPMask
-		gateway   net.IP
-		tapName   string
-		mac       string
-		err       error
-	)
-
 	// If network details are specified, use them, if not do usual network plumbing
-	if len(cfg.IPAddress) > 0 && len(cfg.Gateway) > 0 && len(tapName) > 0 {
-		netstr := fmt.Sprintf("%s/%d", cfg.IPAddress, cfg.IPMask)
-		ip, ipNet, err := net.ParseCIDR(netstr)
-		if err != nil {
-			return nil, fmt.Errorf("not a valid IP address: %s, err: %v", netstr, err)
+	if len(cfg.IPAddress) == 0 || len(cfg.Gateway) == 0 || len(cfg.Tap) == 0 {
+		return nil, fmt.Errorf("Insufficient network arguments set")
+	}
+	netstr := fmt.Sprintf("%s/%d", cfg.IPAddress, cfg.IPMask)
+	ipAddress, ipNet, err := net.ParseCIDR(netstr)
+	if err != nil {
+		return nil, fmt.Errorf("not a valid IP address: %s, err: %v", netstr, err)
+	}
+
+	ipMask := ipNet.Mask
+
+	gateway := net.ParseIP(cfg.Gateway)
+	if gateway == nil {
+		return nil, fmt.Errorf("not a valid gateway address: %s", cfg.Gateway)
+	}
+
+	mac := ""
+	if len(cfg.Mac) > 0 {
+		if _, err := net.ParseMAC(cfg.Mac); err != nil {
+			return nil, fmt.Errorf("not a valid mac addr: %s, err :%v", cfg.Mac, err)
 		}
-
-		ipAddress = ip
-		ipMask = ipNet.Mask
-
-		gateway = net.ParseIP(cfg.Gateway)
-		if gateway == nil {
-			return nil, fmt.Errorf("not a valid gateway address: %s", cfg.Gateway)
-		}
-
-		tapName = cfg.Tap
-
-		if len(cfg.Mac) > 0 {
-			if _, err := net.ParseMAC(cfg.Mac); err != nil {
-				return nil, fmt.Errorf("not a valid mac addr: %s, err :%v", cfg.Mac, err)
-			}
-			mac = cfg.Mac
-		}
-	} else {
-		// If network not provided
-		// (This section will be removed and put in network module in runllc)
-		if cfg.IsInDocker {
-			// The tap device will get the IP assigned to the Docker
-			// container veth pair.
-			ipAddress, gateway, ipMask, mac, tapName, err = network.CreateMacvtapInterfaceDocker("eth0")
-			if err != nil {
-				return nil, fmt.Errorf("could not create %s: %v", tapName, err)
-			}
-		} else if cfg.IsInKubernetes {
-			// The tap device will get the IP assigned to the k8s nabla
-			// container veth pair.
-			// XXX: This is a workaround due to an error with MacvTap, error was :
-			// Could not create /dev/tap8863: open /sys/devices/virtual/net/macvtap8863/tap8863/dev: no such file or directory
-			ipAddress, gateway, ipMask, mac, err = network.CreateTapInterfaceDocker(cfg.Tap, "eth0")
-			if err != nil {
-				return nil, fmt.Errorf("could not create %s: %v\n", cfg.Tap, err)
-			}
-		} else {
-			// Defaults
-			if len(cfg.IPAddress) == 0 {
-				cfg.IPAddress = "10.0.0.2"
-			}
-			if cfg.IPMask == 0 {
-				cfg.IPMask = 24
-			}
-
-			netstr := fmt.Sprintf("%s/%d", cfg.IPAddress, cfg.IPMask)
-			ip, ipNet, err := net.ParseCIDR(netstr)
-			if err != nil {
-				return nil, fmt.Errorf("not a valid IP address: %s, err: %v", netstr, err)
-			}
-
-			ipAddress = ip
-			ipMask = ipNet.Mask
-
-			gateway = net.ParseIP(cfg.Gateway)
-			if gateway == nil {
-				return nil, fmt.Errorf("not a valid gateway address: %s", cfg.Gateway)
-			}
-
-			err = network.CreateTapInterface(cfg.Tap, &ipAddress, &ipMask)
-			if err != nil {
-				// Ignore networking related errors (i.e., like if the TAP
-				// already exists).
-				fmt.Fprintf(os.Stderr, "Could not create %s: %v\n", cfg.Tap, err)
-			}
-		}
+		mac = cfg.Mac
 	}
 
 	return &RunncCont{

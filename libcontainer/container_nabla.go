@@ -28,7 +28,7 @@ import (
 	"time"
 
 	"github.com/nabla-containers/runnc/libcontainer/configs"
-	"github.com/nabla-containers/runnc/nabla-lib/network"
+	ll "github.com/nabla-containers/runnc/llif"
 	"github.com/opencontainers/runc/libcontainer/system"
 	"github.com/opencontainers/runc/libcontainer/utils"
 	"github.com/pkg/errors"
@@ -39,6 +39,10 @@ const stdioFdCount = 3
 // State represents a running container's state
 type State struct {
 	BaseState
+
+	FsState      ll.LLState `json:"fsstate"`
+	NetworkState ll.LLState `json:"netstate"`
+	ExecState    ll.LLState `json:"execstate"`
 
 	// Platform specific fields below here
 	Status Status `json:"status"`
@@ -56,13 +60,13 @@ type Container interface {
 }
 
 type nablaContainer struct {
-	id      string
-	root    string
-	fsPath  string
-	config  *configs.Config
-	m       sync.Mutex
-	state   *State
-	created time.Time
+	id         string
+	root       string
+	config     *configs.Config
+	m          sync.Mutex
+	state      *State
+	created    time.Time
+	llcHandler ll.RunllcHandler
 }
 
 func (c *nablaContainer) Config() configs.Config {
@@ -203,18 +207,20 @@ func (c *nablaContainer) start(p *Process) error {
 
 	defer parentPipe.Close()
 	config := initConfig{
-		Id:         c.id,
-		BundlePath: c.root,
-		Root:       c.config.Rootfs,
-		Args:       c.config.Args,
-		FsPath:     c.fsPath,
-		Cwd:        c.config.Cwd,
-		Env:        c.config.Env,
-		TapName:    nablaTapName(c.id),
-		NetnsPath:  c.config.NetnsPath,
-		Hooks:      c.config.Hooks,
-		Memory:     c.config.Memory,
-		Mounts:     c.config.Mounts,
+		Id:           c.id,
+		BundlePath:   c.root,
+		Root:         c.config.Rootfs,
+		Args:         c.config.Args,
+		Cwd:          c.config.Cwd,
+		Env:          c.config.Env,
+		NetnsPath:    c.config.NetnsPath,
+		Hooks:        c.config.Hooks,
+		Memory:       c.config.Memory,
+		Mounts:       c.config.Mounts,
+		Config:       c.config,
+		FsState:      c.state.FsState,
+		NetworkState: c.state.NetworkState,
+		ExecState:    c.state.ExecState,
 	}
 
 	enc := json.NewEncoder(parentPipe)
@@ -266,12 +272,69 @@ func (c *nablaContainer) exec() error {
 func (c *nablaContainer) destroy() error {
 	c.state.InitProcessPid = 0
 	c.state.Status = Stopped
-	if err := os.RemoveAll(c.root); err != nil {
+
+	execInput := &ll.ExecDestroyInput{
+		ll.ExecGenericInput{
+			ContainerRoot: c.root,
+			Config:        c.config,
+			ContainerId:   c.id,
+			FsState:       &c.state.FsState,
+			NetworkState:  &c.state.NetworkState,
+			ExecState:     &c.state.ExecState,
+		},
+	}
+
+	execState, err := c.llcHandler.ExecH.ExecDestroyFunc(execInput)
+	if err != nil {
+		return err
+	}
+	if execState != nil {
+		c.state.ExecState = *execState
+	} else {
+		c.state.ExecState = ll.LLState{}
+	}
+
+	fsInput := &ll.FsDestroyInput{
+		ll.FsGenericInput{
+			ContainerRoot: c.root,
+			Config:        c.config,
+			ContainerId:   c.id,
+			FsState:       &c.state.FsState,
+			NetworkState:  &c.state.NetworkState,
+			ExecState:     execState,
+		},
+	}
+
+	fsState, err := c.llcHandler.FsH.FsDestroyFunc(fsInput)
+	if err != nil {
+		return err
+	}
+	if fsState != nil {
+		c.state.FsState = *fsState
+	} else {
+		c.state.FsState = ll.LLState{}
+	}
+
+	networkInput := &ll.NetworkDestroyInput{
+		ll.NetworkGenericInput{
+			ContainerRoot: c.root,
+			Config:        c.config,
+			ContainerId:   c.id,
+			FsState:       fsState,
+			NetworkState:  &c.state.NetworkState,
+			ExecState:     execState,
+		},
+	}
+
+	networkState, err := c.llcHandler.NetworkH.NetworkDestroyFunc(networkInput)
+	if err != nil {
 		return err
 	}
 
-	if err := network.RemoveTapDevice(nablaTapName(c.id)); err != nil {
-		return err
+	if networkState != nil {
+		c.state.NetworkState = *networkState
+	} else {
+		c.state.NetworkState = ll.LLState{}
 	}
 
 	return nil

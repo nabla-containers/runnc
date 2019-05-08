@@ -18,68 +18,35 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"path/filepath"
 	"strconv"
-	"strings"
 	"syscall"
 
-	"github.com/nabla-containers/runnc/runnc-cont"
+	"github.com/nabla-containers/runnc/libcontainer/configs"
+	ll "github.com/nabla-containers/runnc/llif"
 	spec "github.com/opencontainers/runtime-spec/specs-go"
 	"github.com/vishvananda/netns"
 )
 
-var (
-	NablaBinDir = "/opt/runnc/bin/"
-	NablaRunBin = NablaBinDir + "nabla-run"
-)
-
-func newRunncCont(cfg *initConfig) (*runnc_cont.RunncCont, error) {
-	if len(cfg.Args) == 0 {
-		return nil, fmt.Errorf("OCI process args are empty")
-	}
-
-	if !strings.HasSuffix(cfg.Args[0], ".nabla") {
-		return nil, fmt.Errorf("entrypoint is not a .nabla file")
-	}
-
-	c := runnc_cont.Config{
-		NablaRunBin:    NablaRunBin,
-		UniKernelBin:   filepath.Join(cfg.Root, cfg.Args[0]),
-		Memory:         cfg.Memory,
-		Tap:            cfg.TapName,
-		IsInKubernetes: true,
-		IsInDocker:     false,
-		Disk:           []string{cfg.FsPath},
-		WorkingDir:     cfg.Cwd,
-		Env:            cfg.Env,
-		NablaRunArgs:   cfg.Args[1:],
-		Mounts:         cfg.Mounts,
-	}
-
-	cont, err := runnc_cont.NewRunncCont(c)
-	if err != nil {
-		return nil, err
-	}
-
-	return cont, nil
-}
-
 type initConfig struct {
-	Id         string      `json:"id"`
-	BundlePath string      `json:"bundlepath"`
-	Root       string      `json:"root"`
-	Args       []string    `json:"args"`
-	FsPath     string      `json:"fspath"`
-	Cwd        string      `json:"cwd"`
-	Env        []string    `json:"env"`
-	TapName    string      `json:"tap"`
-	NetnsPath  string      `json:"netnspath"`
-	Hooks      *spec.Hooks `json:"hooks"`
-	Memory     int64       `json:"mem"`
-	Mounts     []spec.Mount `json:"Mounts"`
+	Id         string          `json:"id"`
+	BundlePath string          `json:"bundlepath"`
+	Root       string          `json:"root"`
+	Args       []string        `json:"args"`
+	Cwd        string          `json:"cwd"`
+	Env        []string        `json:"env"`
+	TapName    string          `json:"tap"`
+	NetnsPath  string          `json:"netnspath"`
+	Hooks      *spec.Hooks     `json:"hooks"`
+	Memory     int64           `json:"mem"`
+	Mounts     []spec.Mount    `json:"Mounts"`
+	Config     *configs.Config `json:"config"`
+
+	FsState      ll.LLState `json:"fsstate"`
+	NetworkState ll.LLState `json:"netstate"`
+	ExecState    ll.LLState `json:execstate"`
 }
 
-func initNabla() error {
+func initNabla(llcHandler ll.RunllcHandler) error {
 	var (
 		pipefd, rootfd int
 		envInitPipe    = os.Getenv("_LIBCONTAINER_INITPIPE")
@@ -108,6 +75,24 @@ func initNabla() error {
 	// clear the current process's environment to clean any libcontainer
 	// specific env vars.
 	os.Clearenv()
+
+	// LLC Fs Handle
+	fsInput := &ll.FsRunInput{
+		ll.FsGenericInput{
+			ContainerRoot: config.Root,
+			Config:        config.Config,
+			ContainerId:   config.Id,
+			FsState:       &config.FsState,
+			NetworkState:  &config.NetworkState,
+			ExecState:     &config.ExecState,
+		},
+	}
+
+	// TODO(runllc): Propagate and store LLstates
+	fsState, err := llcHandler.FsH.FsRunFunc(fsInput)
+	if err != nil {
+		return fmt.Errorf("Error running llc Fs handler: %v", err)
+	}
 
 	// Go into network namespace for temporary hack for CNI plugin using veth pairs
 	// K8s case
@@ -140,6 +125,24 @@ func initNabla() error {
 		}
 	}
 
+	networkInput := &ll.NetworkRunInput{
+		ll.NetworkGenericInput{
+			ContainerRoot: config.Root,
+			Config:        config.Config,
+			ContainerId:   config.Id,
+			FsState:       fsState,
+			NetworkState:  &config.NetworkState,
+			ExecState:     &config.ExecState,
+		},
+	}
+
+	// TODO(runllc): Propagate and store LLstates
+	networkState, err := llcHandler.NetworkH.NetworkRunFunc(networkInput)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error running llc Network handler: %v", err)
+		return fmt.Errorf("Error running llc Network handler: %v", err)
+	}
+
 	// wait for the fifo to be opened on the other side before
 	// exec'ing the users process.
 	fd, err := syscall.Openat(rootfd, execFifoFilename, os.O_WRONLY|syscall.O_CLOEXEC, 0)
@@ -157,14 +160,18 @@ func initNabla() error {
 		select {}
 	}
 
-	runncCont, err := newRunncCont(config)
-	if err != nil {
-		return newSystemErrorWithCause(err, "Unable to construct nabla run args")
+	// LLC Exec Handle
+	execInput := &ll.ExecRunInput{
+		ll.ExecGenericInput{
+			ContainerRoot: config.Root,
+			Config:        config.Config,
+			ContainerId:   config.Id,
+			FsState:       fsState,
+			NetworkState:  networkState,
+			ExecState:     &config.ExecState,
+		},
 	}
 
-	if err := runncCont.Run(); err != nil {
-		return err
-	}
-
-	return nil
+	// Should not return if successful
+	return llcHandler.ExecH.ExecRunFunc(execInput)
 }
