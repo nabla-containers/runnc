@@ -38,8 +38,8 @@ script:
   - make build/runnc build/nabla-run
   - git submodule update --init --recursive
   - make shellcheck
-  - env GO111MODULE=on make build
-  - env GO111MODULE=on make install
+  - make build
+  - make install
   - echo '{"runtimes":{"runnc":{"path":"/usr/local/bin/runnc"}}}' | sudo tee /etc/docker/daemon.json
   - sudo service docker restart
   - make local-integration-test
