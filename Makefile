@@ -64,8 +64,7 @@ container-uninstall:
 .PHONY: godep
 ifeq ($(GO111MODULE),on)
 godep:
-	$(GO_BIN) build -v ./...
-	make tidy
+	$(GO_BIN) mod tidy
 else
 godep:
 	dep ensure
@@ -73,13 +72,6 @@ endif
 
 update:
 	$(GO_BIN) get -u
-
-tidy:
-ifeq ($(GO111MODULE),on)
-	$(GO_BIN) mod tidy
-else
-	echo skipping go mod tidy
-endif
 
 build/runnc: godep runnc.go
 	GOOS=linux GOARCH=${GOARCH} $(GO_BIN) build -o $@ .
