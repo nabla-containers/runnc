@@ -17,6 +17,7 @@ package llcli
 import (
 	"github.com/nabla-containers/runnc/libcontainer"
 	"github.com/opencontainers/runtime-spec/specs-go"
+	"github.com/sirupsen/logrus"
 
 	"fmt"
 	"io/ioutil"
@@ -39,6 +40,7 @@ type runner struct {
 }
 
 func (r *runner) run(config *specs.Process) (int, error) {
+	logrus.Warn("In run()")
 	process, err := newProcess(*config)
 	if err != nil {
 		r.destroy()
@@ -58,26 +60,31 @@ func (r *runner) run(config *specs.Process) (int, error) {
 		r.destroy()
 		return -1, err
 	}
+	logrus.Warn("before setupIO")
 	tty, err := setupIO(process, rootuid, rootgid, r.console, config.Terminal, r.detach || r.create)
 	if err != nil {
 		r.destroy()
 		return -1, err
 	}
+	logrus.Warn("after setupIO")
 	handler := newSignalHandler(tty, r.enableSubreaper)
 	startFn := r.container.Start
 	if !r.create {
 		startFn = r.container.Run
 	}
 	defer tty.Close()
+	logrus.Warn("startFn")
 	if err := startFn(process); err != nil {
 		r.destroy()
 		return -1, err
 	}
+	logrus.Warn("tty.ClosePostStart")
 	if err := tty.ClosePostStart(); err != nil {
 		r.terminate(process)
 		r.destroy()
 		return -1, err
 	}
+	logrus.Warn("CreatePidFile")
 	if r.pidFile != "" {
 		if err := createPidFile(r.pidFile, process); err != nil {
 			r.terminate(process)
@@ -92,14 +99,17 @@ func (r *runner) run(config *specs.Process) (int, error) {
 			return -1, err
 		}
 	}
+	logrus.Warn("before detach || create check")
 	if r.detach || r.create {
 		return 0, nil
 	}
+	logrus.Warn("before forward()")
 	status, err := handler.forward(process)
 	if err != nil {
 		r.terminate(process)
 	}
 	r.destroy()
+	logrus.Warn("end run()")
 	return status, err
 }
 
@@ -138,20 +148,24 @@ func newProcess(p specs.Process) (*libcontainer.Process, error) {
 // setupIO sets the proper IO on the process depending on the configuration
 // If there is a nil error then there must be a non nil tty returned
 func setupIO(process *libcontainer.Process, rootuid, rootgid int, console string, createTTY, detach bool) (*tty, error) {
+	logrus.Warn("In setupIO")
 	// detach and createTty will not work unless a console path is passed
 	// so error out here before changing any terminal settings
 	if createTTY && detach && console == "" {
 		return nil, fmt.Errorf("cannot allocate tty if runc will detach")
 	}
 	if createTTY {
+		logrus.Warn("setupIO: in createTTY")
 		return createTty(process, rootuid, rootgid, console)
 	}
 	if detach {
+		logrus.Warn("setupIO: in detach")
 		if err := dupStdio(process, rootuid, rootgid); err != nil {
 			return nil, err
 		}
 		return &tty{}, nil
 	}
+	logrus.Warn("setupIO: end createStdioPipes")
 	return createStdioPipes(process, rootuid, rootgid)
 }
 

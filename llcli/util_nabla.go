@@ -53,10 +53,12 @@ func startContainer(context *cli.Context, llcHandler ll.RunllcHandler, spec *spe
 		return -1, errEmptyID
 	}
 
+	logrus.Warn("before createContainer")
 	container, err := createContainer(context, llcHandler, id, spec)
 	if err != nil {
 		return -1, err
 	}
+	logrus.Warn("after createContainer")
 
 	detach := context.Bool("detach")
 	// Support on-demand socket activation by passing file descriptors into   the container init process.
@@ -67,7 +69,7 @@ func startContainer(context *cli.Context, llcHandler ll.RunllcHandler, spec *spe
 		shouldDestroy:   true,
 		container:       container,
 		listenFDs:       listenFDs,
-		console:         context.String("console"),
+		console:         context.String("console-socket"),
 		detach:          detach,
 		pidFile:         context.String("pid-file"),
 		create:          create,
@@ -78,10 +80,12 @@ func startContainer(context *cli.Context, llcHandler ll.RunllcHandler, spec *spe
 
 func createContainer(context *cli.Context, llcHandler ll.RunllcHandler, id string, spec *specs.Spec) (libcontainer.Container, error) {
 
+	logrus.Warn("In createContainers")
 	config, err := configs.ParseSpec(spec)
 	if err != nil {
 		return nil, err
 	}
+	logrus.Warn("done parsing spec")
 
 	config.Labels = append(config.Labels, "bundle="+context.String("bundle"))
 
@@ -92,6 +96,7 @@ func createContainer(context *cli.Context, llcHandler ll.RunllcHandler, id strin
 		return nil, err
 	}
 
+	logrus.Warn("before loadFactory")
 	factory, err := loadFactory(context, llcHandler)
 	if err != nil {
 		return nil, err

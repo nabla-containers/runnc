@@ -3,10 +3,7 @@
 
 [[projects]]
   name = "github.com/docker/docker"
-  packages = [
-    "pkg/mount",
-    "pkg/term"
-  ]
+  packages = ["pkg/term"]
   revision = "a8a31eff10544860d2188dddabdee4d727545796"
   version = "v1.5.0"
 
@@ -23,10 +20,11 @@
     "libcontainer/selinux",
     "libcontainer/stacktrace",
     "libcontainer/system",
-    "libcontainer/utils"
+    "libcontainer/utils",
+    "libcontainer/nsenter"
   ]
-  revision = "baf6536d6259209c3edfa2b22237af82942d3dfa"
-  version = "v0.1.1"
+  revision = ""
+  version = "v1.0.0-rc3"
 
 [[projects]]
   name = "github.com/opencontainers/runtime-spec"
@@ -85,6 +83,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "161a6358b5d2b899cb8a657abf464b14118ff68e1531d527d326703010500ad6"
+  inputs-digest = "89fa051e52204d06152dc94f70feda9f6ec27b2b131df14441385f212bcf3fc9"
   solver-name = "gps-cdcl"
   solver-version = 1

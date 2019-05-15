@@ -18,6 +18,7 @@ import (
 	"os"
 
 	ll "github.com/nabla-containers/runnc/llif"
+	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 )
 
@@ -77,6 +78,7 @@ to specify command(s) that get run when the container is started.
 			if err != nil {
 				fatal(err)
 			}
+			logrus.Warn("done Create")
 
 			// exit with the container's exit status so any external supervisor is
 			// notified of the exit with the correct exit status.
