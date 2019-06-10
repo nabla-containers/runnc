@@ -12,8 +12,14 @@ go:
   - tip
 
 matrix:
+  include:
+    - go: "1.12"
+      env: GO111MODULE=on
+    - go: tip
+      env: GO111MODULE=on
   allow_failures:
     - go: tip
+    - env: GO111MODULE=on
 
 go_import_path: github.com/nabla-containers/runnc
 
@@ -26,7 +32,7 @@ before_install:
   - sudo apt-get install -y libseccomp-dev genisoimage jq
   - go get -u golang.org/x/lint/golint
   - go get -u github.com/vbatts/git-validation
-  - go get -u github.com/golang/dep/cmd/dep
+  - sh -c "if [ \"${GO111MODULE}\" != 'on' ]; then go get -u github.com/golang/dep/cmd/dep; fi"
   - env | grep TRAVIS_
 
 script:

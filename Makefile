@@ -14,6 +14,7 @@
 # OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
 # TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 # PERFORMANCE OF THIS SOFTWARE.
+GO_BIN ?= go
 
 ARCH=$(shell uname --m)
 ifeq ($(ARCH), aarch64)
@@ -61,11 +62,19 @@ container-uninstall:
 	sudo hack/update_binaries.sh delete
 
 .PHONY: godep
+ifeq ($(GO111MODULE),on)
+godep:
+	$(GO_BIN) mod tidy
+else
 godep:
 	dep ensure
+endif
+
+update:
+	$(GO_BIN) get -u
 
 build/runnc: godep runnc.go
-	GOOS=linux GOARCH=${GOARCH} go build -o $@ .
+	GOOS=linux GOARCH=${GOARCH} $(GO_BIN) build -o $@ .
 
 solo5/tenders/spt/solo5-spt: FORCE
 	make -C solo5
