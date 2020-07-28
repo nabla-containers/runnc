@@ -322,7 +322,7 @@ func CreateTapInterfaceDocker(tapName string, master string) (
 		return nil, nil, nil, "", err
 	}
 
-	// defaukt-br0 has to be removed first if exists	
+	// default-br0 has to be removed first if exists	
 	br, err := netlink.LinkByName("br0")
 	if br != nil {
 		err := netlink.LinkDel(br)
