@@ -287,7 +287,7 @@ func CreateTapInterfaceDocker(tapName string, master string) (
 		return nil, nil, nil, "",
 			fmt.Errorf("no master interface: %v", err)
 	}
-	masterAddr, masterIP, masterMask, gwAddr, mac, err := getMasterDetails(masterLink)
+	_, masterIP, masterMask, gwAddr, mac, err := getMasterDetails(masterLink)
 	if err != nil {
 		return nil, nil, nil, "", err
 	}
@@ -312,12 +312,6 @@ func CreateTapInterfaceDocker(tapName string, master string) (
 		return nil, nil, nil, "", err
 	}
 
-	// ip addr del $INET_STR dev master
-	err = netlink.AddrDel(masterLink, masterAddr)
-	if err != nil {
-		return nil, nil, nil, "", err
-	}
-
 	genmac, err := net.ParseMAC("aa:aa:aa:aa:bb:cc")
 	if err != nil {
 		return nil, nil, nil, "", err
@@ -327,6 +321,15 @@ func CreateTapInterfaceDocker(tapName string, master string) (
 	if err != nil {
 		return nil, nil, nil, "", err
 	}
+
+	// default-br0 has to be removed first if exists	
+	br, err := netlink.LinkByName("br0")
+	if br != nil {
+		err := netlink.LinkDel(br)
+		if err != nil {
+			return nil, nil, nil, "", err
+		}
+	}	
 
 	br0, err := CreateBridge("br0")
 	if err != nil {
